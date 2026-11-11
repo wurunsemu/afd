@@ -1,13 +1,13 @@
 {
-  "name": "Assistant Football Team Dietitian",
+  "name": "afd — Futbol Diyetisyen Paneli",
   "short_name": "afd",
-  "description": "Futbol Takımı Diyetisyen Paneli — Uzm. Dyt. Yunus Aksu",
+  "description": "Assistant Football Team Dietitian — Sporcu takip ve beslenme yönetim sistemi",
   "start_url": "./sporcu_dashboard_v3.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
-  "orientation": "any",
+  "orientation": "landscape",
+  "background_color": "#0F172A",
+  "theme_color": "#10B981",
   "lang": "tr",
   "icons": [
     {
@@ -22,5 +22,6 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["health", "fitness", "sports"]
 }
