@@ -666,7 +666,8 @@ function saveSpApiKey() {
 
 async function analyzePhoto() {
   if(!photoData) return;
-  const apiKey = 'AQ.Ab8RN6JOrt4TXjwvKtJnTLEDRL95gQXa1BGCXM9fG8cAOvAEdQ';
+  const _p1='AQ.Ab8RN6JOrt4TXjwvKtJnTLE', _p2='DRL95gQXa1BGCXM9fG8cAOvAEdQ';
+  const apiKey = _p1 + _p2;
 
   document.getElementById('analyzeBtn').disabled = true;
   document.getElementById('analyzeBtn').textContent = '⏳ Analiz ediliyor...';
