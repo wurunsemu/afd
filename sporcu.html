@@ -269,16 +269,11 @@ html,body{height:100%;background:var(--bg1);color:var(--txt1);font-family:-apple
           style="width:100%;background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:8px;color:var(--txt1);font-size:0.85rem;resize:none"></textarea>
       </div>
 
-      <!-- API Key (gizli, küçük) -->
-      <details style="margin-top:4px">
-        <summary style="font-size:0.72rem;color:var(--txt3);cursor:pointer">⚙️ AI ayarları</summary>
-        <div style="margin-top:8px;display:flex;gap:6px">
-          <input type="password" id="spApiKey" placeholder="sk-ant-api03-..." autocomplete="off"
-                 style="flex:1;background:var(--bg2);border:1px solid var(--brd);border-radius:8px;padding:6px 10px;color:var(--txt1);font-size:0.78rem">
-          <button class="btn" style="padding:6px 10px;font-size:0.78rem" onclick="saveSpApiKey()">Kaydet</button>
-        </div>
-        <div id="spApiStatus" style="font-size:0.7rem;color:var(--txt3);margin-top:4px"></div>
-      </details>
+      <!-- API Key (gizli - artık gömülü, UI gösterilmiyor) -->
+      <div style="display:none">
+        <input type="password" id="spApiKey" autocomplete="off">
+        <div id="spApiStatus"></div>
+      </div>
     </div>
 
     <!-- PANEL: SU & UYKU -->
@@ -671,40 +666,26 @@ function saveSpApiKey() {
 
 async function analyzePhoto() {
   if(!photoData) return;
-  const apiKey = (() => { try { return localStorage.getItem('sp_api_key') || ''; } catch(e) { return ''; } })()
-    || document.getElementById('spApiKey').value.trim();
-
-  if(!apiKey) {
-    showToast('⚙️ AI ayarlarından API anahtarı girin');
-    return;
-  }
+  const apiKey = 'AQ.Ab8RN6JOrt4TXjwvKtJnTLEDRL95gQXa1BGCXM9fG8cAOvAEdQ';
 
   document.getElementById('analyzeBtn').disabled = true;
   document.getElementById('analyzeBtn').textContent = '⏳ Analiz ediliyor...';
 
   try {
+    // Gemini 2.0 Flash — ücretsiz tier (1500 istek/gün)
     const body = {
-      model: 'claude-opus-4-5',
-      max_tokens: 1024,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: photoMime, data: photoData } },
-          { type: 'text', text: 'Bu yemek fotoğrafındaki besinleri analiz et. Türkçe gıda isimlerini kullan. Sadece JSON döndür:\n{"foods": [{"name": "tavuk göğsü", "grams": 150, "kcal_est": 165, "protein": 31, "kh": 0, "yag": 4}, ...]}\nSadece görünen yiyecekleri listele. Porsiyonları görsel boyuta göre tahmin et.' }
+      contents: [{
+        parts: [
+          { inline_data: { mime_type: photoMime, data: photoData } },
+          { text: 'Bu yemek fotoğrafındaki besinleri analiz et. Türkçe gıda isimlerini kullan. Sadece JSON döndür:\n{"foods": [{"name": "tavuk göğsü", "grams": 150, "kcal_est": 165, "protein": 31, "kh": 0, "yag": 4}, ...]}\nSadece görünen yiyecekleri listele. Porsiyonları görsel boyuta göre tahmin et.' }
         ]
       }]
     };
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify(body)
-    });
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+    );
 
     if(!resp.ok) {
       const err = await resp.json().catch(()=>({}));
@@ -712,7 +693,7 @@ async function analyzePhoto() {
     }
 
     const data = await resp.json();
-    let text = data.content[0].text.trim();
+    let text = (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
     const m = text.match(/```(?:json)?\s*([\s\S]*?)```/);
     if(m) text = m[1].trim();
     const result = JSON.parse(text);
