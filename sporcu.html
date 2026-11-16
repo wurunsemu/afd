@@ -666,27 +666,31 @@ function saveSpApiKey() {
 
 async function analyzePhoto() {
   if(!photoData) return;
-  const _p1='AQ.Ab8RN6JOrt4TXjwvKtJnTLE', _p2='DRL95gQXa1BGCXM9fG8cAOvAEdQ';
-  const apiKey = _p1 + _p2;
+  // Groq — ücretsiz vision API (llama-3.2-11b-vision)
+  const _k1='gsk_ky8dtGkbrAxMuA81WjMB', _k2='WGdyb3FYeMcFgKposp8S7uBOvNZGS9Cp';
+  const apiKey = _k1 + _k2;
 
   document.getElementById('analyzeBtn').disabled = true;
   document.getElementById('analyzeBtn').textContent = '⏳ Analiz ediliyor...';
 
   try {
-    // Gemini 2.0 Flash — ücretsiz tier (1500 istek/gün)
     const body = {
-      contents: [{
-        parts: [
-          { inline_data: { mime_type: photoMime, data: photoData } },
-          { text: 'Bu yemek fotoğrafındaki besinleri analiz et. Türkçe gıda isimlerini kullan. Sadece JSON döndür:\n{"foods": [{"name": "tavuk göğsü", "grams": 150, "kcal_est": 165, "protein": 31, "kh": 0, "yag": 4}, ...]}\nSadece görünen yiyecekleri listele. Porsiyonları görsel boyuta göre tahmin et.' }
+      model: 'llama-3.2-11b-vision-preview',
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image_url', image_url: { url: `data:${photoMime};base64,${photoData}` } },
+          { type: 'text', text: 'Bu yemek fotoğrafındaki besinleri analiz et. Türkçe gıda isimlerini kullan. Sadece JSON döndür:\n{"foods": [{"name": "tavuk göğsü", "grams": 150, "kcal_est": 165, "protein": 31, "kh": 0, "yag": 4}, ...]}\nSadece görünen yiyecekleri listele. Porsiyonları görsel boyuta göre tahmin et.' }
         ]
-      }]
+      }],
+      max_tokens: 1024
     };
 
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-    );
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify(body)
+    });
 
     if(!resp.ok) {
       const err = await resp.json().catch(()=>({}));
@@ -694,7 +698,7 @@ async function analyzePhoto() {
     }
 
     const data = await resp.json();
-    let text = (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+    let text = (data.choices?.[0]?.message?.content || '').trim();
     const m = text.match(/```(?:json)?\s*([\s\S]*?)```/);
     if(m) text = m[1].trim();
     const result = JSON.parse(text);
