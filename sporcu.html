@@ -256,6 +256,18 @@ html,body{height:100%;background:var(--bg1);color:var(--txt1);font-family:-apple
       <div id="aiResults" style="display:none" class="card">
         <div class="card-title">Tespit Edilen Besinler</div>
         <div id="aiResultsList"></div>
+
+        <!-- Manuel ekleme satırı -->
+        <div style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <input type="text" id="manuelAd" placeholder="Besin adı (ör. ekmek)" autocomplete="off"
+                 style="flex:2;min-width:100px;background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:5px 8px;color:var(--txt1);font-size:0.8rem">
+          <input type="number" id="manuelGram" placeholder="g" min="1" max="2000" value="100"
+                 style="width:56px;background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:5px;text-align:center;color:var(--txt1);font-size:0.8rem">
+          <input type="number" id="manuelKcal" placeholder="kcal" min="0" max="9999"
+                 style="width:62px;background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:5px;text-align:center;color:var(--txt1);font-size:0.8rem">
+          <button class="btn" style="padding:5px 10px;font-size:0.8rem" onclick="manuelEkle()">+ Ekle</button>
+        </div>
+
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--brd);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:0.85rem;color:var(--txt2)">Toplam: <strong id="aiTotalKcal" style="color:var(--yel)">0 kcal</strong></span>
           <button class="btn" onclick="submitMeal()" id="submitBtn">✅ Kaydet</button>
@@ -714,18 +726,21 @@ async function analyzePhoto() {
 }
 
 function renderAiResults() {
-  if(!aiDetected.length) { showToast('Besin tespit edilemedi'); return; }
+  if(!aiDetected.length && document.getElementById('aiResults').style.display === 'none') {
+    showToast('Besin tespit edilemedi'); return;
+  }
   let totalKcal = 0;
 
   document.getElementById('aiResultsList').innerHTML = aiDetected.map((f,i) => {
-    const kc = f.kcal_est || Math.round((f.grams||100) * 1.5);
+    const kc = f._kcal !== undefined ? f._kcal : (f.kcal_est || Math.round((f.grams||100) * 1.5));
     totalKcal += kc;
     return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <button onclick="silBesin(${i})" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:1rem;padding:0 2px;line-height:1" title="Sil">✕</button>
       <div style="flex:1">
         <div style="font-size:0.85rem;font-weight:600">${f.name}</div>
         <div style="font-size:0.72rem;color:var(--txt2)">${f.protein||0}g protein · ${f.kh||0}g kh · ${f.yag||0}g yağ</div>
       </div>
-      <input type="number" value="${f.grams||100}" min="1" max="2000"
+      <input type="number" value="${f._grams||f.grams||100}" min="1" max="2000"
              style="width:60px;background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:4px;text-align:center;color:var(--txt1);font-size:0.82rem"
              onchange="updateAiItem(${i}, this.value)">
       <span style="font-size:0.75rem;color:var(--txt3)">g</span>
@@ -735,6 +750,23 @@ function renderAiResults() {
 
   document.getElementById('aiTotalKcal').textContent = Math.round(totalKcal) + ' kcal';
   document.getElementById('aiResults').style.display = 'block';
+}
+
+function silBesin(i) {
+  aiDetected.splice(i, 1);
+  renderAiResults();
+}
+
+function manuelEkle() {
+  const ad = document.getElementById('manuelAd').value.trim();
+  const gram = parseFloat(document.getElementById('manuelGram').value) || 100;
+  const kcal = parseFloat(document.getElementById('manuelKcal').value) || 0;
+  if(!ad) { showToast('⚠️ Besin adı girin'); return; }
+  aiDetected.push({ name: ad, grams: gram, kcal_est: kcal, protein: 0, kh: 0, yag: 0 });
+  document.getElementById('manuelAd').value = '';
+  document.getElementById('manuelGram').value = '100';
+  document.getElementById('manuelKcal').value = '';
+  renderAiResults();
 }
 
 function updateAiItem(i, grams) {
