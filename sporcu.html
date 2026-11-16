@@ -469,7 +469,7 @@ async function doLogin() {
   try {
     // Adım 1: Sporcu listesini çek, ada göre eşleştir (dropdown gösterilmez)
     const list = await callAPI({ action: 'getAthletes', secret: TEAM_SECRET });
-    if (!list.ok) { errEl.textContent = 'Sunucu hatası. Tekrar dene.'; setLoading(false); return; }
+    if (!list.ok) { errEl.textContent = 'Sunucu hatası: ' + (list.error || JSON.stringify(list)); setLoading(false); return; }
 
     const athletes = list.data || [];
     const found = athletes.find(a =>
