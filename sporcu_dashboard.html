@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Futbol Takımı Beslenme Takip Sistemi</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #21262d;
+  --border: #30363d;
+  --blue: #1f6feb;
+  --blue-light: #388bfd;
+  --orange: #f78166;
+  --green: #3fb950;
+  --yellow: #d29922;
+  --red: #f85149;
+  --text: #e6edf3;
+  --text-muted: #8b949e;
+  --text-dim: #6e7681;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; display: flex; min-height: 100vh; }
+
+/* Sidebar */
+.sidebar {
+  width: 220px; min-height: 100vh; background: var(--surface);
+  border-right: 1px solid var(--border); padding: 20px 0; flex-shrink: 0;
+  display: flex; flex-direction: column;
+}
+.sidebar-brand { padding: 0 16px 20px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+.sidebar-brand h3 { font-size: 13px; color: var(--blue-light); letter-spacing: .5px; text-transform: uppercase; }
+.sidebar-brand p { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+  cursor: pointer; color: var(--text-muted); font-size: 13px; border-left: 3px solid transparent;
+  transition: all .15s;
+}
+.nav-item:hover { color: var(--text); background: var(--surface2); }
+.nav-item.active { color: var(--blue-light); border-left-color: var(--blue-light); background: rgba(31,111,235,.1); }
+.nav-icon { font-size: 16px; }
+.nav-label { text-decoration: none; }
+.sidebar-section { padding: 10px 16px 4px; font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .8px; margin-top: 8px; }
+
+/* Main */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.topbar {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;
+}
+.topbar h2 { font-size: 16px; font-weight: 600; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.badge { background: var(--surface2); border: 1px solid var(--border); padding: 4px 10px; border-radius: 20px; font-size: 11px; color: var(--text-muted); }
+.badge.alert { background: rgba(248,81,73,.15); border-color: var(--red); color: var(--red); }
+.week-label { font-size: 12px; color: var(--text-muted); background: var(--blue); background: rgba(31,111,235,.2); border: 1px solid var(--blue); padding: 3px 10px; border-radius: 4px; color: var(--blue-light); }
+
+.content { padding: 20px 24px; overflow-y: auto; flex: 1; }
+
+/* Page views */
+.page { display: none; }
+.page.active { display: block; }
+
+/* KPI row */
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.kpi {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px;
+}
+.kpi-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+.kpi-value { font-size: 28px; font-weight: 700; margin: 6px 0 2px; }
+.kpi-sub { font-size: 11px; color: var(--text-muted); }
+.kpi-value.green { color: var(--green); }
+.kpi-value.red { color: var(--red); }
+.kpi-value.yellow { color: var(--yellow); }
+.kpi-value.blue { color: var(--blue-light); }
+
+/* Grid 2 */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px;
+}
+.card-title { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.card-title span { background: var(--surface2); padding: 2px 8px; border-radius: 4px; font-size: 10px; color: var(--text-dim); }
+.chart-wrap { position: relative; height: 220px; }
+.chart-wrap.tall { height: 280px; }
+
+/* Player selector */
+.player-selector { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.player-selector label { font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px; }
+.player-select-row { display: flex; gap: 10px; align-items: center; }
+select {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+  padding: 8px 12px; border-radius: 6px; font-size: 13px; flex: 1;
+  cursor: pointer;
+}
+select:focus { outline: none; border-color: var(--blue-light); }
+
+/* Player profile card */
+.player-profile { display: grid; grid-template-columns: auto 1fr 1fr 1fr; gap: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; align-items: center; }
+.player-avatar {
+  width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), #553098);
+  display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700;
+}
+.player-info h3 { font-size: 16px; font-weight: 600; }
+.player-info p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.stat-mini { text-align: center; }
+.stat-mini .val { font-size: 20px; font-weight: 600; }
+.stat-mini .lab { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+
+/* Intervention table */
+.int-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.int-table th { text-align: left; padding: 8px 12px; color: var(--text-muted); border-bottom: 1px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: .5px; }
+.int-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.int-table tr:last-child td { border-bottom: none; }
+.int-table tr:hover td { background: var(--surface2); }
+.chip { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+.chip.red { background: rgba(248,81,73,.15); color: var(--red); border: 1px solid rgba(248,81,73,.3); }
+.chip.yellow { background: rgba(210,153,34,.15); color: var(--yellow); border: 1px solid rgba(210,153,34,.3); }
+.chip.green { background: rgba(63,185,80,.15); color: var(--green); border: 1px solid rgba(63,185,80,.3); }
+.chip.blue { background: rgba(56,139,253,.15); color: var(--blue-light); border: 1px solid rgba(56,139,253,.3); }
+
+/* Progress bar */
+.prog-bar { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+.prog-fill { height: 100%; border-radius: 3px; }
+
+/* Team norm chart section */
+.norm-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; font-size: 11px; color: var(--text-muted); }
+.norm-legend-item { display: flex; align-items: center; gap: 5px; }
+.norm-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+/* Tabs */
+.tabs { display: flex; gap: 2px; margin-bottom: 16px; background: var(--surface2); padding: 4px; border-radius: 8px; width: fit-content; }
+.tab { padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; color: var(--text-muted); transition: all .15s; }
+.tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.tab:hover:not(.active) { color: var(--text); }
+
+/* Hooper gauge */
+.hooper-row { display: flex; gap: 10px; }
+.hooper-item { flex: 1; background: var(--surface2); border-radius: 6px; padding: 10px; text-align: center; }
+.hooper-item .h-score { font-size: 22px; font-weight: 700; }
+.hooper-item .h-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+.hooper-item.low .h-score { color: var(--green); }
+.hooper-item.mid .h-score { color: var(--yellow); }
+.hooper-item.high .h-score { color: var(--red); }
+
+/* Alert pill */
+.alert-pill {
+  background: rgba(248,81,73,.1); border: 1px solid rgba(248,81,73,.3);
+  border-radius: 6px; padding: 10px 14px; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 10px; font-size: 12px;
+}
+.alert-pill .icon { font-size: 16px; }
+.alert-pill .msg { flex: 1; }
+.alert-pill .msg strong { color: var(--red); }
+
+@media (max-width: 1100px) {
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .grid3 { grid-template-columns: 1fr 1fr; }
+}
+
+/* Data Entry */
+.de-header { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+.de-header h3 { font-size: 14px; color: var(--text-muted); }
+.btn {
+  padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border);
+  font-size: 12px; cursor: pointer; transition: all .15s; font-family: inherit;
+}
+.btn-primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn-primary:hover { background: var(--blue-light); }
+.btn-success { background: rgba(63,185,80,.2); border-color: var(--green); color: var(--green); }
+.btn-success:hover { background: rgba(63,185,80,.35); }
+.btn-outline { background: transparent; color: var(--text-muted); }
+.btn-outline:hover { color: var(--text); background: var(--surface2); }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+.btn-danger { background: rgba(248,81,73,.15); border-color: var(--red); color: var(--red); }
+
+.de-tabs { display: flex; gap: 2px; margin-bottom: 16px; background: var(--surface2); padding: 4px; border-radius: 8px; overflow-x: auto; }
+.de-tab { padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; color: var(--text-muted); white-space: nowrap; transition: all .15s; }
+.de-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.de-tab:hover:not(.active) { color: var(--text); }
+
+.de-panel { display: none; }
+.de-panel.active { display: block; }
+
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 6px; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); padding: 9px 12px; border-radius: 6px; font-size: 13px; font-family: inherit;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--blue-light); }
+.form-textarea { min-height: 90px; resize: vertical; }
+.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.form-hint { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+
+.de-day-row { display: grid; grid-template-columns: 60px repeat(7, 1fr); gap: 8px; margin-bottom: 8px; align-items: center; }
+.de-day-label { font-size: 11px; color: var(--text-muted); }
+.de-day-input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 8px; border-radius: 4px; font-size: 12px; width: 100%; text-align: center; }
+.de-day-input:focus { outline: none; border-color: var(--blue-light); }
+.de-day-headers { display: grid; grid-template-columns: 60px repeat(7, 1fr); gap: 8px; margin-bottom: 4px; }
+.de-day-headers span { font-size: 10px; color: var(--text-dim); text-align: center; }
+
+.meal-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+.meal-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.meal-card-title { font-size: 12px; font-weight: 600; }
+.meal-remove { background: none; border: none; color: var(--red); cursor: pointer; font-size: 14px; }
+
+.photo-upload-area { border: 2px dashed var(--border); border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; transition: border-color .15s; margin-bottom: 10px; }
+.photo-upload-area:hover { border-color: var(--blue-light); }
+.photo-upload-area input { display: none; }
+.photo-preview-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.photo-preview-item { position: relative; }
+.photo-preview-item img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+.photo-preview-item .remove-photo { position: absolute; top: -6px; right: -6px; background: var(--red); color: #fff; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; border: none; }
+
+.saved-entries { margin-top: 16px; }
+.saved-entry { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+.saved-entry-info { font-size: 12px; }
+.saved-entry-info strong { color: var(--text); }
+.saved-entry-info span { color: var(--text-muted); font-size: 11px; margin-left: 8px; }
+.saved-entry-actions { display: flex; gap: 6px; }
+
+.rating-group { display: flex; gap: 8px; margin-top: 6px; }
+.rating-btn { width: 36px; height: 36px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted); cursor: pointer; font-size: 13px; transition: all .15s; }
+.rating-btn.selected { border-color: var(--blue-light); background: rgba(31,111,235,.2); color: var(--blue-light); font-weight: 700; }
+
+.import-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 20px; text-align: center; }
+.import-zone input { display: none; }
+.export-preview { background: var(--surface2); border-radius: 6px; padding: 12px; font-size: 11px; color: var(--text-muted); font-family: monospace; max-height: 160px; overflow-y: auto; white-space: pre-wrap; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <h3>⚽ Beslenme Takip</h3>
+    <p>Hayali FC · Hafta 4</p>
+  </div>
+  <div class="sidebar-section">Raporlar</div>
+  <div class="nav-item active" onclick="showPage('team')">
+    <span class="nav-icon">📊</span>
+    <span class="nav-label">Takım Durumu</span>
+  </div>
+  <div class="nav-item" onclick="showPage('individual')">
+    <span class="nav-icon">👤</span>
+    <span class="nav-label">Bireysel Oyuncu</span>
+  </div>
+  <div class="nav-item" onclick="showPage('intervention')">
+    <span class="nav-icon">⚠️</span>
+    <span class="nav-label">Müdahale Gerektiren</span>
+  </div>
+  <div class="sidebar-section">Veri Girişi</div>
+  <div class="nav-item" onclick="showPage('dataentry')">
+    <span class="nav-icon">📝</span>
+    <span class="nav-label">Sporcu Veri Girişi</span>
+  </div>
+  <div class="sidebar-section" style="margin-top:auto">Sistem</div>
+  <div class="nav-item" style="color:var(--text-dim); cursor:default">
+    <span class="nav-icon">📅</span>
+    <span class="nav-label">Pazar Raporu</span>
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <h2 id="page-title">Takım Durumu Raporu</h2>
+    <div class="topbar-right">
+      <span class="badge alert" id="alert-count">⚠ 4 oyuncu müdahale</span>
+      <span class="badge">25 oyuncu</span>
+      <span class="week-label">Hafta 4 · Gün 5</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- TEAM PAGE -->
+    <div class="page active" id="page-team">
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Takım Ort. Enerji Dengesi</div>
+          <div class="kpi-value red" id="kpi-balance">-320 kcal</div>
+          <div class="kpi-sub">CHO kısıt dönemi · hedef: negatif</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Ortalama Vücut Yağ %</div>
+          <div class="kpi-value blue" id="kpi-fat">12.4%</div>
+          <div class="kpi-sub">Hafta başı: 12.8% · ↓ 0.4pp</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Hooper Skoru (Ort.)</div>
+          <div class="kpi-value yellow" id="kpi-hooper">14.2 / 28</div>
+          <div class="kpi-sub">Kritik eşik: 20 · İyi aralıkta</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">sRPE × Süre (Ort.)</div>
+          <div class="kpi-value green" id="kpi-load">1,840 AU</div>
+          <div class="kpi-sub">Hafta 3 ort: 1,540 AU · +19.5%</div>
+        </div>
+      </div>
+
+      <!-- Energy triple chart + BIA -->
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">⚡ Enerji Dengesi — Haftalık Trend <span>Alınan · Harcanan · Denge</span></div>
+          <div class="chart-wrap tall"><canvas id="chart-energy-team"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🏃 BIA Trend — Vücut Kompozisyonu <span>Yağ % · Kas Kütlesi</span></div>
+          <div class="chart-wrap tall"><canvas id="chart-bia-team"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Hooper + sRPE + Hydration -->
+      <div class="grid3">
+        <div class="card">
+          <div class="card-title">🧠 Hooper Wellness İndeksi</div>
+          <div class="chart-wrap"><canvas id="chart-hooper-team"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">💪 Antrenman Yükü (sRPE × Süre)</div>
+          <div class="chart-wrap"><canvas id="chart-load-team"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">💧 Hidrasyon Trendi</div>
+          <div class="chart-wrap"><canvas id="chart-hydration-team"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Positional norms -->
+      <div class="card">
+        <div class="card-title">📐 Mevki Bazlı Vücut Yağ % — Takım vs Normlar</div>
+        <div class="norm-legend">
+          <div class="norm-legend-item"><div class="norm-dot" style="background:#1f6feb"></div> Popülasyon normu (elite)</div>
+          <div class="norm-legend-item"><div class="norm-dot" style="background:#3fb950"></div> Takım hedefi</div>
+          <div class="norm-legend-item"><div class="norm-dot" style="background:#f78166; border-radius:50%"></div> Mevcut takım ortalaması</div>
+        </div>
+        <div class="chart-wrap tall"><canvas id="chart-norms"></canvas></div>
+      </div>
+    </div>
+
+    <!-- INDIVIDUAL PAGE -->
+    <div class="page" id="page-individual">
+      <div class="player-selector">
+        <label>Oyuncu Seç</label>
+        <div class="player-select-row">
+          <select id="player-select" onchange="updateIndividual()">
+          </select>
+        </div>
+      </div>
+
+      <div class="player-profile" id="player-profile-card">
+        <div class="player-avatar" id="pav">K</div>
+        <div class="player-info">
+          <h3 id="pname">Ahmet Yılmaz</h3>
+          <p id="ppos">Kaleci · #1</p>
+        </div>
+        <div class="stat-mini">
+          <div class="val" id="p-weight">82 kg</div>
+          <div class="lab">Ağırlık</div>
+        </div>
+        <div class="stat-mini">
+          <div class="val" id="p-fat" style="color:var(--blue-light)">11.2%</div>
+          <div class="lab">Yağ %</div>
+        </div>
+        <div class="stat-mini">
+          <div class="val" id="p-muscle" style="color:var(--green)">72.8 kg</div>
+          <div class="lab">Kas Kütlesi</div>
+        </div>
+        <div class="stat-mini">
+          <div class="val" id="p-hooper" style="color:var(--yellow)">12</div>
+          <div class="lab">Hooper</div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">⚡ Bireysel Enerji Dengesi <span>Alınan · TEE · Denge</span></div>
+          <div class="chart-wrap tall"><canvas id="chart-energy-ind"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📊 BIA + Hidrasyon Trend</div>
+          <div class="chart-wrap tall"><canvas id="chart-bia-ind"></canvas></div>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="card">
+          <div class="card-title">🧠 Hooper Skoru (4 Alt Ölçek)</div>
+          <div class="hooper-row" id="hooper-breakdown">
+            <div class="hooper-item low"><div class="h-score">2</div><div class="h-label">Uyku</div></div>
+            <div class="hooper-item low"><div class="h-score">3</div><div class="h-label">Yorgunluk</div></div>
+            <div class="hooper-item mid"><div class="h-score">3</div><div class="h-label">Stres</div></div>
+            <div class="hooper-item low"><div class="h-score">2</div><div class="h-label">Kas Ağrısı</div></div>
+          </div>
+          <div style="margin-top:10px"><div class="chart-wrap" style="height:140px"><canvas id="chart-hooper-ind"></canvas></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">💪 Antrenman Yükü + sRPE</div>
+          <div class="chart-wrap"><canvas id="chart-load-ind"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🥗 CHO / Protein Alım</div>
+          <div class="chart-wrap"><canvas id="chart-macro-ind"></canvas></div>
+        </div>
+      </div>
+
+      <!-- VS Team comparison -->
+      <div class="card">
+        <div class="card-title">⚖️ Oyuncu vs Takım Ortalaması — Temel Metrikler</div>
+        <div class="chart-wrap"><canvas id="chart-compare-ind"></canvas></div>
+      </div>
+    </div>
+
+    <!-- DATA ENTRY PAGE -->
+    <div class="page" id="page-dataentry">
+      <div class="de-header">
+        <div class="player-selector" style="margin:0;flex:1">
+          <label>Sporcu Seç</label>
+          <div class="player-select-row">
+            <select id="de-player-select" class="form-select" onchange="switchDePlayer()" style="max-width:360px"></select>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+          <button class="btn btn-success" onclick="exportData()">⬇ JSON Dışa Aktar</button>
+          <label class="btn btn-outline" style="cursor:pointer">📂 JSON İçe Aktar<input type="file" accept=".json" id="import-file" onchange="importData(this)" style="display:none"></label>
+          <button class="btn btn-primary" onclick="saveCurrentEntry()">💾 Kaydet</button>
+        </div>
+      </div>
+      <div id="de-status" style="font-size:12px;color:var(--green);margin-bottom:12px;min-height:18px"></div>
+
+      <div class="de-tabs">
+        <div class="de-tab active" onclick="switchDeTab('beslenme',this)">🥗 Beslenme Programı</div>
+        <div class="de-tab" onclick="switchDeTab('enerji',this)">⚡ Enerji (Alınan/Harcanan)</div>
+        <div class="de-tab" onclick="switchDeTab('ogunler',this)">🍽 Öğünler</div>
+        <div class="de-tab" onclick="switchDeTab('saglik',this)">❤️ Sağlık & İştah</div>
+        <div class="de-tab" onclick="switchDeTab('ozel',this)">📋 Özel Durumlar</div>
+      </div>
+
+      <!-- BESLENME PROGRAMI -->
+      <div class="de-panel active" id="dep-beslenme">
+        <div class="card">
+          <div class="card-title">🥗 Beslenme Programı</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Tarih</label>
+              <input type="date" class="form-input" id="de-bes-tarih">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Hafta / Dönem</label>
+              <select class="form-select" id="de-bes-hafta">
+                <option>Hafta 4 — Genel Hazırlık</option>
+                <option>Hafta 5 — Özel Hazırlık</option>
+                <option>Hafta 6 — Özel Hazırlık</option>
+                <option>Hafta 7 — Yoğunlaştırma</option>
+                <option>Maç Haftası</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Program Türü</label>
+              <select class="form-select" id="de-bes-tur">
+                <option>Standart Beslenme</option>
+                <option>CHO Kısıtlı</option>
+                <option>CHO Yükleme</option>
+                <option>Maç Öncesi Protokol</option>
+                <option>Toparlanma Protokolü</option>
+                <option>NaHCO₃ Protokolü</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">CHO Hedef (g/kg)</label>
+              <input type="number" class="form-input" id="de-bes-cho" placeholder="6.0" step="0.1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Protein Hedef (g/kg)</label>
+              <input type="number" class="form-input" id="de-bes-pro" placeholder="2.0" step="0.1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Yağ Hedef (g/kg)</label>
+              <input type="number" class="form-input" id="de-bes-fat" placeholder="1.2" step="0.1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Kalori Hedef (kcal)</label>
+              <input type="number" class="form-input" id="de-bes-kcal" placeholder="3200" step="50">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Suplementler</label>
+            <input type="text" class="form-input" id="de-bes-sup" placeholder="Kreatin 5g/gün · NaHCO₃ 0.3 g/kg (Sal) · Kafein 3 mg/kg">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notlar</label>
+            <textarea class="form-textarea" id="de-bes-not" placeholder="GI hassasiyeti, tercihler, özel kısıtlar vb."></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="saveBeslenme()">💾 Kaydet</button>
+        </div>
+        <div class="saved-entries" id="bes-saved"></div>
+      </div>
+
+      <!-- ENERJİ -->
+      <div class="de-panel" id="dep-enerji">
+        <div class="card">
+          <div class="card-title">⚡ Günlük Enerji Verisi <span>7 günlük haftalık giriş</span></div>
+          <div class="form-row" style="margin-bottom:12px">
+            <div class="form-group">
+              <label class="form-label">Hafta Başlangıç Tarihi</label>
+              <input type="date" class="form-input" id="de-en-start">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vücut Ağırlığı (kg)</label>
+              <input type="number" class="form-input" id="de-en-kilo" placeholder="82.5" step="0.1">
+            </div>
+          </div>
+          <div class="de-day-headers">
+            <span>Metrik</span><span>Pzt</span><span>Sal</span><span>Çar</span><span>Per</span><span>Cum</span><span>Cmt</span><span>Paz</span>
+          </div>
+          <div class="de-day-row"><span class="de-day-label">Alınan kcal</span>
+            <input class="de-day-input" type="number" id="en-al-0" placeholder="3100">
+            <input class="de-day-input" type="number" id="en-al-1" placeholder="3200">
+            <input class="de-day-input" type="number" id="en-al-2" placeholder="3100">
+            <input class="de-day-input" type="number" id="en-al-3" placeholder="2900">
+            <input class="de-day-input" type="number" id="en-al-4" placeholder="3300">
+            <input class="de-day-input" type="number" id="en-al-5" placeholder="2800">
+            <input class="de-day-input" type="number" id="en-al-6" placeholder="2600">
+          </div>
+          <div class="de-day-row"><span class="de-day-label">TEE kcal</span>
+            <input class="de-day-input" type="number" id="en-tee-0" placeholder="3400">
+            <input class="de-day-input" type="number" id="en-tee-1" placeholder="3200">
+            <input class="de-day-input" type="number" id="en-tee-2" placeholder="3500">
+            <input class="de-day-input" type="number" id="en-tee-3" placeholder="3300">
+            <input class="de-day-input" type="number" id="en-tee-4" placeholder="3600">
+            <input class="de-day-input" type="number" id="en-tee-5" placeholder="3400">
+            <input class="de-day-input" type="number" id="en-tee-6" placeholder="2200">
+          </div>
+          <div class="de-day-row"><span class="de-day-label">sRPE (1-10)</span>
+            <input class="de-day-input" type="number" id="en-rpe-0" placeholder="6.5" step="0.5">
+            <input class="de-day-input" type="number" id="en-rpe-1" placeholder="5.0" step="0.5">
+            <input class="de-day-input" type="number" id="en-rpe-2" placeholder="7.0" step="0.5">
+            <input class="de-day-input" type="number" id="en-rpe-3" placeholder="8.0" step="0.5">
+            <input class="de-day-input" type="number" id="en-rpe-4" placeholder="6.0" step="0.5">
+            <input class="de-day-input" type="number" id="en-rpe-5" placeholder="7.5" step="0.5">
+            <input class="de-day-input" type="number" id="en-rpe-6" placeholder="3.0" step="0.5">
+          </div>
+          <div class="de-day-row"><span class="de-day-label">Hidrasyon ml</span>
+            <input class="de-day-input" type="number" id="en-hid-0" placeholder="2800">
+            <input class="de-day-input" type="number" id="en-hid-1" placeholder="3200">
+            <input class="de-day-input" type="number" id="en-hid-2" placeholder="2900">
+            <input class="de-day-input" type="number" id="en-hid-3" placeholder="3100">
+            <input class="de-day-input" type="number" id="en-hid-4" placeholder="3400">
+            <input class="de-day-input" type="number" id="en-hid-5" placeholder="3600">
+            <input class="de-day-input" type="number" id="en-hid-6" placeholder="2200">
+          </div>
+          <div class="de-day-row"><span class="de-day-label">CHO g/kg</span>
+            <input class="de-day-input" type="number" id="en-cho-0" placeholder="6.0" step="0.1">
+            <input class="de-day-input" type="number" id="en-cho-1" placeholder="5.5" step="0.1">
+            <input class="de-day-input" type="number" id="en-cho-2" placeholder="6.5" step="0.1">
+            <input class="de-day-input" type="number" id="en-cho-3" placeholder="7.0" step="0.1">
+            <input class="de-day-input" type="number" id="en-cho-4" placeholder="6.0" step="0.1">
+            <input class="de-day-input" type="number" id="en-cho-5" placeholder="5.0" step="0.1">
+            <input class="de-day-input" type="number" id="en-cho-6" placeholder="4.5" step="0.1">
+          </div>
+          <div class="de-day-row"><span class="de-day-label">Protein g/kg</span>
+            <input class="de-day-input" type="number" id="en-pro-0" placeholder="2.0" step="0.1">
+            <input class="de-day-input" type="number" id="en-pro-1" placeholder="2.2" step="0.1">
+            <input class="de-day-input" type="number" id="en-pro-2" placeholder="2.0" step="0.1">
+            <input class="de-day-input" type="number" id="en-pro-3" placeholder="2.4" step="0.1">
+            <input class="de-day-input" type="number" id="en-pro-4" placeholder="2.0" step="0.1">
+            <input class="de-day-input" type="number" id="en-pro-5" placeholder="2.2" step="0.1">
+            <input class="de-day-input" type="number" id="en-pro-6" placeholder="2.0" step="0.1">
+          </div>
+          <div style="margin-top:14px">
+            <button class="btn btn-primary" onclick="saveEnerji()">💾 Kaydet</button>
+          </div>
+        </div>
+        <div class="saved-entries" id="en-saved"></div>
+      </div>
+
+      <!-- ÖĞÜNLER -->
+      <div class="de-panel" id="dep-ogunler">
+        <div class="card">
+          <div class="card-title">🍽 Öğün Kaydı & Tabak Fotoğrafı</div>
+          <div class="form-row" style="margin-bottom:12px">
+            <div class="form-group">
+              <label class="form-label">Tarih</label>
+              <input type="date" class="form-input" id="de-og-tarih">
+            </div>
+          </div>
+          <div id="meal-list"></div>
+          <button class="btn btn-outline" onclick="addMeal()" style="margin-bottom:14px">+ Öğün Ekle</button>
+
+          <div class="form-group">
+            <label class="form-label">📸 Tabak Fotoğrafı</label>
+            <div class="photo-upload-area" onclick="document.getElementById('plate-photo').click()">
+              <div style="font-size:28px">📷</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Tabak fotoğrafı yükle (tıkla)</div>
+              <div style="font-size:11px;color:var(--text-dim);margin-top:2px">JPG, PNG · Görsel değerlendirme için</div>
+              <input type="file" id="plate-photo" accept="image/*" multiple onchange="previewPhotos(this)">
+            </div>
+            <div class="photo-preview-row" id="photo-preview-row"></div>
+            <div class="form-group" style="margin-top:8px">
+              <label class="form-label">Görsel Değerlendirme Notu</label>
+              <textarea class="form-textarea" id="de-og-foto-not" placeholder="Porsiyon tahmini, besin kalitesi, eksik besin grubu vb." style="min-height:70px"></textarea>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="saveOgunler()">💾 Kaydet</button>
+        </div>
+        <div class="saved-entries" id="og-saved"></div>
+      </div>
+
+      <!-- SAĞLIK & İŞTAH -->
+      <div class="de-panel" id="dep-saglik">
+        <div class="card">
+          <div class="card-title">❤️ Sağlık, İştah & Wellness</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Tarih</label>
+              <input type="date" class="form-input" id="de-sag-tarih">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div>
+              <div class="form-group">
+                <label class="form-label">Hooper — Uyku (1=çok iyi, 7=çok kötü)</label>
+                <div class="rating-group" id="hoop-uyku"></div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Hooper — Yorgunluk (1-7)</label>
+                <div class="rating-group" id="hoop-yor"></div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Hooper — Stres (1-7)</label>
+                <div class="rating-group" id="hoop-str"></div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Hooper — Kas Ağrısı (1-7)</label>
+                <div class="rating-group" id="hoop-kas"></div>
+              </div>
+            </div>
+            <div>
+              <div class="form-group">
+                <label class="form-label">İştah Skoru (1=hiç yok → 10=çok iyi)</label>
+                <div class="rating-group" id="ishtah-rating"></div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Toparlanma Hissi (1-10)</label>
+                <div class="rating-group" id="topar-rating"></div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Ağırlık (kg)</label>
+                <input type="number" class="form-input" id="de-sag-agirlik" placeholder="82.3" step="0.1">
+              </div>
+              <div class="form-group">
+                <label class="form-label">İdrar Rengi (1=açık → 8=koyu)</label>
+                <div class="rating-group" id="hidra-rating"></div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sağlık Şikayetleri</label>
+            <input type="text" class="form-input" id="de-sag-sikayet" placeholder="GI şikayeti, baş ağrısı, kas krampı, bulantı vb.">
+          </div>
+          <div class="form-group">
+            <label class="form-label">İştah Notları</label>
+            <textarea class="form-textarea" id="de-sag-ishtah-not" placeholder="Yemek yemek istemiyor mu? Öğün atlıyor mu?" style="min-height:70px"></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="saveSaglik()">💾 Kaydet</button>
+        </div>
+        <div class="saved-entries" id="sag-saved"></div>
+      </div>
+
+      <!-- ÖZEL DURUMLAR -->
+      <div class="de-panel" id="dep-ozel">
+        <div class="card">
+          <div class="card-title">📋 Özel Durumlar & Diyetisyen Notları</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Tarih</label>
+              <input type="date" class="form-input" id="de-oz-tarih">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Kategori</label>
+              <select class="form-select" id="de-oz-kategori">
+                <option>Müdahale Notu</option>
+                <option>Sakatlık / Toparlanma</option>
+                <option>Psikolojik Durum</option>
+                <option>Seyahat / Kampanya</option>
+                <option>Özel Protokol</option>
+                <option>Kilo Yönetimi</option>
+                <option>Diğer</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Öncelik</label>
+              <select class="form-select" id="de-oz-oncelik">
+                <option value="low">Düşük — Bilgi amaçlı</option>
+                <option value="mid">Orta — Yakın takip</option>
+                <option value="high">Yüksek — Hemen müdahale</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Başlık</label>
+            <input type="text" class="form-input" id="de-oz-baslik" placeholder="Kısa açıklayıcı başlık">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Detay / Açıklama</label>
+            <textarea class="form-textarea" id="de-oz-detay" placeholder="Durumu, yapılan müdahaleyi ve sonraki adımları açıklayın..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Eylem Planı</label>
+            <textarea class="form-textarea" id="de-oz-eylem" placeholder="1. Beslenme protokolü güncelle&#10;2. Teknik ekip ile görüş&#10;3. ..." style="min-height:70px"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Takip Tarihi</label>
+            <input type="date" class="form-input" id="de-oz-takip">
+          </div>
+          <button class="btn btn-primary" onclick="saveOzel()">💾 Kaydet</button>
+        </div>
+        <div class="saved-entries" id="oz-saved"></div>
+      </div>
+    </div>
+
+    <!-- INTERVENTION PAGE -->
+    <div class="page" id="page-intervention">
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Acil Müdahale</div>
+          <div class="kpi-value red">2 oyuncu</div>
+          <div class="kpi-sub">Yüksek Hooper (&gt;20)</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Yakın Takip</div>
+          <div class="kpi-value yellow">2 oyuncu</div>
+          <div class="kpi-sub">Enerji dengesi kritik</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">BIA Anomalisi</div>
+          <div class="kpi-value yellow">1 oyuncu</div>
+          <div class="kpi-sub">Yağ % &gt; %16</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Şikayet Bildirimi</div>
+          <div class="kpi-value blue">3 oyuncu</div>
+          <div class="kpi-sub">GI şikayet, yorgunluk</div>
+        </div>
+      </div>
+
+      <div class="alert-pill">
+        <span class="icon">🔴</span>
+        <div class="msg"><strong>Acil:</strong> Mehmet Demir — Hooper 23/28, son 3 gün %12 performans düşüşü. Yük azaltımı önerisi.</div>
+      </div>
+      <div class="alert-pill">
+        <span class="icon">🔴</span>
+        <div class="msg"><strong>Acil:</strong> Emre Şahin — Enerji dengesi -780 kcal/gün (3 gün üst üste). Kas kütlesi ↓ 0.8 kg. CHO protokolü revize.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">⚠️ Müdahale Gerektiren Oyuncular — Detaylı Liste</div>
+        <table class="int-table">
+          <thead>
+            <tr>
+              <th>Oyuncu</th>
+              <th>Mevki</th>
+              <th>Öncelik</th>
+              <th>Hooper</th>
+              <th>Enerji Dengesi</th>
+              <th>Vücut Yağ %</th>
+              <th>Neden</th>
+              <th>Öneri</th>
+            </tr>
+          </thead>
+          <tbody id="int-table-body"></tbody>
+        </table>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">📉 Müdahale Grubu — Enerji Dengesi</div>
+          <div class="chart-wrap"><canvas id="chart-int-energy"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🧠 Müdahale Grubu — Hooper Trend</div>
+          <div class="chart-wrap"><canvas id="chart-int-hooper"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- content -->
+</div><!-- main -->
+
+<script>
+// ===================== MOCK DATA =====================
+const positions = ['GK','GK','GK','CB','CB','CB','CB','RB','LB','LB','DM','DM','CM','CM','CM','AM','AM','RW','LW','CF','CF','CF','RB','LB','DM'];
+const posLabels = {'GK':'Kaleci','CB':'Stoper','RB':'Sağ Bek','LB':'Sol Bek','DM':'Def. Orta','CM':'Merkez Orta','AM':'Atk. Orta','RW':'Sağ Kanat','LW':'Sol Kanat','CF':'Santrafor'};
+
+// Çok uluslu kadro: Türk, Brezilyalı, Afrikalı, Balkan
+const names = [
+  'Ahmet Yılmaz','Diego Ferreira','Ivan Petrović',       // GK x3
+  'Murat Kaya','Hasan Çelik','Nikola Marković','Moussa Diallo', // CB x4
+  'Mustafa Şahin','Emre Kurt','Ozan Arslan',             // RB, LB x2
+  'Ibrahima Koné','Burak Öztürk',                        // DM x2
+  'Serkan Polat','Felipe Santos','Furkan Aydın',         // CM x3
+  'Mehmet Demir','Berkay Demir',                         // AM x2  ← idx15 müdahale
+  'Emre Şahin','Carlos Oliveira',                        // RW, LW  ← idx17 müdahale
+  'Cheikh Ndiaye','Can Yıldız','Utku Tekin',             // CF x3
+  'Ferhat Bulut','Çağlar Sözen','Tolga Arslan'           // RB, LB, DM
+];
+
+const days = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+
+// Generate player base stats
+function rand(min, max) { return Math.random() * (max - min) + min; }
+function randInt(min, max) { return Math.floor(rand(min, max+1)); }
+
+const players = names.map((name, i) => {
+  const pos = positions[i];
+  const isFwd = ['CF','RW','LW'].includes(pos);
+  const isDef = ['CB','RB','LB','GK'].includes(pos);
+  const baseFat = isDef ? rand(10, 14) : (isFwd ? rand(8, 12) : rand(9, 13));
+  const weight = isDef ? rand(78, 92) : (isFwd ? rand(70, 82) : rand(72, 84));
+  const height = rand(174, 194);
+  const age = randInt(19, 33);
+  const bmr = 88.4 + 13.4 * weight + 4.8 * height - 5.7 * age;
+
+  // Intervention flags
+  const isIntervention = [15, 17].includes(i); // Mehmet Demir, Emre Şahin
+
+  const dailyData = days.map((d, di) => {
+    const trainingDay = di < 6;
+    const sessions = (di === 0 || di === 2 || di === 4) ? 3 : (di === 6 ? 1 : 2);
+    const duration = sessions === 3 ? (di === 3 ? 240 : 210) : (di === 1 ? 170 : (di === 4 ? 185 : (di === 5 ? 265 : 50)));
+    const kcalEx = trainingDay ? duration * rand(7, 10) : 50 * 5;
+    const consumed = isIntervention ? bmr + kcalEx - rand(600, 900) : bmr + kcalEx - rand(100, 450);
+    const tee = bmr + kcalEx;
+    const balance = consumed - tee;
+    const sRPE = trainingDay ? rand(5, 8) : 3;
+    const load = sRPE * duration;
+    const hooper = isIntervention ? rand(18, 26) : rand(7, 16);
+    const hydration = rand(2200, 3600);
+    const cho = sessions === 3 ? rand(5.5, 7.5) : rand(4.5, 6.5); // CHO kısıt döneminde düşük
+    const protein = rand(1.8, 2.4);
+
+    return { duration, kcalEx, consumed: Math.round(consumed), tee: Math.round(tee), balance: Math.round(balance),
+             sRPE: parseFloat(sRPE.toFixed(1)), load: Math.round(load), hooper: Math.round(hooper),
+             hydration: Math.round(hydration), cho: parseFloat(cho.toFixed(1)), protein: parseFloat(protein.toFixed(1)) };
+  });
+
+  const latestBIA = {
+    fat: parseFloat((baseFat + rand(-0.5, 0.5)).toFixed(1)),
+    lean: parseFloat((weight * (1 - baseFat/100)).toFixed(1))
+  };
+
+  const hoopers = { sleep: randInt(1, 4), fatigue: isIntervention ? randInt(4,6) : randInt(1,4),
+                    stress: isIntervention ? randInt(4,6) : randInt(1,3), muscle: isIntervention ? randInt(4,6) : randInt(1,4) };
+  const totalHooper = hoopers.sleep + hoopers.fatigue + hoopers.stress + hoopers.muscle;
+
+  return { id: i, name, pos, posLabel: posLabels[pos]||pos, jersey: i+1, weight: parseFloat(weight.toFixed(1)),
+           height: parseFloat(height.toFixed(1)), age, bmr: Math.round(bmr), baseFat: parseFloat(baseFat.toFixed(1)),
+           latestBIA, hoopers, totalHooper, dailyData, isIntervention };
+});
+
+// Team averages per day
+const teamAvg = days.map((d, di) => {
+  const vals = players.map(p => p.dailyData[di]);
+  const avg = arr => arr.reduce((a,b) => a+b, 0) / arr.length;
+  return {
+    consumed: Math.round(avg(vals.map(v => v.consumed))),
+    tee: Math.round(avg(vals.map(v => v.tee))),
+    balance: Math.round(avg(vals.map(v => v.balance))),
+    load: Math.round(avg(vals.map(v => v.load))),
+    hooper: parseFloat(avg(vals.map(v => v.hooper)).toFixed(1)),
+    hydration: Math.round(avg(vals.map(v => v.hydration))),
+  };
+});
+
+// ===================== CHART DEFAULTS =====================
+const C = Chart.defaults;
+C.color = '#8b949e';
+C.font.family = "'Segoe UI', system-ui, sans-serif";
+C.font.size = 11;
+
+const gridOpts = { color: 'rgba(48,54,61,0.8)', drawBorder: false };
+const tickOpts = { color: '#6e7681' };
+
+function baseOpts(extras = {}) {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#8b949e', font: { size: 10 }, boxWidth: 10, padding: 12 } }, tooltip: { backgroundColor: '#161b22', borderColor: '#30363d', borderWidth: 1, titleColor: '#e6edf3', bodyColor: '#8b949e' } },
+    scales: {
+      x: { grid: gridOpts, ticks: tickOpts },
+      y: { grid: gridOpts, ticks: tickOpts },
+      ...extras
+    }
+  };
+}
+
+let charts = {};
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+// ===================== TEAM PAGE CHARTS =====================
+function buildTeamCharts() {
+  // Energy triple
+  destroyChart('energy-team');
+  const ctxE = document.getElementById('chart-energy-team').getContext('2d');
+  charts['energy-team'] = new Chart(ctxE, {
+    type: 'bar',
+    data: {
+      labels: days,
+      datasets: [
+        { label: 'Alınan (kcal)', data: teamAvg.map(d => d.consumed), backgroundColor: 'rgba(56,139,253,0.6)', borderColor: '#388bfd', borderWidth: 1 },
+        { label: 'Harcanan TEE (kcal)', data: teamAvg.map(d => d.tee), backgroundColor: 'rgba(247,129,102,0.6)', borderColor: '#f78166', borderWidth: 1 },
+        { label: 'Denge (kcal)', data: teamAvg.map(d => d.balance), type: 'line', borderColor: '#3fb950', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 4, yAxisID: 'y2' }
+      ]
+    },
+    options: { ...baseOpts({ y2: { position:'right', grid:{drawOnChartArea:false}, ticks:tickOpts } }), responsive: true, maintainAspectRatio: false }
+  });
+
+  // BIA
+  destroyChart('bia-team');
+  const ctxB = document.getElementById('chart-bia-team').getContext('2d');
+  const biaWeek = [0,1,2,3,4,5,6].map(di => {
+    const avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
+    const fats = players.map(p => p.baseFat + (di - 3.5) * 0.08 + rand(-0.1,0.1));
+    const leans = players.map(p => p.latestBIA.lean + (di - 3.5) * (-0.05) + rand(-0.1,0.1));
+    return { fat: parseFloat(avg(fats).toFixed(2)), lean: parseFloat(avg(leans).toFixed(2)) };
+  });
+  charts['bia-team'] = new Chart(ctxB, {
+    data: {
+      labels: days,
+      datasets: [
+        { type:'bar', label:'Yağ % (Ort.)', data: biaWeek.map(d=>d.fat), backgroundColor:'rgba(248,81,73,0.5)', borderColor:'#f85149', borderWidth:1, yAxisID:'y' },
+        { type:'line', label:'Kas Kütlesi kg (Ort.)', data: biaWeek.map(d=>d.lean), borderColor:'#3fb950', backgroundColor:'rgba(63,185,80,0.1)', borderWidth:2, fill:true, pointRadius:3, yAxisID:'y2' }
+      ]
+    },
+    options: { ...baseOpts({ y2:{position:'right',grid:{drawOnChartArea:false},ticks:tickOpts} }), responsive:true, maintainAspectRatio:false }
+  });
+
+  // Hooper
+  destroyChart('hooper-team');
+  const ctxH = document.getElementById('chart-hooper-team').getContext('2d');
+  charts['hooper-team'] = new Chart(ctxH, {
+    type: 'line',
+    data: {
+      labels: days,
+      datasets: [
+        { label:'Hooper Ort.', data: teamAvg.map(d=>d.hooper), borderColor:'#d29922', backgroundColor:'rgba(210,153,34,0.15)', fill:true, borderWidth:2, pointRadius:3 },
+        { label:'Kritik Eşik (20)', data: days.map(()=>20), borderColor:'rgba(248,81,73,0.5)', borderDash:[5,5], pointRadius:0, borderWidth:1 }
+      ]
+    },
+    options: { ...baseOpts(), responsive:true, maintainAspectRatio:false }
+  });
+
+  // Load
+  destroyChart('load-team');
+  const ctxL = document.getElementById('chart-load-team').getContext('2d');
+  charts['load-team'] = new Chart(ctxL, {
+    type: 'bar',
+    data: {
+      labels: days,
+      datasets: [{ label:'Antrenman Yükü (AU)', data: teamAvg.map(d=>d.load), backgroundColor: days.map((d,i) => i===6 ? 'rgba(63,185,80,0.5)' : 'rgba(31,111,235,0.6)'), borderColor: days.map((d,i)=>i===6?'#3fb950':'#1f6feb'), borderWidth:1 }]
+    },
+    options: { ...baseOpts(), responsive:true, maintainAspectRatio:false }
+  });
+
+  // Hydration
+  destroyChart('hydration-team');
+  const ctxW = document.getElementById('chart-hydration-team').getContext('2d');
+  charts['hydration-team'] = new Chart(ctxW, {
+    type: 'line',
+    data: {
+      labels: days,
+      datasets: [
+        { label:'Hidrasyon (ml)', data: teamAvg.map(d=>d.hydration), borderColor:'#388bfd', backgroundColor:'rgba(56,139,253,0.1)', fill:true, borderWidth:2, pointRadius:3 },
+        { label:'Hedef (2500ml)', data: days.map(()=>2500), borderColor:'rgba(63,185,80,0.5)', borderDash:[5,5], pointRadius:0, borderWidth:1 }
+      ]
+    },
+    options: { ...baseOpts(), responsive:true, maintainAspectRatio:false }
+  });
+
+  // Norms
+  destroyChart('norms');
+  const ctxN = document.getElementById('chart-norms').getContext('2d');
+  const posGroups = ['GK','CB','RB','LB','DM','CM','AM','RW','LW','CF'];
+  const popNorms = { GK:11.5, CB:11.0, RB:10.5, LB:10.5, DM:10.0, CM:9.5, AM:9.0, RW:8.5, LW:8.5, CF:9.0 };
+  const teamTargets = { GK:10.0, CB:10.0, RB:9.5, LB:9.5, DM:9.0, CM:8.5, AM:8.5, RW:8.0, LW:8.0, CF:8.5 };
+  const teamCurrent = {};
+  posGroups.forEach(p => {
+    const pp = players.filter(pl => pl.pos===p);
+    if (pp.length) teamCurrent[p] = parseFloat((pp.reduce((a,b)=>a+b.baseFat,0)/pp.length).toFixed(1));
+    else teamCurrent[p] = popNorms[p];
+  });
+  charts['norms'] = new Chart(ctxN, {
+    data: {
+      labels: posGroups.map(p => posLabels[p]||p),
+      datasets: [
+        { type:'bar', label:'Popülasyon Normu (Elite)', data: posGroups.map(p=>popNorms[p]), backgroundColor:'rgba(31,111,235,0.4)', borderColor:'#1f6feb', borderWidth:1 },
+        { type:'bar', label:'Takım Hedefi', data: posGroups.map(p=>teamTargets[p]), backgroundColor:'rgba(63,185,80,0.4)', borderColor:'#3fb950', borderWidth:1 },
+        { type:'line', label:'Mevcut Takım Ort.', data: posGroups.map(p=>teamCurrent[p]||null), borderColor:'#f78166', backgroundColor:'rgba(247,129,102,0.2)', borderWidth:2, pointRadius:5, pointBackgroundColor:'#f78166' }
+      ]
+    },
+    options: { ...baseOpts(), responsive:true, maintainAspectRatio:false }
+  });
+}
+
+// ===================== INDIVIDUAL CHARTS =====================
+let currentPlayer = 0;
+
+function buildIndividualCharts(playerIdx) {
+  const p = players[playerIdx];
+  // Update profile card
+  document.getElementById('pav').textContent = p.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+  document.getElementById('pname').textContent = p.name;
+  document.getElementById('ppos').textContent = `${p.posLabel} · #${p.jersey}`;
+  document.getElementById('p-weight').textContent = `${p.weight} kg`;
+  document.getElementById('p-fat').textContent = `${p.latestBIA.fat}%`;
+  document.getElementById('p-muscle').textContent = `${p.latestBIA.lean} kg`;
+  document.getElementById('p-hooper').textContent = p.totalHooper;
+
+  // Hooper breakdown
+  const hNames = ['Uyku','Yorgunluk','Stres','Kas Ağrısı'];
+  const hVals = [p.hoopers.sleep, p.hoopers.fatigue, p.hoopers.stress, p.hoopers.muscle];
+  document.getElementById('hooper-breakdown').innerHTML = hNames.map((n, i) => {
+    const v = hVals[i]; const cls = v<=2?'low':v<=4?'mid':'high';
+    return `<div class="hooper-item ${cls}"><div class="h-score">${v}</div><div class="h-label">${n}</div></div>`;
+  }).join('');
+
+  // Energy individual
+  destroyChart('energy-ind');
+  const ctxEI = document.getElementById('chart-energy-ind').getContext('2d');
+  charts['energy-ind'] = new Chart(ctxEI, {
+    type:'bar',
+    data: {
+      labels: days,
+      datasets: [
+        { label:'Alınan (kcal)', data:p.dailyData.map(d=>d.consumed), backgroundColor:'rgba(56,139,253,0.6)', borderColor:'#388bfd', borderWidth:1 },
+        { label:'TEE (kcal)', data:p.dailyData.map(d=>d.tee), backgroundColor:'rgba(247,129,102,0.6)', borderColor:'#f78166', borderWidth:1 },
+        { label:'Denge', data:p.dailyData.map(d=>d.balance), type:'line', borderColor:'#3fb950', backgroundColor:'transparent', borderWidth:2, pointRadius:4, yAxisID:'y2' }
+      ]
+    },
+    options: { ...baseOpts({y2:{position:'right',grid:{drawOnChartArea:false},ticks:tickOpts}}), responsive:true, maintainAspectRatio:false }
+  });
+
+  // BIA + hydration
+  destroyChart('bia-ind');
+  const ctxBI = document.getElementById('chart-bia-ind').getContext('2d');
+  const biaD = days.map((d,i)=>({ fat: parseFloat((p.baseFat + (i-3.5)*0.1 + rand(-0.1,0.1)).toFixed(1)), lean: parseFloat((p.latestBIA.lean + (i-3.5)*(-0.07)).toFixed(1)) }));
+  charts['bia-ind'] = new Chart(ctxBI, {
+    data: {
+      labels: days,
+      datasets: [
+        { type:'line', label:'Yağ %', data:biaD.map(d=>d.fat), borderColor:'#f85149', backgroundColor:'rgba(248,81,73,0.1)', fill:true, borderWidth:2, pointRadius:3, yAxisID:'y' },
+        { type:'bar', label:'Hidrasyon (ml)', data:p.dailyData.map(d=>d.hydration), backgroundColor:'rgba(56,139,253,0.3)', borderColor:'#388bfd', borderWidth:1, yAxisID:'y2' }
+      ]
+    },
+    options: { ...baseOpts({y2:{position:'right',grid:{drawOnChartArea:false},ticks:tickOpts}}), responsive:true, maintainAspectRatio:false }
+  });
+
+  // Hooper trend
+  destroyChart('hooper-ind');
+  const ctxHI = document.getElementById('chart-hooper-ind').getContext('2d');
+  charts['hooper-ind'] = new Chart(ctxHI, {
+    type:'line',
+    data: {
+      labels: days,
+      datasets: [{ label:'Hooper', data:p.dailyData.map(d=>d.hooper), borderColor:'#d29922', backgroundColor:'rgba(210,153,34,0.1)', fill:true, borderWidth:2, pointRadius:3 }]
+    },
+    options: { ...baseOpts(), responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }
+  });
+
+  // Load
+  destroyChart('load-ind');
+  const ctxLI = document.getElementById('chart-load-ind').getContext('2d');
+  charts['load-ind'] = new Chart(ctxLI, {
+    data: {
+      labels: days,
+      datasets: [
+        { type:'bar', label:'Yük (AU)', data:p.dailyData.map(d=>d.load), backgroundColor:'rgba(31,111,235,0.5)', borderColor:'#1f6feb', borderWidth:1 },
+        { type:'line', label:'sRPE', data:p.dailyData.map(d=>d.sRPE), borderColor:'#f78166', backgroundColor:'transparent', borderWidth:2, pointRadius:3, yAxisID:'y2' }
+      ]
+    },
+    options: { ...baseOpts({y2:{position:'right',grid:{drawOnChartArea:false},ticks:tickOpts}}), responsive:true, maintainAspectRatio:false }
+  });
+
+  // Macros
+  destroyChart('macro-ind');
+  const ctxM = document.getElementById('chart-macro-ind').getContext('2d');
+  charts['macro-ind'] = new Chart(ctxM, {
+    type:'bar',
+    data: {
+      labels: days,
+      datasets: [
+        { label:'CHO (g/kg)', data:p.dailyData.map(d=>d.cho), backgroundColor:'rgba(56,139,253,0.6)', borderColor:'#388bfd', borderWidth:1 },
+        { label:'Protein (g/kg)', data:p.dailyData.map(d=>d.protein), backgroundColor:'rgba(63,185,80,0.6)', borderColor:'#3fb950', borderWidth:1 }
+      ]
+    },
+    options: { ...baseOpts(), responsive:true, maintainAspectRatio:false }
+  });
+
+  // Compare vs team
+  destroyChart('compare-ind');
+  const ctxC = document.getElementById('chart-compare-ind').getContext('2d');
+  const teamFatAvg = parseFloat((players.reduce((a,b)=>a+b.baseFat,0)/players.length).toFixed(1));
+  const teamLeanAvg = parseFloat((players.reduce((a,b)=>a+b.latestBIA.lean,0)/players.length).toFixed(1));
+  const teamHooperAvg = parseFloat((players.reduce((a,b)=>a+b.totalHooper,0)/players.length).toFixed(1));
+  const teamLoadAvg = parseFloat((players.map(pl=>pl.dailyData.reduce((a,b)=>a+b.load,0)/7).reduce((a,b)=>a+b,0)/players.length).toFixed(0));
+  const pLoadAvg = parseFloat((p.dailyData.reduce((a,b)=>a+b.load,0)/7).toFixed(0));
+
+  charts['compare-ind'] = new Chart(ctxC, {
+    type:'radar',
+    data: {
+      labels:['Kas Kütlesi (norm.)', 'Hidrasyon', 'Wellness (ters)', 'Antrenman Yükü', 'CHO Uyum'],
+      datasets: [
+        { label: p.name, data:[
+            Math.min(100, p.latestBIA.lean/teamLeanAvg*100),
+            Math.min(100, p.dailyData[4].hydration/3600*100),
+            Math.min(100, (28-p.totalHooper)/28*100),
+            Math.min(100, pLoadAvg/teamLoadAvg*100),
+            Math.min(100, p.dailyData[2].cho/8*100)
+          ], borderColor:'#388bfd', backgroundColor:'rgba(56,139,253,0.2)', borderWidth:2, pointRadius:3
+        },
+        { label:'Takım Ortalaması', data:[100,75,70,100,65], borderColor:'rgba(63,185,80,0.6)', backgroundColor:'rgba(63,185,80,0.1)', borderWidth:1, borderDash:[4,4], pointRadius:2 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#8b949e',font:{size:10},boxWidth:10}}},
+      scales:{r:{grid:{color:'rgba(48,54,61,0.8)'},angleLines:{color:'rgba(48,54,61,0.8)'},ticks:{color:'#6e7681',backdropColor:'transparent',font:{size:9}},pointLabels:{color:'#8b949e',font:{size:10}},min:0,max:110}}
+    }
+  });
+}
+
+// ===================== INTERVENTION CHARTS =====================
+function buildInterventionCharts() {
+  const intPlayers = players.filter(p => p.isIntervention || p.totalHooper > 18 || p.dailyData.some(d=>d.balance < -600));
+
+  // Table
+  const tbody = document.getElementById('int-table-body');
+  const tableData = [
+    { name:'Mehmet Demir', pos:'Sağ Kanat', priority:'ACİL', hooper:23, balance:-520, fat:11.2, reason:'Hooper kritik + performans düşüşü', action:'Yük ↓30%, CHO ↑1 g/kg' },
+    { name:'Emre Şahin', pos:'Santrafor', priority:'ACİL', hooper:19, balance:-780, fat:10.8, reason:'Aşırı enerji açığı (3 gün)', action:'CHO kısıtı durdur, +500 kcal' },
+    { name:'Ferhat Bulut', pos:'Sağ Bek', priority:'TAKİP', hooper:16, balance:-430, fat:16.4, reason:'Yağ % yüksek (>%16)', action:'Beslenme günlüğü, BIA tekrar' },
+    { name:'Tolga Arslan', pos:'Def. Orta', priority:'TAKİP', hooper:15, balance:-380, fat:13.1, reason:'GI şikayeti (3 gün)', action:'NaHCO3 protokol gözlem, probiyotik' },
+  ];
+  tbody.innerHTML = tableData.map(r => `
+    <tr>
+      <td><strong>${r.name}</strong></td>
+      <td><span class="chip blue">${r.pos}</span></td>
+      <td><span class="chip ${r.priority==='ACİL'?'red':'yellow'}">${r.priority}</span></td>
+      <td style="color:${r.hooper>=20?'#f85149':r.hooper>=16?'#d29922':'#3fb950'}">${r.hooper}/28</td>
+      <td style="color:#f85149">${r.balance} kcal</td>
+      <td style="color:${r.fat>=16?'#f85149':r.fat>=14?'#d29922':'#3fb950'}">${r.fat}%</td>
+      <td style="color:#8b949e">${r.reason}</td>
+      <td style="color:#3fb950">${r.action}</td>
+    </tr>
+  `).join('');
+
+  // Energy
+  destroyChart('int-energy');
+  const ctxIE = document.getElementById('chart-int-energy').getContext('2d');
+  charts['int-energy'] = new Chart(ctxIE, {
+    type:'line',
+    data: {
+      labels: days,
+      datasets: tableData.slice(0,4).map((r, i) => ({
+        label: r.name.split(' ')[0],
+        data: players.find(p=>p.name.includes(r.name.split(' ')[0]))?.dailyData.map(d=>d.balance) || days.map(()=>-400+i*50),
+        borderColor: ['#f85149','#f78166','#d29922','#388bfd'][i],
+        backgroundColor:'transparent', borderWidth:2, pointRadius:3
+      }))
+    },
+    options: { ...baseOpts(), responsive:true, maintainAspectRatio:false }
+  });
+
+  // Hooper trend
+  destroyChart('int-hooper');
+  const ctxIH = document.getElementById('chart-int-hooper').getContext('2d');
+  charts['int-hooper'] = new Chart(ctxIH, {
+    type:'line',
+    data: {
+      labels: days,
+      datasets: [
+        ...tableData.slice(0,4).map((r, i) => ({
+          label: r.name.split(' ')[0],
+          data: days.map(()=>r.hooper + rand(-2,2)),
+          borderColor: ['#f85149','#f78166','#d29922','#388bfd'][i],
+          backgroundColor:'transparent', borderWidth:2, pointRadius:3
+        })),
+        { label:'Kritik Eşik', data: days.map(()=>20), borderColor:'rgba(248,81,73,0.4)', borderDash:[6,4], pointRadius:0, borderWidth:1 }
+      ]
+    },
+    options: { ...baseOpts(), responsive:true, maintainAspectRatio:false }
+  });
+}
+
+// ===================== NAVIGATION =====================
+const pageTitles = { team:'Takım Durumu Raporu', individual:'Bireysel Oyuncu Raporu', intervention:'Müdahale Gerektiren Oyuncular', dataentry:'Sporcu Veri Girişi' };
+let chartsBuilt = { team: false, individual: false, intervention: false, dataentry: false };
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('page-title').textContent = pageTitles[name] || name;
+
+  if (name === 'team' && !chartsBuilt.team) { buildTeamCharts(); chartsBuilt.team = true; }
+  if (name === 'individual' && !chartsBuilt.individual) { buildIndividualCharts(0); chartsBuilt.individual = true; }
+  if (name === 'intervention' && !chartsBuilt.intervention) { buildInterventionCharts(); chartsBuilt.intervention = true; }
+  if (name === 'dataentry' && !chartsBuilt.dataentry) { initDataEntry(); chartsBuilt.dataentry = true; }
+}
+
+function updateIndividual() {
+  const idx = parseInt(document.getElementById('player-select').value);
+  currentPlayer = idx;
+  buildIndividualCharts(idx);
+}
+
+// ===================== DATA ENTRY =====================
+// In-memory store: { playerIdx: { beslenme:[], enerji:[], ogunler:[], saglik:[], ozel:[] } }
+let entryData = {};
+let currentDePlayer = 0;
+let mealCount = 0;
+let activeDeTab = 'beslenme';
+const deRatings = { 'hoop-uyku':0, 'hoop-yor':0, 'hoop-str':0, 'hoop-kas':0, 'ishtah-rating':0, 'topar-rating':0, 'hidra-rating':0 };
+
+function getPlayerStore(idx) {
+  if (!entryData[idx]) entryData[idx] = { beslenme:[], enerji:[], ogunler:[], saglik:[], ozel:[] };
+  return entryData[idx];
+}
+
+function initDataEntry() {
+  // Populate de-player-select
+  const deSel = document.getElementById('de-player-select');
+  players.forEach((p, i) => {
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = `#${p.jersey} ${p.name} — ${p.posLabel}${p.isIntervention?' ⚠️':''}`;
+    deSel.appendChild(o);
+  });
+  // Build rating buttons
+  buildRatingBtns('hoop-uyku', 7);
+  buildRatingBtns('hoop-yor', 7);
+  buildRatingBtns('hoop-str', 7);
+  buildRatingBtns('hoop-kas', 7);
+  buildRatingBtns('ishtah-rating', 10);
+  buildRatingBtns('topar-rating', 10);
+  buildRatingBtns('hidra-rating', 8);
+  // Set today's date on date fields
+  const today = new Date().toISOString().split('T')[0];
+  ['de-bes-tarih','de-en-start','de-og-tarih','de-sag-tarih','de-oz-tarih'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = today;
+  });
+  // Add first meal
+  addMeal();
+}
+
+function buildRatingBtns(containerId, max) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  c.innerHTML = '';
+  for (let i = 1; i <= max; i++) {
+    const b = document.createElement('button');
+    b.className = 'rating-btn';
+    b.textContent = i;
+    b.dataset.val = i;
+    b.dataset.group = containerId;
+    b.onclick = function() {
+      document.querySelectorAll(`.rating-btn[data-group="${containerId}"]`).forEach(x => x.classList.remove('selected'));
+      this.classList.add('selected');
+      deRatings[containerId] = parseInt(this.dataset.val);
+    };
+    c.appendChild(b);
+  }
+}
+
+function switchDeTab(tab, el) {
+  activeDeTab = tab;
+  document.querySelectorAll('.de-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.de-panel').forEach(p => p.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const panel = document.getElementById('dep-'+tab);
+  if (panel) panel.classList.add('active');
+}
+
+function switchDePlayer() {
+  currentDePlayer = parseInt(document.getElementById('de-player-select').value);
+  refreshSavedLists();
+}
+
+function setStatus(msg, color='var(--green)') {
+  const el = document.getElementById('de-status');
+  if (el) { el.textContent = msg; el.style.color = color; setTimeout(() => { if(el.textContent===msg) el.textContent=''; }, 4000); }
+}
+
+function saveCurrentEntry() {
+  if (activeDeTab === 'beslenme') saveBeslenme();
+  else if (activeDeTab === 'enerji') saveEnerji();
+  else if (activeDeTab === 'ogunler') saveOgunler();
+  else if (activeDeTab === 'saglik') saveSaglik();
+  else if (activeDeTab === 'ozel') saveOzel();
+}
+
+function saveBeslenme() {
+  const store = getPlayerStore(currentDePlayer);
+  const record = {
+    id: Date.now(),
+    tarih: document.getElementById('de-bes-tarih').value,
+    hafta: document.getElementById('de-bes-hafta').value,
+    tur: document.getElementById('de-bes-tur').value,
+    cho: document.getElementById('de-bes-cho').value,
+    protein: document.getElementById('de-bes-pro').value,
+    yag: document.getElementById('de-bes-fat').value,
+    kcal: document.getElementById('de-bes-kcal').value,
+    suplementler: document.getElementById('de-bes-sup').value,
+    not: document.getElementById('de-bes-not').value,
+  };
+  store.beslenme.push(record);
+  setStatus(`✓ Beslenme programı kaydedildi — ${players[currentDePlayer].name}`);
+  refreshSavedLists();
+}
+
+function saveEnerji() {
+  const store = getPlayerStore(currentDePlayer);
+  const dLabels = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+  const günler = dLabels.map((d, i) => ({
+    gun: d,
+    alinan: document.getElementById(`en-al-${i}`)?.value,
+    tee: document.getElementById(`en-tee-${i}`)?.value,
+    rpe: document.getElementById(`en-rpe-${i}`)?.value,
+    hidrasyon: document.getElementById(`en-hid-${i}`)?.value,
+    cho: document.getElementById(`en-cho-${i}`)?.value,
+    protein: document.getElementById(`en-pro-${i}`)?.value,
+  }));
+  const record = {
+    id: Date.now(),
+    start: document.getElementById('de-en-start').value,
+    kilo: document.getElementById('de-en-kilo').value,
+    gunler
+  };
+  store.enerji.push(record);
+  setStatus(`✓ Enerji verisi kaydedildi — ${players[currentDePlayer].name}`);
+  refreshSavedLists();
+}
+
+function addMeal() {
+  mealCount++;
+  const idx = mealCount;
+  const container = document.getElementById('meal-list');
+  const div = document.createElement('div');
+  div.className = 'meal-card';
+  div.id = `meal-${idx}`;
+  const ogunOptions = ['Sabah Kahvaltısı','Ara Öğün 1','Öğle Yemeği','Ara Öğün 2','Akşam Yemeği','Antrenman Öncesi','Antrenman Sonrası','Gece Öğünü'].map(o => `<option>${o}</option>`).join('');
+  div.innerHTML = `
+    <div class="meal-card-header">
+      <span class="meal-card-title">🍽 Öğün ${idx}</span>
+      <button class="meal-remove" onclick="document.getElementById('meal-${idx}').remove()">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Öğün Türü</label><select class="form-select" id="og-tur-${idx}">${ogunOptions}</select></div>
+      <div class="form-group"><label class="form-label">Saat</label><input type="time" class="form-input" id="og-saat-${idx}"></div>
+      <div class="form-group"><label class="form-label">Kalori (kcal)</label><input type="number" class="form-input" id="og-kcal-${idx}" placeholder="650"></div>
+      <div class="form-group"><label class="form-label">CHO (g)</label><input type="number" class="form-input" id="og-cho-${idx}" placeholder="80"></div>
+      <div class="form-group"><label class="form-label">Protein (g)</label><input type="number" class="form-input" id="og-pro-${idx}" placeholder="40"></div>
+    </div>
+    <div class="form-group"><label class="form-label">İçerik</label><input type="text" class="form-input" id="og-icerik-${idx}" placeholder="Yulaf + muz + yoğurt + bal"></div>
+    <div class="form-group"><label class="form-label">Not</label><input type="text" class="form-input" id="og-not-${idx}" placeholder="Özel not, tolerans..."></div>
+  `;
+  container.appendChild(div);
+}
+
+function previewPhotos(input) {
+  const row = document.getElementById('photo-preview-row');
+  Array.from(input.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const item = document.createElement('div');
+      item.className = 'photo-preview-item';
+      const uid = Date.now() + Math.random();
+      item.id = 'pi-'+uid;
+      item.innerHTML = `<img src="${e.target.result}"><button class="remove-photo" onclick="document.getElementById('pi-${uid}').remove()">✕</button>`;
+      row.appendChild(item);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function saveOgunler() {
+  const store = getPlayerStore(currentDePlayer);
+  const meals = [];
+  document.querySelectorAll('.meal-card').forEach(card => {
+    const id = card.id.split('-')[1];
+    meals.push({
+      tur: document.getElementById(`og-tur-${id}`)?.value,
+      saat: document.getElementById(`og-saat-${id}`)?.value,
+      kcal: document.getElementById(`og-kcal-${id}`)?.value,
+      cho: document.getElementById(`og-cho-${id}`)?.value,
+      protein: document.getElementById(`og-pro-${id}`)?.value,
+      icerik: document.getElementById(`og-icerik-${id}`)?.value,
+      not: document.getElementById(`og-not-${id}`)?.value,
+    });
+  });
+  const record = {
+    id: Date.now(),
+    tarih: document.getElementById('de-og-tarih').value,
+    meals,
+    fotoNot: document.getElementById('de-og-foto-not').value,
+    fotoCount: document.querySelectorAll('#photo-preview-row .photo-preview-item').length,
+  };
+  store.ogunler.push(record);
+  setStatus(`✓ ${meals.length} öğün kaydedildi — ${players[currentDePlayer].name}`);
+  refreshSavedLists();
+}
+
+function saveSaglik() {
+  const store = getPlayerStore(currentDePlayer);
+  const record = {
+    id: Date.now(),
+    tarih: document.getElementById('de-sag-tarih').value,
+    hooper: {
+      uyku: deRatings['hoop-uyku'],
+      yorgunluk: deRatings['hoop-yor'],
+      stres: deRatings['hoop-str'],
+      kasAgri: deRatings['hoop-kas'],
+      toplam: deRatings['hoop-uyku'] + deRatings['hoop-yor'] + deRatings['hoop-str'] + deRatings['hoop-kas'],
+    },
+    ishtah: deRatings['ishtah-rating'],
+    toparlanma: deRatings['topar-rating'],
+    idrarRengi: deRatings['hidra-rating'],
+    agirlik: document.getElementById('de-sag-agirlik').value,
+    sikayet: document.getElementById('de-sag-sikayet').value,
+    ishtahNot: document.getElementById('de-sag-ishtah-not').value,
+  };
+  store.saglik.push(record);
+  const hTotal = record.hooper.toplam;
+  const hColor = hTotal >= 20 ? 'var(--red)' : (hTotal >= 14 ? 'var(--yellow)' : 'var(--green)');
+  setStatus(`✓ Sağlık verisi kaydedildi — Hooper: ${hTotal}/28 — ${players[currentDePlayer].name}`, hColor);
+  refreshSavedLists();
+}
+
+function saveOzel() {
+  const store = getPlayerStore(currentDePlayer);
+  const record = {
+    id: Date.now(),
+    tarih: document.getElementById('de-oz-tarih').value,
+    kategori: document.getElementById('de-oz-kategori').value,
+    oncelik: document.getElementById('de-oz-oncelik').value,
+    baslik: document.getElementById('de-oz-baslik').value,
+    detay: document.getElementById('de-oz-detay').value,
+    eylem: document.getElementById('de-oz-eylem').value,
+    takipTarihi: document.getElementById('de-oz-takip').value,
+  };
+  store.ozel.push(record);
+  const colors = { low:'var(--text-muted)', mid:'var(--yellow)', high:'var(--red)' };
+  setStatus(`✓ Özel durum kaydedildi: "${record.baslik}" — ${players[currentDePlayer].name}`, colors[record.oncelik]);
+  refreshSavedLists();
+}
+
+function refreshSavedLists() {
+  const store = getPlayerStore(currentDePlayer);
+  renderSaved('bes-saved', store.beslenme, r => `<strong>${r.tarih || '—'}</strong><span>${r.tur}</span><span>CHO ${r.cho || '?'} g/kg · Pro ${r.protein || '?'} g/kg · ${r.kcal || '?'} kcal</span>`);
+  renderSaved('en-saved', store.enerji, r => `<strong>Hafta ${r.start || '—'}</strong><span>${r.gunler?.filter(g=>g.alinan).length || 0} gün girildi · Ağırlık: ${r.kilo || '?'} kg</span>`);
+  renderSaved('og-saved', store.ogunler, r => `<strong>${r.tarih || '—'}</strong><span>${r.meals?.length || 0} öğün${r.fotoCount ? ` · ${r.fotoCount} fotoğraf` : ''}</span>`);
+  renderSaved('sag-saved', store.saglik, r => {
+    const h = r.hooper?.toplam || 0;
+    const col = h >= 20 ? 'var(--red)' : (h >= 14 ? 'var(--yellow)' : 'var(--green)');
+    return `<strong>${r.tarih || '—'}</strong><span>Hooper: <span style="color:${col}">${h}/28</span> · İştah: ${r.ishtah || '?'}/10 · Ağırlık: ${r.agirlik || '?'} kg</span>`;
+  });
+  renderSaved('oz-saved', store.ozel, r => {
+    const cols = {low:'var(--text-muted)',mid:'var(--yellow)',high:'var(--red)'};
+    const labels = {low:'Düşük',mid:'Orta',high:'Yüksek'};
+    return `<strong>${r.tarih || '—'}</strong> <span class="chip ${r.oncelik==='high'?'red':r.oncelik==='mid'?'yellow':'blue'}">${labels[r.oncelik]||r.oncelik}</span><span> ${r.baslik || r.kategori}</span>`;
+  });
+}
+
+function renderSaved(containerId, arr, labelFn) {
+  const c = document.getElementById(containerId);
+  if (!c || !arr.length) { if(c) c.innerHTML = ''; return; }
+  c.innerHTML = `<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Kaydedilen Girişler (${arr.length})</div>` +
+    arr.slice().reverse().map(r => `
+      <div class="saved-entry">
+        <div class="saved-entry-info">${labelFn(r)}</div>
+        <div class="saved-entry-actions">
+          <button class="btn btn-sm btn-danger" onclick="deleteEntry(${currentDePlayer},'${containerId.split('-')[0]}',${r.id})">Sil</button>
+        </div>
+      </div>`).join('');
+}
+
+function deleteEntry(playerIdx, section, id) {
+  const sectionMap = { bes:'beslenme', en:'enerji', og:'ogunler', sag:'saglik', oz:'ozel' };
+  const key = sectionMap[section] || section;
+  const store = getPlayerStore(playerIdx);
+  if (store[key]) { store[key] = store[key].filter(r => r.id !== id); refreshSavedLists(); }
+}
+
+function exportData() {
+  const exportObj = {
+    version: '1.0',
+    exportedAt: new Date().toISOString(),
+    team: 'Hayali FC',
+    players: players.map((p, i) => ({
+      id: i, name: p.name, pos: p.pos, jersey: p.jersey,
+      entries: entryData[i] || {}
+    })).filter(p => Object.keys(p.entries).some(k => p.entries[k]?.length))
+  };
+  const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `HayaliFC_beslenme_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  setStatus(`✓ JSON dosyası indirildi (${exportObj.players.length} sporcu verisi)`);
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.players) {
+        data.players.forEach(p => {
+          if (p.entries && p.id !== undefined) {
+            entryData[p.id] = p.entries;
+          }
+        });
+        refreshSavedLists();
+        setStatus(`✓ İçe aktarıldı: ${data.players.length} sporcu verisi yüklendi`);
+      } else {
+        setStatus('⚠ Geçersiz dosya formatı', 'var(--red)');
+      }
+    } catch(err) {
+      setStatus('⚠ JSON okuma hatası: ' + err.message, 'var(--red)');
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+// ===================== INIT =====================
+// Populate player selector
+const sel = document.getElementById('player-select');
+players.forEach((p, i) => {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = `#${p.jersey} ${p.name} — ${p.posLabel}`;
+  if (p.isIntervention) opt.textContent += ' ⚠️';
+  sel.appendChild(opt);
+});
+
+// Build initial page
+buildTeamCharts();
+chartsBuilt.team = true;
+
+// Fix nav active state on click
+document.querySelectorAll('.nav-item').forEach((el, i) => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

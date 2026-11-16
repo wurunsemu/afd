@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fotoğraflı Öğün Takibi — Yazılım Karşılaştırması</title>
+<style>
+  :root {
+    --bg:#0F172A; --card:#1E293B; --card2:#0D1B2E; --border:#1E3A5F;
+    --green:#10B981; --blue:#3B82F6; --amber:#F59E0B; --red:#EF4444;
+    --purple:#A78BFA; --text:#E2E8F0; --muted:#94A3B8;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; }
+
+  .header {
+    background:var(--card); border-bottom:3px solid var(--green);
+    padding:18px 32px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .header h1 { font-size:1.2rem; font-weight:700; }
+  .header p  { font-size:0.76rem; color:var(--muted); margin-top:3px; }
+  .badge { background:rgba(16,185,129,.15); border:1px solid var(--green); color:var(--green); padding:4px 12px; border-radius:20px; font-size:0.74rem; font-weight:600; }
+
+  .criteria-row {
+    display:flex; gap:10px; padding:20px 32px 0; flex-wrap:wrap;
+  }
+  .crit {
+    background:var(--card2); border:1px solid var(--border); border-radius:8px;
+    padding:8px 14px; font-size:0.74rem;
+  }
+  .crit strong { color:var(--amber); display:block; font-size:0.68rem; text-transform:uppercase; letter-spacing:.04em; margin-bottom:2px; }
+
+  .section-title {
+    padding:22px 32px 10px; font-size:0.78rem; font-weight:700; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.06em;
+  }
+
+  .table-wrap { padding:0 32px; overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; border:1px solid var(--border); border-radius:12px; overflow:hidden; min-width:900px; }
+  th { background:#0D1B2E; color:var(--muted); font-size:0.7rem; text-transform:uppercase; letter-spacing:.05em; padding:10px 12px; text-align:center; white-space:nowrap; }
+  th:first-child { text-align:left; }
+  td { padding:11px 12px; font-size:0.8rem; border-top:1px solid var(--border); text-align:center; vertical-align:top; }
+  td:first-child { text-align:left; }
+  tr:nth-child(even) td { background:rgba(255,255,255,0.02); }
+
+  .app-name { font-weight:700; color:#fff; font-size:0.85rem; }
+  .app-type { font-size:0.68rem; color:var(--muted); margin-top:2px; }
+
+  .yes  { color:var(--green); font-weight:700; }
+  .no   { color:var(--red); }
+  .part { color:var(--amber); font-weight:600; }
+
+  .score {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:32px; height:32px; border-radius:50%; font-weight:800; font-size:0.8rem;
+  }
+  .s5 { background:rgba(16,185,129,.25); color:var(--green); border:1.5px solid var(--green); }
+  .s4 { background:rgba(59,130,246,.25); color:#60A5FA; border:1.5px solid #60A5FA; }
+  .s3 { background:rgba(245,158,11,.25); color:var(--amber); border:1.5px solid var(--amber); }
+  .s2 { background:rgba(239,68,68,.2); color:#FCA5A5; border:1.5px solid #FCA5A5; }
+
+  .rec-box {
+    margin:20px 32px; padding:20px 24px;
+    background:rgba(16,185,129,.08); border:1px solid rgba(16,185,129,.3); border-radius:12px;
+  }
+  .rec-box h3 { color:var(--green); font-size:0.9rem; margin-bottom:10px; }
+  .rec-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:10px; }
+  .rec-card {
+    background:var(--card); border:1px solid var(--border); border-radius:8px; padding:14px;
+  }
+  .rec-card h4 { font-size:0.82rem; color:#fff; margin-bottom:6px; }
+  .rec-card p  { font-size:0.74rem; color:var(--muted); line-height:1.5; }
+  .rec-num { display:inline-block; background:var(--green); color:#000; border-radius:50%; width:20px; height:20px; text-align:center; line-height:20px; font-weight:800; font-size:0.7rem; margin-right:6px; }
+
+  .action-list { padding:0 32px 32px; }
+  .action-list h3 { font-size:0.78rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:12px; }
+  .action-item {
+    display:flex; gap:12px; align-items:flex-start;
+    background:var(--card2); border:1px solid var(--border); border-radius:8px;
+    padding:10px 14px; margin-bottom:8px; font-size:0.8rem;
+  }
+  .action-item .icon { font-size:1.1rem; flex-shrink:0; margin-top:1px; }
+  .action-item strong { color:#fff; display:block; margin-bottom:2px; }
+  .action-item span { color:var(--muted); font-size:0.74rem; }
+
+  .footnote { padding:0 32px 24px; font-size:0.7rem; color:#475569; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Fotoğraflı Öğün Takibi — Yazılım Karşılaştırması</h1>
+    <p>Takım Diyetisyeni Perspektifi · Futbol Kulübü Kullanımı · Ham Veri Aktarım Öncelikli</p>
+  </div>
+  <div class="badge">Görev 2 / 7</div>
+</div>
+
+<div class="criteria-row">
+  <div class="crit"><strong>Öncelik 1</strong>Fotoğraflı yemek kaydı (AI)</div>
+  <div class="crit"><strong>Öncelik 2</strong>Takım yönetimi (diyetisyen görünümü)</div>
+  <div class="crit"><strong>Öncelik 3</strong>Ham veri dışa aktarım (CSV / API)</div>
+  <div class="crit"><strong>Öncelik 4</strong>Büyük veri ölçeklenebilirliği</div>
+  <div class="crit"><strong>Öncelik 5</strong>Türkçe gıda veritabanı</div>
+</div>
+
+<div class="section-title">Yazılım Karşılaştırma Tablosu</div>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th style="min-width:160px">Yazılım</th>
+      <th>Fotoğraf AI</th>
+      <th>Takım<br>Yönetimi</th>
+      <th>Ham Veri<br>Export</th>
+      <th>API<br>Erişim</th>
+      <th>TR Gıda<br>Veritabanı</th>
+      <th>Spor<br>Modülü</th>
+      <th>Fiyat<br>Modeli</th>
+      <th>Öneri<br>Puanı</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <div class="app-name">Nutritics</div>
+        <div class="app-type">Profesyonel diyetisyen platformu</div>
+      </td>
+      <td class="yes">✓ Var</td>
+      <td class="yes">✓ Güçlü</td>
+      <td class="yes">✓ CSV/Excel/PDF</td>
+      <td class="yes">✓ API mevcut</td>
+      <td class="part">Kısmen</td>
+      <td class="yes">✓ Spor odaklı</td>
+      <td style="color:var(--muted);font-size:0.72rem">Kurumsal<br>fiyatlandırma</td>
+      <td><span class="score s5">5</span></td>
+    </tr>
+    <tr>
+      <td>
+        <div class="app-name">Hexis</div>
+        <div class="app-type">Spor beslenme platformu</div>
+      </td>
+      <td class="yes">✓ Var</td>
+      <td class="yes">✓ Takım paneli</td>
+      <td class="yes">✓ CSV/Excel</td>
+      <td class="part">Kısıtlı</td>
+      <td class="no">✗ Yok</td>
+      <td class="yes">✓ GPS/antrenman entegrasyonu</td>
+      <td style="color:var(--muted);font-size:0.72rem">~£8-15<br>/sporcu/ay</td>
+      <td><span class="score s5">5</span></td>
+    </tr>
+    <tr>
+      <td>
+        <div class="app-name">Cronometer Teams</div>
+        <div class="app-type">Mikro besin detay odaklı</div>
+      </td>
+      <td class="part">Kısmi</td>
+      <td class="yes">✓ Pro panel</td>
+      <td class="yes">✓ En detaylı CSV</td>
+      <td class="yes">✓ API Gold</td>
+      <td class="no">✗ Yok</td>
+      <td class="part">Genel</td>
+      <td style="color:var(--muted);font-size:0.72rem">$12-15<br>/kullanıcı/ay</td>
+      <td><span class="score s4">4</span></td>
+    </tr>
+    <tr>
+      <td>
+        <div class="app-name">MyFitnessPal Premium</div>
+        <div class="app-type">Geniş kitle platformu</div>
+      </td>
+      <td class="yes">✓ Var</td>
+      <td class="part">Sınırlı</td>
+      <td class="part">CSV (sınırlı alan)</td>
+      <td class="part">Kısıtlı API</td>
+      <td class="part">Kısmen</td>
+      <td class="no">✗ Yok</td>
+      <td style="color:var(--muted);font-size:0.72rem">$20<br>/ay Pro</td>
+      <td><span class="score s3">3</span></td>
+    </tr>
+    <tr>
+      <td>
+        <div class="app-name">Bitesnap (Snap Food)</div>
+        <div class="app-type">AI fotoğraf öncelikli</div>
+      </td>
+      <td class="yes">✓ En güçlü AI</td>
+      <td class="part">Beta aşama</td>
+      <td class="part">Sınırlı</td>
+      <td class="no">✗ Yok</td>
+      <td class="no">✗ Yok</td>
+      <td class="no">✗ Yok</td>
+      <td style="color:var(--muted);font-size:0.72rem">Freemium</td>
+      <td><span class="score s2">2</span></td>
+    </tr>
+    <tr>
+      <td>
+        <div class="app-name">MyFoodRepo</div>
+        <div class="app-type">Araştırma kalitesi fotoğraf log</div>
+      </td>
+      <td class="yes">✓ Araştırma kalitesi</td>
+      <td class="part">Araştırma grupları</td>
+      <td class="yes">✓ Ham JSON/CSV</td>
+      <td class="yes">✓ Açık API</td>
+      <td class="no">✗ Yok</td>
+      <td class="no">✗ Yok</td>
+      <td style="color:var(--muted);font-size:0.72rem">Ücretsiz<br>(İsviçre)</td>
+      <td><span class="score s3">3</span></td>
+    </tr>
+    <tr>
+      <td>
+        <div class="app-name">Foodvisor</div>
+        <div class="app-type">Fotoğraf AI · Fransız platform</div>
+      </td>
+      <td class="yes">✓ Güçlü AI</td>
+      <td class="part">Pro panel</td>
+      <td class="part">CSV Pro</td>
+      <td class="yes">✓ API mevcut</td>
+      <td class="no">✗ Yok</td>
+      <td class="no">✗ Yok</td>
+      <td style="color:var(--muted);font-size:0.72rem">€9-25<br>/ay</td>
+      <td><span class="score s3">3</span></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="rec-box">
+  <h3>✅ Öneri: Nutritics + Hexis İkili Kullanım</h3>
+  <div class="rec-row">
+    <div class="rec-card">
+      <h4><span class="rec-num">1</span>Nutritics — Birincil Platform</h4>
+      <p>Diyetisyen panelinden tüm sporcuları yönet. Öğün planları oluştur, fotoğraflı kayıtları onayla/düzenle. Haftalık/aylık raporları CSV olarak dışa aktar. Türkiye'ye özel gıda girişi manuel eklenebilir. Referans diyetisyen yazılımı.</p>
+    </div>
+    <div class="rec-card">
+      <h4><span class="rec-num">2</span>Hexis — Antrenman Entegrasyonu</h4>
+      <p>GPS verisi + antrenman yüküyle beslenme ihtiyacını otomatik hesaplar. Sporcu uygulamasından fotoğraflı log. Maç/antrenman günü akıllı bildirimler. Özellikle müsabaka dönemi yük yönetimi için güçlü. Nutritics ile paralel kullanılabilir.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section-title" style="padding-top:14px">Ham Veri Aktarım Kriterleri — Detay</div>
+<div class="table-wrap" style="padding-bottom:20px">
+<table>
+  <thead>
+    <tr>
+      <th>Yazılım</th>
+      <th>Export Formatları</th>
+      <th>Zaman Çözünürlüğü</th>
+      <th>İçerik (Alanlar)</th>
+      <th>Büyük Veri Uyumu</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong style="color:var(--green)">Nutritics</strong></td>
+      <td>CSV, Excel, PDF, XML</td>
+      <td>Öğün bazında</td>
+      <td>Enerji, 60+ besin ögesi, öğün saati, fotoğraf linki, sporcu ID</td>
+      <td class="yes">✓ 100+ sporcu sorunsuz</td>
+    </tr>
+    <tr>
+      <td><strong style="color:var(--blue)">Hexis</strong></td>
+      <td>CSV, Excel</td>
+      <td>Günlük özet / öğün bazında</td>
+      <td>Enerji, CHO/PRO/YAĞ, antrenman yükü, CHO senkronu skoru</td>
+      <td class="yes">✓ Takım planında sınırsız</td>
+    </tr>
+    <tr>
+      <td><strong style="color:var(--amber)">Cronometer</strong></td>
+      <td>CSV (en detaylı), JSON</td>
+      <td>Öğün / besin kaydı bazında</td>
+      <td>Makro + 70 mikro besin, biyometrik, zaman damgası</td>
+      <td class="part">Orta ölçek (~30 sporcu)</td>
+    </tr>
+    <tr>
+      <td><strong style="color:var(--muted)">MyFoodRepo</strong></td>
+      <td>JSON, CSV (açık API)</td>
+      <td>Fotoğraf bazında</td>
+      <td>Ham görüntü + tahmin confidence skoru + besin değerleri</td>
+      <td class="yes">✓ Araştırma altyapısı</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="section-title" style="padding-top:4px">Sonraki Adımlar</div>
+<div class="action-list">
+  <div class="action-item">
+    <div class="icon">📧</div>
+    <div><strong>Nutritics ile iletişime geç</strong><span>nutritics.com/contact — "Professional Sports Team" paketi sor. Demo talep et. Türkiye için fiyatlandırma ve TR gıda DB ekleme imkânını sor.</span></div>
+  </div>
+  <div class="action-item">
+    <div class="icon">🔬</div>
+    <div><strong>Hexis pilot pilot (3 sporcu, 2 hafta)</strong><span>hexis.ac/request-demo — Kulüp hesabı açılmadan önce pilot başlat. GPS entegrasyonu (Polar/Garmin/Catapult) var mı kontrol et.</span></div>
+  </div>
+  <div class="action-item">
+    <div class="icon">🗄️</div>
+    <div><strong>Türkçe gıda veritabanı hazırlığı</strong><span>Nutritics veya Hexis'e import için: BeBiS / BEBIS TR veritabanı veya TürkKomp tablolarından özel DB oluştur. Bu olmadan fotoğraf AI Türk yemeklerini yanlış tanımlar.</span></div>
+  </div>
+  <div class="action-item">
+    <div class="icon">📊</div>
+    <div><strong>afd ile veri köprüsü planla</strong><span>Seçilen platform CSV export → afd App'e import akışı tasarlanacak. API varsa direkt entegrasyon hedefle. Büyük veri için haftalık otomatik çekme rutini kur.</span></div>
+  </div>
+</div>
+
+<div class="footnote">
+  Uzm. Dyt. Yunus Aksu — afd App · Karşılaştırma tarihi: Kasım 2026 · Fiyatlar değişkenlik gösterebilir, güncel teklif alınmalıdır
+</div>
+
+</body>
+</html>

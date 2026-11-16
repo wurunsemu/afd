@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Haftalık Makro Harcama — Özel Hazırlık Dönemi</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0F172A; --card: #1E293B; --border: #1E3A5F;
+    --green: #10B981; --blue: #3B82F6; --amber: #F59E0B;
+    --red: #EF4444; --text: #E2E8F0; --muted: #94A3B8;
+    --cho: #F59E0B; --pro: #3B82F6; --fat: #10B981;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+  .header {
+    background: var(--card);
+    border-bottom: 3px solid var(--green);
+    padding: 18px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .header-left h1 { font-size: 1.25rem; font-weight: 700; color: #fff; }
+  .header-left p  { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+  .badge {
+    background: rgba(16,185,129,0.15); border: 1px solid var(--green);
+    color: var(--green); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+  }
+
+  .kpi-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    padding: 20px 32px 0;
+  }
+  .kpi {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .kpi-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .kpi-val   { font-size: 1.6rem; font-weight: 800; margin-top: 2px; }
+  .kpi-sub   { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+
+  .charts-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    padding: 16px 32px;
+  }
+  .chart-box {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px;
+  }
+  .chart-box.wide { grid-column: 1 / -1; }
+  .chart-title { font-size: 0.82rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
+
+  .table-wrap { padding: 0 32px 32px; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+  th { background: #0D1B2E; color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: .05em; padding: 10px 14px; text-align: left; }
+  td { padding: 10px 14px; font-size: 0.82rem; border-top: 1px solid var(--border); }
+  tr:last-child td { background: rgba(16,185,129,.06); }
+  .pill {
+    display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700;
+  }
+  .int-80 { background: rgba(59,130,246,.2); color: #60A5FA; }
+  .int-85 { background: rgba(245,158,11,.2); color: #FCD34D; }
+  .int-90 { background: rgba(239,68,68,.2); color: #FCA5A5; }
+  .int-40 { background: rgba(16,185,129,.2); color: #6EE7B7; }
+  .cho-c { color: var(--cho); font-weight: 700; }
+  .pro-c { color: var(--pro); font-weight: 700; }
+  .fat-c { color: var(--fat); font-weight: 700; }
+  .tot-c { color: #fff; font-weight: 800; }
+
+  .legend { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 10px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--muted); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  .footnote { padding: 0 32px 24px; font-size: 0.72rem; color: #475569; }
+  .footnote span { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>Haftalık Makro Harcama Analizi</h1>
+    <p>Özel Hazırlık Dönemi · Referans: 75 kg sporcu · Periodize beslenme modeli</p>
+  </div>
+  <div class="badge">afd — Futbol Diyetisyen Paneli</div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi">
+    <div class="kpi-label">Haftalık Toplam Enerji</div>
+    <div class="kpi-val" style="color:var(--green)">23.520</div>
+    <div class="kpi-sub">kcal/hafta</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Ortalama Günlük</div>
+    <div class="kpi-val" style="color:var(--blue)">3.360</div>
+    <div class="kpi-sub">kcal/gün (Pazar hariç: 3.493)</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Pik Gün (Cumartesi)</div>
+    <div class="kpi-val" style="color:var(--amber)">3.915</div>
+    <div class="kpi-sub">kcal · 3 antrenman · %90 şiddet</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Haftalık Antrenman Yükü</div>
+    <div class="kpi-val" style="color:var(--red)">1.130</div>
+    <div class="kpi-sub">dk/hafta aktif antrenman</div>
+  </div>
+</div>
+
+<div class="charts-grid">
+  <div class="chart-box wide">
+    <div class="chart-title">Günlük Makrobesin Dağılımı (kcal)</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--cho)"></div>Karbonhidrat</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--pro)"></div>Protein</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--fat)"></div>Yağ</div>
+    </div>
+    <canvas id="stackedBar" height="85"></canvas>
+  </div>
+  <div class="chart-box">
+    <div class="chart-title">Toplam Günlük Enerji + Şiddet</div>
+    <canvas id="lineChart" height="160"></canvas>
+  </div>
+  <div class="chart-box">
+    <div class="chart-title">Makro Dağılım % — Haftalık Hedef (Alınan)</div>
+    <canvas id="doughnut" height="160"></canvas>
+  </div>
+  <div class="chart-box wide">
+    <div class="chart-title">Antrenman Yakıt Kullanımı — Harcanan Makro Dağılımı (RER Modeli)</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#F59E0B"></div>Karbonhidrat (glikojen)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#10B981"></div>Yağ (lipoliz)</div>
+      <div class="legend-item" style="margin-left:auto;font-size:0.7rem;color:#475569">Not: Protein katkısı &lt;%5 — gösterilmedi</div>
+    </div>
+    <canvas id="fuelBar" height="70"></canvas>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Gün</th>
+        <th>Şiddet</th>
+        <th>Antrenman</th>
+        <th>KARBONHİDRAT</th>
+        <th>PROTEİN</th>
+        <th>YAĞ</th>
+        <th>TOPLAM</th>
+        <th>CHO g/kg</th>
+        <th>PRO g/kg</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Pazartesi</strong></td>
+        <td><span class="pill int-80">%80</span></td>
+        <td>GYM + Saha (150 dk)</td>
+        <td class="cho-c">450g &nbsp;<small style="color:#78350F">1.800 kcal</small></td>
+        <td class="pro-c">135g &nbsp;<small style="color:#1E3A8A">540 kcal</small></td>
+        <td class="fat-c">90g &nbsp;<small style="color:#064E3B">810 kcal</small></td>
+        <td class="tot-c">3.150 kcal</td>
+        <td>6,0</td><td>1,8</td>
+      </tr>
+      <tr>
+        <td><strong>Salı</strong></td>
+        <td><span class="pill int-80">%80</span></td>
+        <td>GYM + Bireysel + Saha (210 dk)</td>
+        <td class="cho-c">562g &nbsp;<small style="color:#78350F">2.248 kcal</small></td>
+        <td class="pro-c">135g &nbsp;<small style="color:#1E3A8A">540 kcal</small></td>
+        <td class="fat-c">82g &nbsp;<small style="color:#064E3B">738 kcal</small></td>
+        <td class="tot-c">3.526 kcal</td>
+        <td>7,5</td><td>1,8</td>
+      </tr>
+      <tr>
+        <td><strong>Çarşamba</strong></td>
+        <td><span class="pill int-85">%85</span></td>
+        <td>GYM + Saha / Anaerobik (150 dk)</td>
+        <td class="cho-c">488g &nbsp;<small style="color:#78350F">1.952 kcal</small></td>
+        <td class="pro-c">135g &nbsp;<small style="color:#1E3A8A">540 kcal</small></td>
+        <td class="fat-c">90g &nbsp;<small style="color:#064E3B">810 kcal</small></td>
+        <td class="tot-c">3.302 kcal</td>
+        <td>6,5</td><td>1,8</td>
+      </tr>
+      <tr>
+        <td><strong>Perşembe</strong></td>
+        <td><span class="pill int-85">%85</span></td>
+        <td>GYM + Bireysel + Saha (210 dk)</td>
+        <td class="cho-c">600g &nbsp;<small style="color:#78350F">2.400 kcal</small></td>
+        <td class="pro-c">135g &nbsp;<small style="color:#1E3A8A">540 kcal</small></td>
+        <td class="fat-c">75g &nbsp;<small style="color:#064E3B">675 kcal</small></td>
+        <td class="tot-c">3.615 kcal</td>
+        <td>8,0</td><td>1,8</td>
+      </tr>
+      <tr>
+        <td><strong>Cuma</strong></td>
+        <td><span class="pill int-90">%90</span></td>
+        <td>GYM + Saha (150 dk)</td>
+        <td class="cho-c">525g &nbsp;<small style="color:#78350F">2.100 kcal</small></td>
+        <td class="pro-c">135g &nbsp;<small style="color:#1E3A8A">540 kcal</small></td>
+        <td class="fat-c">90g &nbsp;<small style="color:#064E3B">810 kcal</small></td>
+        <td class="tot-c">3.450 kcal</td>
+        <td>7,0</td><td>1,8</td>
+      </tr>
+      <tr>
+        <td><strong>Cumartesi</strong></td>
+        <td><span class="pill int-90">%90</span></td>
+        <td>GYM + Bireysel + Saha (210 dk)</td>
+        <td class="cho-c">675g &nbsp;<small style="color:#78350F">2.700 kcal</small></td>
+        <td class="pro-c">135g &nbsp;<small style="color:#1E3A8A">540 kcal</small></td>
+        <td class="fat-c">75g &nbsp;<small style="color:#064E3B">675 kcal</small></td>
+        <td class="tot-c">3.915 kcal</td>
+        <td>9,0</td><td>1,8</td>
+      </tr>
+      <tr>
+        <td><strong>Pazar</strong></td>
+        <td><span class="pill int-40">Rjn.</span></td>
+        <td>Eğlenceli Oyun (50 dk)</td>
+        <td class="cho-c">300g &nbsp;<small style="color:#78350F">1.200 kcal</small></td>
+        <td class="pro-c">120g &nbsp;<small style="color:#1E3A8A">480 kcal</small></td>
+        <td class="fat-c">98g &nbsp;<small style="color:#064E3B">882 kcal</small></td>
+        <td class="tot-c">2.562 kcal</td>
+        <td>4,0</td><td>1,6</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="footnote">
+  <span>Referans sporcu:</span> 75 kg · MET tabanlı enerji hesabı (ACSM) · Periodize karbonhidrat (Burke ve ark., 2011) ·
+  <span>Protein:</span> 1,6–1,8 g/kg/gün (ISSN, 2017) ·
+  <span>Yağ:</span> kalan enerji · REE: Mifflin-St Jeor ~1.900 kcal/gün ·
+  <span>Uzm. Dyt. Yunus Aksu — afd App</span>
+</div>
+
+<script>
+const labels = ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'];
+const cho = [1800, 2248, 1952, 2400, 2100, 2700, 1200];
+const pro = [540, 540, 540, 540, 540, 540, 480];
+const fat = [810, 738, 810, 675, 810, 675, 882];
+const total = [3150, 3526, 3302, 3615, 3450, 3915, 2562];
+const intens = [80, 80, 85, 85, 90, 90, 40];
+
+const grid = { color: 'rgba(255,255,255,0.06)' };
+const tickColor = '#94A3B8';
+
+// Stacked Bar
+new Chart(document.getElementById('stackedBar'), {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [
+      { label: 'Karbonhidrat', data: cho, backgroundColor: '#F59E0B', borderRadius: 0 },
+      { label: 'Protein',       data: pro, backgroundColor: '#3B82F6', borderRadius: 0 },
+      { label: 'Yağ',           data: fat, backgroundColor: '#10B981', borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true, plugins: { legend: { display: false } },
+    scales: {
+      x: { stacked: true, grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } } },
+      y: { stacked: true, grid, ticks: { color: tickColor, callback: v => v.toLocaleString('tr') + ' kcal' } }
+    }
+  }
+});
+
+// Line + intensity
+new Chart(document.getElementById('lineChart'), {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [
+      {
+        label: 'Toplam kcal', data: total, yAxisID: 'y1',
+        borderColor: '#F59E0B', backgroundColor: 'rgba(245,158,11,0.12)',
+        fill: true, tension: 0.4, pointBackgroundColor: '#F59E0B', pointRadius: 5
+      },
+      {
+        label: 'Şiddet %', data: intens, yAxisID: 'y2',
+        borderColor: '#EF4444', borderDash: [5,3],
+        backgroundColor: 'transparent', tension: 0.3, pointBackgroundColor: '#EF4444', pointRadius: 4
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { labels: { color: '#94A3B8', font: { size: 11 } } } },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: tickColor, font: { size: 10 } } },
+      y1: { position: 'left', grid, ticks: { color: '#F59E0B', callback: v => v.toLocaleString('tr') } },
+      y2: { position: 'right', min: 0, max: 110, grid: { display: false }, ticks: { color: '#EF4444', callback: v => v + '%' } }
+    }
+  }
+});
+
+// Fuel utilization chart (RER-based substrate use during training)
+// At 80% intensity: ~72% CHO / 28% Fat (blended GYM + field)
+// At 85% intensity: ~83% CHO / 17% Fat
+// At 90% intensity: ~91% CHO / 9% Fat
+// At 40% (regen):   ~40% CHO / 60% Fat
+const fuelCHO = [73, 72, 84, 83, 92, 91, 40];
+const fuelFAT = [27, 28, 16, 17,  8,  9, 60];
+// Training kcal per day (actual burned)
+const trainKcal = [1538, 2025, 1725, 2250, 1912, 2512, 250];
+const fuelCHOkcal = fuelCHO.map((p,i) => Math.round(trainKcal[i] * p / 100));
+const fuelFATkcal = fuelFAT.map((p,i) => Math.round(trainKcal[i] * p / 100));
+
+new Chart(document.getElementById('fuelBar'), {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [
+      { label: 'Karbonhidrat (kcal)', data: fuelCHOkcal, backgroundColor: '#F59E0B', borderRadius: 0 },
+      { label: 'Yağ (kcal)',          data: fuelFATkcal, backgroundColor: '#10B981', borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { labels: { color: '#94A3B8', font: { size: 11 } } },
+      tooltip: {
+        callbacks: {
+          afterBody: (items) => {
+            const i = items[0].dataIndex;
+            return [`→ CHO %${fuelCHO[i]}  |  Yağ %${fuelFAT[i]}`, `Toplam antrenman: ${trainKcal[i].toLocaleString('tr')} kcal`];
+          }
+        }
+      }
+    },
+    scales: {
+      x: { stacked: true, grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } } },
+      y: { stacked: true, grid, ticks: { color: tickColor, callback: v => v.toLocaleString('tr') + ' kcal' } }
+    }
+  }
+});
+
+// Doughnut
+const choTot = cho.reduce((a,b)=>a+b,0);
+const proTot = pro.reduce((a,b)=>a+b,0);
+const fatTot = fat.reduce((a,b)=>a+b,0);
+const grandTot = choTot+proTot+fatTot;
+new Chart(document.getElementById('doughnut'), {
+  type: 'doughnut',
+  data: {
+    labels: [
+      `KARBONHİDRAT  ${Math.round(choTot/grandTot*100)}%`,
+      `PROTEİN  ${Math.round(proTot/grandTot*100)}%`,
+      `YAĞ  ${Math.round(fatTot/grandTot*100)}%`
+    ],
+    datasets: [{
+      data: [choTot, proTot, fatTot],
+      backgroundColor: ['#F59E0B','#3B82F6','#10B981'],
+      borderColor: '#0F172A', borderWidth: 3
+    }]
+  },
+  options: {
+    responsive: true, cutout: '62%',
+    plugins: {
+      legend: { position: 'bottom', labels: { color: '#94A3B8', font: { size: 11 }, padding: 14 } }
+    }
+  }
+});
+</script>
+</body>
+</html>

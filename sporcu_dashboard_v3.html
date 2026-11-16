@@ -8,14 +8,39 @@
 <meta name="description" content="Assistant Football Team Dietitian — Uzm. Dyt. Yunus Aksu">
 <meta name="apple-mobile-web-app-title" content="afd">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#10B981">
 <link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="shortcut icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <script>
+// PWA Install
+let _pwaPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _pwaPrompt = e;
+  const btn = document.getElementById('pwaInstallBtn');
+  if (btn) btn.style.display = 'inline-flex';
+});
+window.addEventListener('appinstalled', () => {
+  const btn = document.getElementById('pwaInstallBtn');
+  if (btn) btn.style.display = 'none';
+  _pwaPrompt = null;
+});
+function pwaInstall() {
+  if (_pwaPrompt) {
+    _pwaPrompt.prompt();
+    _pwaPrompt.userChoice.then(() => { _pwaPrompt = null; });
+  } else {
+    alert('Tarayıcı yükleme hazır değil.\nChrome\'da: Adres çubuğu sağındaki ⊕ ikonu veya ⋮ menü → "afd\'yi yükle"');
+  }
+}
+// Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js').catch(e => console.warn('SW:', e));
   });
 }
 </script>
@@ -277,6 +302,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
       <span id="cloudSyncLabel" style="font-size:.75rem;margin-left:4px">Senkronize Et</span>
     </button>
     <span id="cloudSyncStatus" style="font-size:.7rem;color:var(--text2);display:none"></span>
+    <button class="btn btn-sm" id="pwaInstallBtn" onclick="pwaInstall()" title="Uygulamayı bilgisayara / telefona kur" style="display:none;background:#10B981;color:#fff;border-color:#10B981"><i class="fas fa-download"></i> Uygulamayı Kur</button>
     <button class="btn btn-sm" onclick="exportData()"><i class="fas fa-download"></i> JSON Dışa Aktar</button>
     <button class="btn btn-sm" onclick="document.getElementById('importFile').click()"><i class="fas fa-upload"></i> JSON İçe Aktar</button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
@@ -295,6 +321,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
   <button class="nav-btn" onclick="showPage('p-nutrition')"><i class="fas fa-utensils"></i> Beslenme Anketi</button>
   <button class="nav-btn" onclick="showPage('p-print')"><i class="fas fa-file-pdf"></i> Raporlar</button>
   <button class="nav-btn" onclick="showPage('p-td')"><i class="fas fa-arrows-left-right-to-line"></i> Futbolcu Hareketleri</button>
+  <button class="nav-btn" onclick="showPage('p-sporcu-takip')"><i class="fas fa-bowl-food"></i> Sporcu Beslenme</button>
 </div>
 
 <!-- ===== PAGE: TEAM OVERVIEW ===== -->
@@ -535,6 +562,102 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
     </div>
   </div>
   <div id="printPreview" style="margin-top:14px"></div>
+</div>
+
+<!-- ===== PAGE: SPORCU BESLENMESİ ===== -->
+<div class="page" id="p-sporcu-takip">
+  <div class="sec-header">
+    <div class="sec-title"><i class="fas fa-bowl-food" style="color:var(--green)"></i> Sporcu Beslenme Takibi</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input type="date" id="st_tarih" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:.82rem">
+      <select id="st_sporcu" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:.82rem;min-width:140px">
+        <option value="">— Tüm Sporcular —</option>
+      </select>
+      <select id="st_ogun" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:.82rem">
+        <option value="">— Tüm Öğünler —</option>
+        <option value="Kahvaltı">Kahvaltı</option>
+        <option value="Öğle">Öğle</option>
+        <option value="Akşam">Akşam</option>
+        <option value="Ara Öğün">Ara Öğün</option>
+        <option value="Antrenman Öncesi">Antrenman Öncesi</option>
+        <option value="Antrenman Sonrası">Antrenman Sonrası</option>
+        <option value="Maç Öncesi">Maç Öncesi</option>
+      </select>
+      <button class="btn btn-primary" onclick="stYukle()" style="font-size:.82rem"><i class="fas fa-sync"></i> Yükle</button>
+    </div>
+  </div>
+
+  <!-- KPI özet kartları -->
+  <div class="grid4" id="st-kpis" style="margin-bottom:14px"></div>
+
+  <!-- Sporcu özet kartları (günlük durum) -->
+  <div id="st-sporcu-ozet" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:16px"></div>
+
+  <!-- Öğün logları tablosu -->
+  <div class="card">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span><i class="fas fa-list-ul"></i> Öğün Kayıtları</span>
+      <span id="st-ogun-count" style="font-size:.8rem;color:var(--text2)"></span>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:.82rem" id="st-ogun-table">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border);color:var(--text2)">
+            <th style="padding:8px 6px;text-align:left">Sporcu</th>
+            <th style="padding:8px 6px;text-align:left">Öğün</th>
+            <th style="padding:8px 6px;text-align:left">Saat</th>
+            <th style="padding:8px 6px;text-align:right">Kcal</th>
+            <th style="padding:8px 6px;text-align:right">P (g)</th>
+            <th style="padding:8px 6px;text-align:right">KH (g)</th>
+            <th style="padding:8px 6px;text-align:right">Yağ (g)</th>
+            <th style="padding:8px 6px;text-align:left">Besinler</th>
+            <th style="padding:8px 6px;text-align:left">Not</th>
+          </tr>
+        </thead>
+        <tbody id="st-ogun-tbody"></tbody>
+      </table>
+      <div id="st-ogun-empty" style="text-align:center;padding:32px;color:var(--text2);display:none">
+        <i class="fas fa-bowl-food" style="font-size:2rem;margin-bottom:8px;display:block"></i>
+        Kayıt bulunamadı
+      </div>
+    </div>
+  </div>
+
+  <!-- Su & Uyku tablosu -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-title"><i class="fas fa-droplet" style="color:var(--blue)"></i> Su & Uyku Durumu</div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border);color:var(--text2)">
+            <th style="padding:8px 6px;text-align:left">Sporcu</th>
+            <th style="padding:8px 6px;text-align:center">Su (ml)</th>
+            <th style="padding:8px 6px;text-align:center">Hedef Su</th>
+            <th style="padding:8px 6px;text-align:center">Su %</th>
+            <th style="padding:8px 6px;text-align:center">Uyku (saat)</th>
+            <th style="padding:8px 6px;text-align:center">Uyku Kalite</th>
+          </tr>
+        </thead>
+        <tbody id="st-suuyku-tbody"></tbody>
+      </table>
+      <div id="st-suuyku-empty" style="text-align:center;padding:32px;color:var(--text2);display:none">
+        <i class="fas fa-moon" style="font-size:2rem;margin-bottom:8px;display:block"></i>
+        Kayıt bulunamadı
+      </div>
+    </div>
+  </div>
+
+  <!-- Apps Script URL ayarı -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-title"><i class="fas fa-gear"></i> Sporcu Panel Ayarları</div>
+    <div class="form-row" style="gap:10px;align-items:flex-end">
+      <div class="form-group" style="flex:1">
+        <label>Sporcu Apps Script URL</label>
+        <input id="st_api_url" placeholder="https://script.google.com/macros/s/..." style="font-size:.78rem">
+      </div>
+      <button class="btn btn-primary" onclick="stKaydetAyar()" style="height:38px"><i class="fas fa-save"></i> Kaydet</button>
+    </div>
+  </div>
 </div>
 
 <!-- TRANSFER MODAL -->
@@ -4433,6 +4556,336 @@ document.getElementById('confirmModal').addEventListener('click', e => {
 const _dangerStyle = document.createElement('style');
 _dangerStyle.textContent = '.btn-danger{background:var(--bg-red)!important;border-color:var(--red)!important;color:var(--red)!important}.btn-danger:hover{background:var(--red)!important;color:#fff!important}';
 document.head.appendChild(_dangerStyle);
+</script>
+
+<!-- ===== SPORCU TAKİP MODÜLÜ ===== -->
+<script>
+(function(){
+'use strict';
+
+// ── Ayarlar ──────────────────────────────────────────────────────
+const ST_SECRET  = 'YA2026';
+let   ST_API_URL = '';
+try {
+  ST_API_URL = localStorage.getItem('st_api_url') ||
+    'https://script.google.com/macros/s/AKfycbzITFfpC8EZ67uesNrH4P3Y3xhrq1UO0TvGSXyhsdSe6UgALG4m7rjY70mGawuaBSv5MA/exec';
+} catch(e) {
+  ST_API_URL = 'https://script.google.com/macros/s/AKfycbzITFfpC8EZ67uesNrH4P3Y3xhrq1UO0TvGSXyhsdSe6UgALG4m7rjY70mGawuaBSv5MA/exec';
+}
+
+// Tarih yardımcısı
+function todayISO() {
+  return new Date().toISOString().split('T')[0];
+}
+function fmtTarih(d) {
+  if (!d) return '-';
+  const s = String(d);
+  return s.length >= 10 ? s.substring(0,10) : s;
+}
+function fmtSaat(dt) {
+  if (!dt) return '-';
+  const s = String(dt);
+  const t = s.split(' ')[1];
+  return t ? t.substring(0,5) : '-';
+}
+
+// API çağrısı
+async function stGet(params) {
+  const url = new URL(ST_API_URL);
+  url.searchParams.set('secret', ST_SECRET);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k,v));
+  const r = await fetch(url.toString());
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+// Sporcu listesi cache
+let _stSporcular = [];
+
+async function stSporcuListesiYukle() {
+  try {
+    const res = await stGet({ action: 'getAthletes' });
+    if (res.ok && Array.isArray(res.data)) {
+      _stSporcular = res.data;
+      const sel = document.getElementById('st_sporcu');
+      if (!sel) return;
+      // Mevcut seçimi koru
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">— Tüm Sporcular —</option>';
+      _stSporcular.forEach(sp => {
+        const opt = document.createElement('option');
+        opt.value = sp.ID || sp.id || '';
+        opt.textContent = sp.Ad || sp.ad || sp.ID || '';
+        sel.appendChild(opt);
+      });
+      if (cur) sel.value = cur;
+    }
+  } catch(e) {
+    console.warn('Sporcu listesi yüklenemedi:', e);
+  }
+}
+
+// Ana yükleme
+window.stYukle = async function() {
+  const tarih   = document.getElementById('st_tarih')?.value  || todayISO();
+  const sporcuId= document.getElementById('st_sporcu')?.value || '';
+  const ogunTip = document.getElementById('st_ogun')?.value   || '';
+
+  // KPI'ları sıfırla
+  document.getElementById('st-kpis').innerHTML =
+    '<div class="card" style="text-align:center"><i class="fas fa-spinner fa-spin"></i> Yükleniyor…</div>';
+  document.getElementById('st-sporcu-ozet').innerHTML = '';
+  document.getElementById('st-ogun-tbody').innerHTML = '';
+  document.getElementById('st-suuyku-tbody').innerHTML = '';
+
+  try {
+    // Paralel çekme
+    const [ogunRes, suUykuRes] = await Promise.all([
+      stGet({ action: 'getOgunler', tarih, ...(sporcuId && { athleteId: sporcuId }) }),
+      stGet({ action: 'getSuUykuTum', tarih })
+    ]);
+
+    const ogunler  = (ogunRes.ok  ? ogunRes.data  : []) || [];
+    let   suUykuArr= (suUykuRes.ok? suUykuRes.data: []) || [];
+
+    // Öğün tipi filtresi (client-side)
+    const filtreOgunler = ogunTip
+      ? ogunler.filter(o => o.ogunTipi === ogunTip || o.OgunTipi === ogunTip)
+      : ogunler;
+
+    stRenderKPIs(filtreOgunler, suUykuArr);
+    stRenderSporcuOzet(filtreOgunler, suUykuArr, tarih);
+    stRenderOgunTablosu(filtreOgunler);
+    stRenderSuUykuTablosu(suUykuArr);
+
+  } catch(e) {
+    document.getElementById('st-kpis').innerHTML =
+      `<div class="card" style="color:var(--red);grid-column:1/-1"><i class="fas fa-circle-exclamation"></i> Hata: ${e.message}</div>`;
+  }
+};
+
+function stRenderKPIs(ogunler, suUykuArr) {
+  const topKcal   = ogunler.reduce((s,o) => s + (Number(o.Kcal   || o.kcal)   || 0), 0);
+  const topProtein= ogunler.reduce((s,o) => s + (Number(o.Protein|| o.protein) || 0), 0);
+  const topSu     = suUykuArr.reduce((s,r) => s + (Number(r.Su_ml || r.su_ml)  || 0), 0);
+  const sporcuSet = new Set(ogunler.map(o => o.SporucuID || o.athleteId || o.sporucuid).filter(Boolean));
+
+  const kpis = [
+    { icon:'fa-users',   label:'Kayıt Gönderen',  val: sporcuSet.size + ' sporcu', color:'var(--blue)' },
+    { icon:'fa-fire',    label:'Toplam Enerji',    val: Math.round(topKcal) + ' kcal', color:'var(--red)' },
+    { icon:'fa-dumbbell',label:'Toplam Protein',   val: Math.round(topProtein) + ' g', color:'var(--green)' },
+    { icon:'fa-droplet', label:'Toplam Su',         val: topSu ? (topSu/1000).toFixed(1) + ' L' : '-', color:'var(--blue)' }
+  ];
+
+  document.getElementById('st-kpis').innerHTML = kpis.map(k => `
+    <div class="card" style="text-align:center;padding:14px 10px">
+      <i class="fas ${k.icon}" style="font-size:1.5rem;color:${k.color};margin-bottom:8px;display:block"></i>
+      <div style="font-size:1.3rem;font-weight:800;margin-bottom:4px">${k.val}</div>
+      <div style="font-size:.75rem;color:var(--text2)">${k.label}</div>
+    </div>`).join('');
+}
+
+function stRenderSporcuOzet(ogunler, suUykuArr, tarih) {
+  const container = document.getElementById('st-sporcu-ozet');
+
+  // Sporcular sayfasından hedefleri al (cache'den)
+  const hedefMap = {};
+  _stSporcular.forEach(sp => {
+    const id = sp.ID || sp.id || '';
+    hedefMap[id] = {
+      enerji:  Number(sp.Enerji_kcal) || 0,
+      protein: Number(sp.Protein_g)   || 0,
+      su:      Number(sp.Su_ml)       || 2000
+    };
+  });
+
+  // Öğünleri sporcuya göre grupla
+  const byAthlete = {};
+  ogunler.forEach(o => {
+    const id  = o.SporucuID  || o.athleteId  || '';
+    const ad  = o.SporucuAdi || o.athleteName || id;
+    if (!byAthlete[id]) byAthlete[id] = { id, ad, kcal:0, protein:0, ogunSayisi:0 };
+    byAthlete[id].kcal    += Number(o.Kcal    || o.kcal)    || 0;
+    byAthlete[id].protein += Number(o.Protein || o.protein) || 0;
+    byAthlete[id].ogunSayisi++;
+  });
+
+  // Su verisi
+  const suMap = {};
+  suUykuArr.forEach(r => {
+    const id = r.SporucuID || r.sporucuid || '';
+    if (id) suMap[id] = { su: Number(r.Su_ml || r.su_ml) || 0, uyku: r.Uyku_saat || r.uyku_saat || '-', kalite: r.Uyku_kalite || r.uyku_kalite || '-' };
+  });
+
+  // Kayıt göndermeyenleri de ekle
+  _stSporcular.forEach(sp => {
+    const id = sp.ID || sp.id || '';
+    if (!byAthlete[id]) byAthlete[id] = { id, ad: sp.Ad || id, kcal:0, protein:0, ogunSayisi:0 };
+  });
+
+  if (!Object.keys(byAthlete).length) {
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = Object.values(byAthlete)
+    .sort((a,b) => (a.ad||'').localeCompare(b.ad||''))
+    .map(sp => {
+      const h    = hedefMap[sp.id] || { enerji:2500, protein:150, su:2500 };
+      const su   = suMap[sp.id];
+      const pKcal= h.enerji > 0 ? Math.round((sp.kcal / h.enerji)*100) : 0;
+      const pProt= h.protein > 0 ? Math.round((sp.protein / h.protein)*100) : 0;
+      const pSu  = su && h.su > 0 ? Math.round((su.su / h.su)*100) : 0;
+      const barClr= p => p >= 90 ? 'var(--green)' : p >= 60 ? 'var(--yellow)' : 'var(--red)';
+      const kaliteClr = k => k==='iyi'?'var(--green)': k==='orta'?'var(--yellow)':'k==="kötü"'?'var(--red)':'var(--text2)';
+
+      return `<div class="card" style="padding:14px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div>
+            <div style="font-weight:700;font-size:.92rem">${sp.ad}</div>
+            <div style="font-size:.72rem;color:var(--text2)">${sp.ogunSayisi} öğün kaydı</div>
+          </div>
+          ${sp.ogunSayisi === 0 ? '<span style="font-size:.7rem;background:var(--bg-red);color:var(--red);padding:2px 8px;border-radius:20px">Kayıt Yok</span>' : ''}
+        </div>
+        <div style="margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--text2);margin-bottom:2px">
+            <span>Enerji</span><span>${Math.round(sp.kcal)} / ${h.enerji} kcal</span>
+          </div>
+          <div style="background:var(--bg3);border-radius:4px;height:6px;overflow:hidden">
+            <div style="height:100%;width:${Math.min(pKcal,100)}%;background:${barClr(pKcal)};transition:.3s"></div>
+          </div>
+        </div>
+        <div style="margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--text2);margin-bottom:2px">
+            <span>Protein</span><span>${Math.round(sp.protein)} / ${h.protein} g</span>
+          </div>
+          <div style="background:var(--bg3);border-radius:4px;height:6px;overflow:hidden">
+            <div style="height:100%;width:${Math.min(pProt,100)}%;background:${barClr(pProt)};transition:.3s"></div>
+          </div>
+        </div>
+        ${su ? `<div style="display:flex;gap:12px;margin-top:8px;font-size:.75rem">
+          <span><i class="fas fa-droplet" style="color:var(--blue)"></i> ${(su.su/1000).toFixed(1)} L (${pSu}%)</span>
+          <span><i class="fas fa-moon" style="color:${kaliteClr(su.kalite)}"></i> ${su.uyku}h · ${su.kalite}</span>
+        </div>` : `<div style="font-size:.72rem;color:var(--text2);margin-top:6px"><i class="fas fa-droplet"></i> Su/uyku kaydı yok</div>`}
+      </div>`;
+    }).join('');
+}
+
+function stRenderOgunTablosu(ogunler) {
+  const tbody = document.getElementById('st-ogun-tbody');
+  const empty = document.getElementById('st-ogun-empty');
+
+  if (!ogunler.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    document.getElementById('st-ogun-count').textContent = '';
+    return;
+  }
+
+  empty.style.display = 'none';
+  document.getElementById('st-ogun-count').textContent = ogunler.length + ' kayıt';
+
+  tbody.innerHTML = ogunler
+    .sort((a,b) => {
+      const ta = a.TarihSaat || a.tarihSaat || '';
+      const tb = b.TarihSaat || b.tarihSaat || '';
+      return tb.localeCompare(ta);
+    })
+    .map(o => {
+      const besinlerRaw = o.Besinler || o.besinler || '';
+      let besinlerStr = besinlerRaw;
+      try {
+        const arr = typeof besinlerRaw === 'string' ? JSON.parse(besinlerRaw) : besinlerRaw;
+        if (Array.isArray(arr)) {
+          besinlerStr = arr.map(b => `${b.name||b.isim||''} (${b.grams||b.gram||0}g)`).join(', ');
+        }
+      } catch(e) {}
+
+      return `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 6px;font-weight:600">${o.SporucuAdi || o.athleteName || '-'}</td>
+        <td style="padding:8px 6px">
+          <span style="background:var(--bg3);padding:2px 8px;border-radius:12px;font-size:.75rem">${o.OgunTipi || o.ogunTipi || '-'}</span>
+        </td>
+        <td style="padding:8px 6px;color:var(--text2);font-size:.8rem">${fmtSaat(o.TarihSaat || o.tarihSaat)}</td>
+        <td style="padding:8px 6px;text-align:right;font-weight:600;color:var(--red)">${Math.round(Number(o.Kcal||o.kcal)||0)}</td>
+        <td style="padding:8px 6px;text-align:right;color:var(--green)">${Math.round(Number(o.Protein||o.protein)||0)}</td>
+        <td style="padding:8px 6px;text-align:right;color:var(--yellow)">${Math.round(Number(o.KH||o.kh)||0)}</td>
+        <td style="padding:8px 6px;text-align:right;color:var(--text2)">${Math.round(Number(o.Yag||o.yag)||0)}</td>
+        <td style="padding:8px 6px;font-size:.75rem;color:var(--text2);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${besinlerStr}">${besinlerStr||'-'}</td>
+        <td style="padding:8px 6px;font-size:.75rem;color:var(--text2)">${o.Not||o.not||''}</td>
+      </tr>`;
+    }).join('');
+}
+
+function stRenderSuUykuTablosu(suUykuArr) {
+  const tbody = document.getElementById('st-suuyku-tbody');
+  const empty = document.getElementById('st-suuyku-empty');
+
+  if (!suUykuArr.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+
+  empty.style.display = 'none';
+
+  // Hedef su map
+  const hedefSu = {};
+  _stSporcular.forEach(sp => {
+    hedefSu[sp.ID || sp.id || ''] = Number(sp.Su_ml) || 2500;
+  });
+
+  tbody.innerHTML = suUykuArr.map(r => {
+    const id  = r.SporucuID || r.sporucuid || '';
+    const ad  = r.SporucuAdi || r.sporucuadi || id;
+    const su  = Number(r.Su_ml  || r.su_ml)  || 0;
+    const uyku= r.Uyku_saat || r.uyku_saat  || '-';
+    const kal = (r.Uyku_kalite || r.uyku_kalite || '').toLowerCase();
+    const hSu = hedefSu[id] || 2500;
+    const pct = hSu > 0 ? Math.round((su/hSu)*100) : 0;
+    const suClr = pct>=90?'var(--green)':pct>=60?'var(--yellow)':'var(--red)';
+    const kalClr = kal==='iyi'?'var(--green)':kal==='orta'?'var(--yellow)':kal==='kötü'?'var(--red)':'var(--text2)';
+
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:8px 6px;font-weight:600">${ad}</td>
+      <td style="padding:8px 6px;text-align:center;color:${suClr};font-weight:700">${su}</td>
+      <td style="padding:8px 6px;text-align:center;color:var(--text2)">${hSu}</td>
+      <td style="padding:8px 6px;text-align:center">
+        <span style="background:${suClr};color:#fff;padding:2px 10px;border-radius:12px;font-size:.8rem;font-weight:700">${pct}%</span>
+      </td>
+      <td style="padding:8px 6px;text-align:center">${uyku}</td>
+      <td style="padding:8px 6px;text-align:center;color:${kalClr};font-weight:600">${kal||'-'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// Ayar kaydet
+window.stKaydetAyar = function() {
+  const url = document.getElementById('st_api_url')?.value.trim();
+  if (url) {
+    ST_API_URL = url;
+    try { localStorage.setItem('st_api_url', url); } catch(e) {}
+    alert('✅ URL kaydedildi!');
+  }
+};
+
+// Sayfa açıldığında başlat
+const _origShowPage = window.showPage;
+window.showPage = function(id) {
+  if (_origShowPage) _origShowPage(id);
+  if (id === 'p-sporcu-takip') {
+    // Tarih varsayılanı
+    const tarihEl = document.getElementById('st_tarih');
+    if (tarihEl && !tarihEl.value) tarihEl.value = todayISO();
+    // URL input
+    const urlEl = document.getElementById('st_api_url');
+    if (urlEl) urlEl.value = ST_API_URL;
+    // Sporcu listesi + veriler
+    stSporcuListesiYukle().then(() => stYukle());
+  }
+};
+
+})();
 </script>
 </body>
 </html>
