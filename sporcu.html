@@ -807,7 +807,7 @@ async function submitMeal() {
     kh: fmt(totalKh),
     yag: fmt(totalYag),
     not: document.getElementById('mealNote').value,
-    saat: new Date().toISOString(),
+    saat: new Date().toTimeString().substring(0, 8),
     tarih: today()
   };
 

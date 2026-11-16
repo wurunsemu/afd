@@ -4627,7 +4627,7 @@ async function stSporcuListesiYukle() {
 
 // Ana yükleme
 window.stYukle = async function() {
-  const tarih   = document.getElementById('st_tarih')?.value  || todayISO();
+  const tarih   = document.getElementById('st_tarih')?.value  || '';
   const sporcuId= document.getElementById('st_sporcu')?.value || '';
   const ogunTip = document.getElementById('st_ogun')?.value   || '';
 
@@ -4876,7 +4876,7 @@ window.showPage = function(id) {
   if (id === 'p-sporcu-takip') {
     // Tarih varsayılanı
     const tarihEl = document.getElementById('st_tarih');
-    if (tarihEl && !tarihEl.value) tarihEl.value = todayISO();
+    // Tarih varsayılanı yok — tüm kayıtlar gösterilir, kullanıcı filtreleyebilir
     // URL input
     const urlEl = document.getElementById('st_api_url');
     if (urlEl) urlEl.value = ST_API_URL;
