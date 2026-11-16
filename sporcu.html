@@ -110,7 +110,8 @@ html,body{height:100%;background:var(--bg1);color:var(--txt1);font-family:-apple
   <div class="login-title">Sporcu Paneli</div>
   <div class="login-sub">Takım beslenme takip sistemi</div>
 
-  <input type="text" id="loginName" placeholder="Ad Soyad" autocomplete="name"
+  <input type="text" id="loginName" placeholder="Ad Soyad (örn: Ahmet Yılmaz)"
+         autocomplete="off" autocorrect="off" spellcheck="false"
          style="margin-top:8px" autocapitalize="words">
 
   <input type="password" id="loginPin" placeholder="PIN (ilk girişte kendin belirle)"
@@ -464,12 +465,34 @@ async function doLogin() {
   if (!name) { errEl.textContent = 'Adını gir'; return; }
   if (!pin || pin.length < 4) { errEl.textContent = 'PIN en az 4 hane olmalı'; return; }
 
-  setLoading(true, 'Giriş yapılıyor...');
+  setLoading(true, 'Kontrol ediliyor...');
   try {
-    const r = await postAPI({ action: 'loginByName', secret: TEAM_SECRET, name: name, pin: pin });
+    // Adım 1: Sporcu listesini çek, ada göre eşleştir (dropdown gösterilmez)
+    const list = await callAPI({ action: 'getAthletes', secret: TEAM_SECRET });
+    if (!list.ok) { errEl.textContent = 'Sunucu hatası. Tekrar dene.'; setLoading(false); return; }
+
+    const athletes = list.data || [];
+    const found = athletes.find(a =>
+      a.Ad && a.Ad.toLowerCase().trim() === name.toLowerCase().trim()
+    );
+    if (!found) {
+      errEl.textContent = 'Sporcu bulunamadı. Adını tam yaz (örn: Ahmet Yılmaz)';
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true, 'Giriş yapılıyor...');
+
+    // Adım 2: Bulunan ID ile PIN doğrula
+    const r = await postAPI({
+      action: 'athleteLogin',
+      secret: TEAM_SECRET,
+      athleteId: String(found.ID),
+      pin: pin
+    });
 
     if (!r.ok) {
-      errEl.textContent = r.error || 'Giriş başarısız. Adını kontrol et.';
+      errEl.textContent = r.error || 'PIN hatalı';
       setLoading(false);
       return;
     }
@@ -477,14 +500,14 @@ async function doLogin() {
     athlete = {
       id:      r.data.athleteId,
       name:    r.data.athleteName,
-      pos:     r.data.pos || '',
+      pos:     found.Mevki || '',
       targets: r.data.targets || {}
     };
 
     try { localStorage.setItem('sp_session', JSON.stringify(athlete)); } catch(e){}
     launchApp();
   } catch(e) {
-    errEl.textContent = 'Bağlantı hatası. Tekrar dene.';
+    errEl.textContent = 'Hata: ' + (e.message || e);
     console.error(e);
   }
   setLoading(false);
@@ -521,9 +544,11 @@ async function callAPI(params) {
 }
 
 async function postAPI(params) {
+  // text/plain kullanıyoruz — application/json CORS preflight tetikler,
+  // Google Apps Script OPTIONS isteğini desteklemez.
   const r = await fetch(API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(params)
   });
   if(!r.ok) throw new Error('HTTP ' + r.status);
