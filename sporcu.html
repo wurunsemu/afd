@@ -189,6 +189,31 @@ html,body{height:100%;background:var(--bg1);color:var(--txt1);font-family:-apple
         </div>
       </div>
 
+      <!-- Makro Hedef Progress Barları -->
+      <div>
+        <div class="prog-row" style="margin-bottom:6px">
+          <div class="prog-label">
+            <span style="color:var(--blu)">Protein</span>
+            <span id="protLabel" style="color:var(--txt3)">— g</span>
+          </div>
+          <div class="prog-track" style="height:6px"><div class="prog-fill" id="protBar" style="width:0%;background:var(--blu)"></div></div>
+        </div>
+        <div class="prog-row" style="margin-bottom:6px">
+          <div class="prog-label">
+            <span style="color:var(--yel)">Karbonhidrat</span>
+            <span id="khLabel" style="color:var(--txt3)">— g</span>
+          </div>
+          <div class="prog-track" style="height:6px"><div class="prog-fill" id="khBar" style="width:0%;background:var(--yel)"></div></div>
+        </div>
+        <div class="prog-row">
+          <div class="prog-label">
+            <span style="color:var(--pur)">Yağ</span>
+            <span id="yagLabel" style="color:var(--txt3)">— g</span>
+          </div>
+          <div class="prog-track" style="height:6px"><div class="prog-fill" id="yagBar" style="width:0%;background:var(--pur)"></div></div>
+        </div>
+      </div>
+
       <!-- Öğünler -->
       <div>
         <div class="sec-hdr">
@@ -583,19 +608,23 @@ function renderTodayMeals() {
   const list = document.getElementById('todayMealList');
   let totalKcal = 0, totalProt = 0, totalKh = 0, totalYag = 0;
 
-  todayMeals.forEach(m => {
+  // Öğünleri saate göre sırala
+  const sorted = [...todayMeals].sort((a, b) => (a.saat||'').localeCompare(b.saat||''));
+
+  sorted.forEach(m => {
     totalKcal += m.kcal || 0;
     totalProt += m.protein || 0;
     totalKh += m.kh || 0;
     totalYag += m.yag || 0;
   });
 
-  // Update totals
+  // Kcal güncelle
   document.getElementById('todayKcal').textContent = Math.round(totalKcal);
   document.getElementById('todayProt').textContent = fmt(totalProt, 0);
   document.getElementById('todayKh').textContent = fmt(totalKh, 0);
   document.getElementById('todayYag').textContent = fmt(totalYag, 0);
 
+  // Kcal progress
   const targetK = parseInt(athlete?.targets?.kcal) || 0;
   if(targetK > 0) {
     document.getElementById('targetKcal').textContent = targetK;
@@ -607,7 +636,27 @@ function renderTodayMeals() {
     document.getElementById('kcalBadge').style.color = col;
   }
 
-  if(!todayMeals.length) {
+  // Makro hedef progress barları
+  const tP = parseInt(athlete?.targets?.protein) || 0;
+  const tK = parseInt(athlete?.targets?.kh) || 0;
+  const tY = parseInt(athlete?.targets?.yag) || 0;
+  if(tP > 0) {
+    const pct = Math.min(100, Math.round(totalProt / tP * 100));
+    document.getElementById('protBar').style.width = pct + '%';
+    document.getElementById('protLabel').textContent = `${Math.round(totalProt)} / ${tP} g`;
+  }
+  if(tK > 0) {
+    const pct = Math.min(100, Math.round(totalKh / tK * 100));
+    document.getElementById('khBar').style.width = pct + '%';
+    document.getElementById('khLabel').textContent = `${Math.round(totalKh)} / ${tK} g`;
+  }
+  if(tY > 0) {
+    const pct = Math.min(100, Math.round(totalYag / tY * 100));
+    document.getElementById('yagBar').style.width = pct + '%';
+    document.getElementById('yagLabel').textContent = `${Math.round(totalYag)} / ${tY} g`;
+  }
+
+  if(!sorted.length) {
     list.innerHTML = `<div style="text-align:center;color:var(--txt3);padding:20px;font-size:0.85rem">
       Henüz öğün eklenmedi.<br>
       <span style="color:var(--grn);cursor:pointer" onclick="switchPanel('photo')">📷 Fotoğraf ile ekle →</span>
@@ -615,18 +664,31 @@ function renderTodayMeals() {
     return;
   }
 
-  list.innerHTML = todayMeals.map(m => `
-    <div class="meal-item">
-      <div class="meal-item-info">
-        <div class="meal-item-name">${m.ogunTipi || 'Öğün'}</div>
-        <div class="meal-item-meta">${(m.besinler||[]).slice(0,3).join(', ')}${(m.besinler||[]).length > 3 ? '...' : ''}</div>
+  // Öğün tipi emoji haritası
+  const ogunEmoji = {
+    'Kahvaltı': '🌅', 'Öğle Yemeği': '☀️',
+    'Akşam Yemeği': '🌙', 'Ara Öğün': '🍎'
+  };
+
+  list.innerHTML = sorted.map(m => {
+    const emoji = ogunEmoji[m.ogunTipi] || '🍽️';
+    // saat "HH:MM:SS" formatında — slice(0,5) = "HH:MM"
+    const saatStr = (m.saat||'').slice(0,5);
+    const besinler = (m.besinler||[]).slice(0,3).join(', ') + ((m.besinler||[]).length > 3 ? '…' : '');
+    return `
+      <div class="meal-item">
+        <div style="font-size:1.5rem;width:34px;text-align:center;flex-shrink:0">${emoji}</div>
+        <div class="meal-item-info">
+          <div class="meal-item-name">${m.ogunTipi || 'Öğün'}</div>
+          ${besinler ? `<div class="meal-item-meta">${besinler}</div>` : ''}
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div class="meal-item-kcal">${Math.round(m.kcal||0)} kcal</div>
+          ${saatStr ? `<div class="meal-time-badge">${saatStr}</div>` : ''}
+        </div>
       </div>
-      <div>
-        <div class="meal-item-kcal">${Math.round(m.kcal||0)} kcal</div>
-        <div class="meal-time-badge">${(m.saat||'').slice(11,16)}</div>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function updateWaterDisplay() {

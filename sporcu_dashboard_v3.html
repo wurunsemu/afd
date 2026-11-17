@@ -647,6 +647,19 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
     </div>
   </div>
 
+  <!-- Günlük Enerji Grafiği -->
+  <div class="card" style="margin-top:14px;border-left:3px solid var(--orange)">
+    <div class="card-title"><i class="fas fa-bolt" style="color:var(--orange)"></i> Günlük Enerji Takibi — Alınan vs Hedef
+      <span id="st-enerji-hedef-badge" style="font-size:.72rem;color:var(--text2);margin-left:8px"></span>
+    </div>
+    <div class="chart-wrap" style="height:260px;position:relative">
+      <canvas id="st-enerji-chart"></canvas>
+      <div id="st-enerji-empty" style="display:none;position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:var(--text2);font-size:.85rem">
+        <div style="text-align:center"><i class="fas fa-chart-bar" style="font-size:2rem;margin-bottom:8px;display:block;opacity:.4"></i>Veri bulunamadı</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Apps Script URL ayarı -->
   <div class="card" style="margin-top:14px">
     <div class="card-title"><i class="fas fa-gear"></i> Sporcu Panel Ayarları</div>
@@ -4657,6 +4670,7 @@ window.stYukle = async function() {
     stRenderSporcuOzet(filtreOgunler, suUykuArr, tarih);
     stRenderOgunTablosu(filtreOgunler);
     stRenderSuUykuTablosu(suUykuArr);
+    stRenderEnerjiGrafik(ogunler);
 
   } catch(e) {
     document.getElementById('st-kpis').innerHTML =
@@ -4857,6 +4871,129 @@ function stRenderSuUykuTablosu(suUykuArr) {
       <td style="padding:8px 6px;text-align:center;color:${kalClr};font-weight:600">${kal||'-'}</td>
     </tr>`;
   }).join('');
+}
+
+// ── Günlük Enerji Grafiği ───────────────────────────────────────────
+function stRenderEnerjiGrafik(ogunler) {
+  destroyChart('st-enerji-chart');
+  const el  = document.getElementById('st-enerji-chart');
+  const emp = document.getElementById('st-enerji-empty');
+  const bdg = document.getElementById('st-enerji-hedef-badge');
+  if (!el) return;
+
+  if (!ogunler || !ogunler.length) {
+    el.style.display = 'none';
+    if (emp) { emp.style.display = 'flex'; }
+    return;
+  }
+  el.style.display = 'block';
+  if (emp) emp.style.display = 'none';
+
+  // Tarih bazında kcal topla
+  const byDate = {};
+  ogunler.forEach(o => {
+    const ts   = o.TarihSaat || o.tarihsaat || o.Tarih || o.tarih || '';
+    const date = String(ts).substring(0, 10);
+    if (!date || date.length < 10) return;
+    byDate[date] = (byDate[date] || 0) + (Number(o.Kcal || o.kcal) || 0);
+  });
+
+  const dates = Object.keys(byDate).sort();
+  if (!dates.length) {
+    el.style.display = 'none';
+    if (emp) emp.style.display = 'flex';
+    return;
+  }
+
+  const kcals = dates.map(d => Math.round(byDate[d]));
+
+  // Seçili sporcu hedef kcal (yoksa tüm sporcu ortalaması)
+  const sporcuId = document.getElementById('st_sporcu')?.value || '';
+  let targetKcal = 0;
+  if (sporcuId && _stSporcular.length) {
+    const sp = _stSporcular.find(s => String(s.ID || s.id) === String(sporcuId));
+    targetKcal = Number(sp?.Enerji_kcal || sp?.enerji_kcal || 0);
+  } else if (_stSporcular.length) {
+    const vals = _stSporcular.map(s => Number(s.Enerji_kcal || s.enerji_kcal) || 0).filter(v => v > 0);
+    if (vals.length) targetKcal = Math.round(vals.reduce((a,b) => a+b, 0) / vals.length);
+  }
+
+  if (bdg) {
+    bdg.textContent = targetKcal
+      ? (sporcuId ? `Hedef: ${targetKcal} kcal/gün` : `Ortalama hedef: ${targetKcal} kcal/gün`)
+      : '';
+  }
+
+  const shortDates = dates.map(d => {
+    const [,m,day] = d.split('-');
+    return `${day}/${m}`;
+  });
+
+  const barColors = kcals.map(v => {
+    if (!targetKcal) return 'rgba(52,199,89,.75)';
+    const ratio = v / targetKcal;
+    if (ratio < 0.80) return 'rgba(249,115,22,.75)';   // turuncu — düşük
+    if (ratio > 1.15) return 'rgba(239,68,68,.75)';     // kırmızı — aşırı
+    return 'rgba(52,199,89,.75)';                        // yeşil — hedefte
+  });
+
+  const datasets = [
+    {
+      label: 'Alınan (kcal)',
+      data: kcals,
+      backgroundColor: barColors,
+      borderRadius: 5,
+      order: 2
+    }
+  ];
+  if (targetKcal) {
+    datasets.push({
+      label: `Hedef (${targetKcal} kcal)`,
+      data: dates.map(() => targetKcal),
+      type: 'line',
+      borderColor: '#3B82F6',
+      borderDash: [6, 3],
+      borderWidth: 2,
+      pointRadius: 0,
+      fill: false,
+      tension: 0,
+      order: 1
+    });
+  }
+
+  charts['st-enerji-chart'] = new Chart(el, {
+    type: 'bar',
+    data: { labels: shortDates, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#9a8e80', boxWidth: 12 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} kcal`,
+            afterBody: (items) => {
+              if (!targetKcal) return [];
+              const v = items[0]?.parsed?.y;
+              if (v == null) return [];
+              const diff = v - targetKcal;
+              const sign = diff >= 0 ? '+' : '';
+              return [`Fark: ${sign}${diff} kcal`];
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#9a8e80', maxRotation: 45 }, grid: { color: 'rgba(255,255,255,.05)' } },
+        y: {
+          ticks: { color: '#9a8e80' },
+          grid: { color: 'rgba(255,255,255,.05)' },
+          title: { display: true, text: 'kcal', color: '#9a8e80' },
+          beginAtZero: true
+        }
+      }
+    }
+  });
 }
 
 // Ayar kaydet
