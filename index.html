@@ -555,6 +555,38 @@ html:active-view-transition-type(backward)::view-transition-new(page) { animatio
   <div id="nutritionContent"></div>
 </div>
 
+<!-- ===== PAGE: YEMEK SİMÜLASYONU ===== -->
+<div class="page" id="p-sim">
+  <div class="sec-header">
+    <div class="sec-title"><i class="fas fa-kitchen-set" style="color:var(--orange)"></i> Yemek Simülasyonu</div>
+  </div>
+  <div id="simContent"></div>
+</div>
+
+<!-- ===== PAGE: ERGOJENİK STRATEJİLER ===== -->
+<div class="page" id="p-ergogen">
+  <div class="sec-header">
+    <div class="sec-title"><i class="fas fa-flask-vial" style="color:var(--teal)"></i> Ergojenik Stratejiler</div>
+  </div>
+  <div id="ergogenContent"></div>
+</div>
+
+<!-- ===== PAGE: MAÇ PROTOKOLLERİ ===== -->
+<div class="page" id="p-match-proto">
+  <div class="sec-header">
+    <div class="sec-title"><i class="fas fa-person-running" style="color:var(--green)"></i> Maç Protokolleri</div>
+  </div>
+  <div id="matchProtoContent"></div>
+</div>
+
+<!-- ===== PAGE: FİZYOTERAPİST ===== -->
+<div class="page" id="p-physio">
+  <div class="sec-header">
+    <div class="sec-title"><i class="fas fa-kit-medical" style="color:var(--teal)"></i> Fizyoterapist Entegrasyonu</div>
+  </div>
+  <div id="physioContent"></div>
+</div>
+
 <!-- ===== PAGE: PRINT REPORTS ===== -->
 <div class="page" id="p-print">
   <div class="sec-header">
@@ -1052,7 +1084,11 @@ const NAV_GROUPS = [
   ]},
   { title: 'Veri & Planlama', items: [
     { id:'p-entry', icon:'fa-pen-to-square', label:'Veri Girişi', sub:'Ölçüm, Hooper, GPS, beslenme' },
-    { id:'p-nutrition', icon:'fa-utensils', label:'Beslenme Planı', sub:'Makro hesap & menü' }
+    { id:'p-nutrition', icon:'fa-utensils', label:'Beslenme Planı', sub:'Makro hesap & menü' },
+    { id:'p-sim', icon:'fa-kitchen-set', label:'Yemek Simülasyonu', sub:'Takım ortak menü planı' },
+    { id:'p-ergogen', icon:'fa-flask-vial', label:'Ergojenik Stratejiler', sub:'Kafein · Kreatin · Protokoller' },
+    { id:'p-match-proto', icon:'fa-person-running', label:'Maç Protokolleri', sub:'Maç önü/arası/sonrası + kabul takibi' },
+    { id:'p-physio', icon:'fa-kit-medical', label:'Fizyoterapist', sub:'Sinyal takibi · sorular · uygulamalar' }
   ]},
   { title: 'Çıktı & Kayıt', items: [
     { id:'p-print', icon:'fa-file-pdf', label:'PDF Raporlar', sub:'Takım / bireysel / müdahale' },
@@ -1071,6 +1107,10 @@ const PAGE_INFO = {
   'p-report': { text: 'Oyuncuyla paylaşabileceğiniz sade bir özet: takım ortalamasıyla karşılaştırma ve <b>kişisel öneriler</b>.' },
   'p-entry': { text: 'Bir oyuncu için tek oturumluk verileri girin. BMI, BMH ve yağsız kütle <b>otomatik hesaplanır</b>.', steps: ['Oyuncu ve oturum seç', 'Değerleri gir', 'Kaydet'] },
   'p-nutrition': { text: 'BIA verisinden günlük makro hedefini hesaplayın, değişim tablosuyla menü oluşturun ve <b>PDF</b> olarak verin.', steps: ['Makro hedefi', 'Örnek Dağıtım / tabloyu düzenle', 'Yazılı diyeti kontrol et', 'PDF indir'] },
+  'p-sim': { text: 'Tüm takım için <b>tek bir ortak menü</b> kurun (antrenman, maç öncesi/arası/sonrası, deplasman). Menü, her oyuncunun kendi kilosuna göre hesaplanan KH ve protein hedefiyle karşılaştırılır.', steps: ['Senaryo seç', 'Porsiyonları gir', 'Karşılama tablosuna bak', 'PDF al'] },
+  'p-ergogen': { text: 'Kafein, kreatin, beta-alanin, sodyum bikarbonat ve KH ağız çalkalama protokolleri. Dozlar her oyuncunun <b>kendi kilosuna</b> göre hesaplanır; protokolü oyuncu bazında aktif edin.', steps: ['Protokol seç', 'Oyuncuları aktif et', 'PDF al'] },
+  'p-match-proto': { text: 'Maç önü, devre arası ve maç sonrası beslenme protokolleri. Her faz için servis menüsünü belirleyin ve oyuncuların her besini <b>ne kadar kabul ettiğini</b> 1-5 yıldızla puanlayın.', steps: ['Faz seç', 'Menüyü düzenle', 'Oyuncu puanlarını gir', 'Düşük kabulleri değiştir'] },
+  'p-physio': { text: 'Fizyoterapistler kendi telefon formlarından (<b>fizyo.html</b>) uygulama yanıtlarını ve gözledikleri <b>psikolojik, beslenme ve fiziksel sinyalleri</b> bildirir. Siz burada her bildirimin takip sürecini yürütür, fizyoterapiste soru sorarsınız.', steps: ['Yeni bildirimi oku', 'Önerilen süreci uygula', 'Takip durumunu güncelle', 'Gerekirse soru sor'] },
   'p-print': { text: 'Yazdırılabilir raporlar yeni sekmede açılır; tarayıcının yazdır penceresinden <b>PDF olarak kaydet</b>i seçin.' },
   'p-td': { text: 'Gelen/giden transferler, kiralamalar ve teknik direktör notları.' }
 };
@@ -1173,7 +1213,8 @@ function navTo(id) {
   if (from === id) { renderPage(id); return; }
   const dir = NAV_ORDER.indexOf(id) >= NAV_ORDER.indexOf(from) ? 'forward' : 'backward';
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!document.startViewTransition || reduce) {
+  // Sekme görünür değilse tarayıcı geçişi bekletebilir → animasyonsuz değiştir
+  if (!document.startViewTransition || reduce || document.visibilityState !== 'visible') {
     showPage(id);
     if (!reduce) animatePageIn(document.getElementById(id));
     return;
@@ -1241,6 +1282,10 @@ function renderPage(id) {
     else if (id === 'p-report') renderReportPage();
     else if (id === 'p-entry') loadEntryForm();
     else if (id === 'p-nutrition') renderNutritionPage();
+    else if (id === 'p-sim') renderSimPage();
+    else if (id === 'p-ergogen') renderErgoPage();
+    else if (id === 'p-match-proto') renderMatchProtoPage();
+    else if (id === 'p-physio') renderPhysioPage();
     else if (id === 'p-sporcu-takip' && window.stOnShow) window.stOnShow();
   } catch (e) {
     console.error('Sayfa çizim hatası:', id, e);
@@ -1283,13 +1328,15 @@ function renderSessionSelector() {
 
 // ===================== TEAM SNAPSHOTS (cinsiyet) =====================
 function snapshotTeam() {
-  return { players, transfers, sessionDates, tdNotes: window._tdNotes || '', activeSession, _playerIdCounter };
+  return { players, transfers, sessionDates, tdNotes: window._tdNotes || '', activeSession, _playerIdCounter, teamSim, teamMatch };
 }
 function loadTeamSnapshot(s) {
   players = normalizePlayers(Array.isArray(s.players) ? s.players : []);
   transfers = Array.isArray(s.transfers) ? s.transfers : [];
   sessionDates = Object.assign(emptyDates(), s.sessionDates || {});
   window._tdNotes = s.tdNotes || '';
+  teamSim = (s.teamSim && typeof s.teamSim === 'object') ? s.teamSim : {};
+  teamMatch = (s.teamMatch && typeof s.teamMatch === 'object') ? s.teamMatch : {};
   activeSession = SESSIONS.includes(+s.activeSession) ? +s.activeSession : 1;
   _playerIdCounter = +s._playerIdCounter || 1000;
   syncIdCounter();
@@ -3239,7 +3286,1461 @@ function saveNutritionData(pidx) {
     setTimeout(function(){ win.focus(); win.print(); }, 500);
   };
   window._EXG = EXG;
+  window._exMenuText = function(M){ return buildMenuText(M, [0,0,0,0,0,0], []); };
 })();
+
+
+// ===================== YEMEK SİMÜLASYONU (takım ortak menü) =====================
+const SIM_SCENARIOS = {
+  antrenman: {
+    id:'antrenman', label:'Antrenman Günü', icon:'🏃', color:'var(--blue)',
+    choGkg:[5,6], proGkg:[1.6,2.0], fatGkg:[1.0,1.5],
+    timing:'Ana öğün 2-3 saat öncesi',
+    note:'Yüksek CHO periodizasyonu — yoğun günlerde 6 g/kg, orta yük 5 g/kg. Protein YKK bazlı 1.6-2.0 g/kg.'
+  },
+  mac_oncesi: {
+    id:'mac_oncesi', label:'Maç Öncesi (3-4 sa)', icon:'⚽', color:'var(--green)',
+    choGkg:[1,4], proGkg:[0.3,0.5], fatGkg:[0.3,0.5], fatMaxG:15,
+    timing:'Maçtan 3-4 saat önce',
+    note:'Az yağ (<15 g), az lif, az protein — GI >70 KH kaynakları tercih edilmeli. Mide rahatsızlığı riski azaltılır.'
+  },
+  mac_arasi: {
+    id:'mac_arasi', label:'Maç Arası (Devre)', icon:'⏱️', color:'var(--yellow)',
+    isSpecial:true, choTarget:[30,60],
+    timing:'15 dakikalık devre arası',
+    note:'Hedef: 30-60 g hızlı KH — muz / jel / sporcu içeceği / üzüm / hurma. Katı besin yok, hidrasyon öncelikli.'
+  },
+  mac_sonrasi: {
+    id:'mac_sonrasi', label:'Maç Sonrası (Toparlanma)', icon:'🔄', color:'var(--purple)',
+    choGkg:[1.0,1.2], proGkg:[0.3,0.4], fatGkg:[0.5,0.8],
+    timing:'Maç sonrası ilk 30-60 dakika',
+    note:'1.0-1.2 g/kg KH + 0.3-0.4 g/kg protein — glikojen yenileme + MPS tetikleme. İlk 4 saat kritik pencere.'
+  },
+  deplasman: {
+    id:'deplasman', label:'Deplasman', icon:'🚌', color:'var(--orange)',
+    choGkg:[3,5], proGkg:[1.6,1.8], fatGkg:[1.0,1.5],
+    timing:'Seyahat + deplasman günü',
+    note:'Güvenli besinler: muz, haşlanmış yumurta, tam buğday ekmeği, protein shake, meyve. Açık büfe riski yüksek.'
+  }
+};
+const SIM_HALFTIME_PRESETS = [
+  { name:'Muz (1 orta boy)',      grams:120, cho:27 },
+  { name:'Enerji jeli',           grams:40,  cho:25 },
+  { name:'Sporcu içeceği 500 ml', grams:500, cho:35 },
+  { name:'Üzüm 100 g',            grams:100, cho:17 },
+  { name:'Hurma 2 adet',          grams:40,  cho:18 }
+];
+const SIM_MEALS = ['Kah','Ara1','Öğle','Ara2','Akş','Gece'];
+
+// Takım ortak menüsü takım düzeyinde saklanır (her oyuncuya kopyalanmaz)
+let teamSim = {};
+let _simScenario = 'antrenman';
+let _simTimerInterval = null, _simTimerSec = 0;
+
+function emptySimTable() { return Array.from({ length: 9 }, () => Array(6).fill('')); }
+function simState(id) {
+  id = id || _simScenario;
+  if (!teamSim[id]) teamSim[id] = SIM_SCENARIOS[id]?.isSpecial ? { items: [], notes: '' } : { exTable: emptySimTable(), freeItems: [], notes: '' };
+  const s = teamSim[id];
+  if (!SIM_SCENARIOS[id]?.isSpecial) {
+    if (!Array.isArray(s.exTable)) s.exTable = emptySimTable();
+    if (!Array.isArray(s.freeItems)) s.freeItems = [];
+  } else if (!Array.isArray(s.items)) s.items = [];
+  return s;
+}
+// Önceki sürümde menü her oyuncunun simData alanına yazılıyordu → takım düzeyine taşı
+function migrateSimFromPlayers() {
+  if (Object.keys(teamSim).length) return;
+  const src = players.find(p => p.simData && Object.keys(p.simData).length);
+  if (!src) return;
+  teamSim = JSON.parse(JSON.stringify(src.simData));
+  if (teamSim.deplasyon && !teamSim.deplasman) { teamSim.deplasman = teamSim.deplasyon; delete teamSim.deplasyon; }
+  (teamSim.antrenman?.freeItems || []).concat(teamSim.mac_oncesi?.freeItems || [], teamSim.mac_sonrasi?.freeItems || [], teamSim.deplasman?.freeItems || [])
+    .forEach(it => { if (!it.grams) it.grams = 100; });
+  players.forEach(p => delete p.simData);
+}
+
+function getSimTarget(pidx, scenarioId) {
+  const p = players[pidx];
+  const sc = SIM_SCENARIOS[scenarioId];
+  if (!p || !sc || sc.isSpecial) return null;
+  const nk = p.nutritionData || {};
+  let bw = nk.bwCho || nk.weight || null, ffm = null;
+  for (let s = 8; s >= 1 && (!bw || !ffm); s--) {
+    const ss = p.sessions[s];
+    if (!bw && hasVal(ss?.weight)) bw = ss.weight;
+    if (!ffm && hasVal(ss?.ffm)) ffm = ss.ffm;
+  }
+  const estimated = !bw;
+  bw = bw || (teamGender === 'kadin' ? 60 : 75);
+  ffm = ffm || bw * (teamGender === 'kadin' ? 0.80 : 0.88);
+  const mid = r => (r[0] + r[1]) / 2;
+  return { cho: bw * mid(sc.choGkg), pro: ffm * mid(sc.proGkg), fat: bw * mid(sc.fatGkg), estimated };
+}
+function calcSimMacrosFromTable(exTable) {
+  let cho = 0, pro = 0, fat = 0, kcal = 0;
+  (window._EXG || []).forEach((g, i) => {
+    const n = (exTable[i] || []).reduce((a, v) => a + (parseFloat(v) || 0), 0);
+    // EXG değerleri porsiyon başına; protein tozu (isGram) için zaten gram başına
+    cho += n * g.cho; pro += n * g.pro; fat += n * g.fat; kcal += n * g.kcal;
+  });
+  return { cho, pro, fat, kcal };
+}
+// Serbest besinler: 100 g başına değer × gram / 100
+function calcSimMacrosFromFree(freeItems) {
+  return (freeItems || []).reduce((a, it) => {
+    const k = (parseFloat(it.grams) || 100) / 100;
+    const kcal = it.kcal ? it.kcal : (it.cho || 0) * 4 + (it.pro || 0) * 4 + (it.fat || 0) * 9;
+    return { cho: a.cho + (it.cho || 0) * k, pro: a.pro + (it.pro || 0) * k, fat: a.fat + (it.fat || 0) * k, kcal: a.kcal + kcal * k };
+  }, { cho: 0, pro: 0, fat: 0, kcal: 0 });
+}
+function calcSimTotal(id) {
+  const s = simState(id);
+  const ex = calcSimMacrosFromTable(s.exTable), fr = calcSimMacrosFromFree(s.freeItems);
+  return { cho: ex.cho + fr.cho, pro: ex.pro + fr.pro, fat: ex.fat + fr.fat, kcal: ex.kcal + fr.kcal };
+}
+const simPctColor = p => p === null ? 'var(--text2)' : p >= 90 ? 'var(--green)' : p >= 70 ? 'var(--yellow)' : 'var(--red)';
+function simCoverage(id) {
+  const got = calcSimTotal(id);
+  return players.map((p, i) => {
+    const tgt = getSimTarget(i, id);
+    const choPct = tgt && tgt.cho > 0 ? Math.round(got.cho / tgt.cho * 100) : null;
+    const proPct = tgt && tgt.pro > 0 ? Math.round(got.pro / tgt.pro * 100) : null;
+    const status = choPct === null || proPct === null ? '—' : (choPct >= 90 && proPct >= 90) ? '✅' : (choPct >= 70 && proPct >= 70) ? '⚠️' : '❌';
+    return { p, tgt, got, choPct, proPct, status };
+  });
+}
+
+function renderSimPage() {
+  const box = document.getElementById('simContent');
+  if (!players.length) { box.innerHTML = noPlayersHTML(); return; }
+  migrateSimFromPlayers();
+  const sc = SIM_SCENARIOS[_simScenario];
+  const s = simState();
+  const scenarioBtns = Object.values(SIM_SCENARIOS).map(x => `
+    <button class="btn${_simScenario === x.id ? ' btn-primary' : ''}" aria-pressed="${_simScenario === x.id}"
+      style="${_simScenario === x.id ? `background:${x.color};border-color:${x.color};color:#fff;` : ''}font-size:.82rem"
+      onclick="simSetScenario('${x.id}')">${x.icon} ${x.label}</button>`).join('');
+  const infoCard = `
+    <div class="card" style="border-left:3px solid ${sc.color}">
+      <div class="card-title" style="color:${sc.color}">${sc.icon} ${sc.label}</div>
+      <div style="font-size:.82rem;color:var(--text2);margin-bottom:4px"><i class="fas fa-clock"></i> ${sc.timing}</div>
+      <div style="font-size:.85rem">${sc.note}</div>
+      ${sc.isSpecial ? '' : `<div style="font-size:.75rem;color:var(--text2);margin-top:6px">Hedefler: KH ${sc.choGkg.join('–')} g/kg · Protein ${sc.proGkg.join('–')} g/kg YKK · Yağ ${sc.fatGkg.join('–')} g/kg (aralık ortası alınır)</div>`}
+    </div>`;
+  let menuCard = '';
+  if (sc.isSpecial) {
+    menuCard = `
+      <div class="card">
+        <div class="card-title"><i class="fas fa-bolt" style="color:var(--yellow)"></i> Devre Arası Besin Seçimi</div>
+        <div id="simHalfBar"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          ${SIM_HALFTIME_PRESETS.map((pr, k) => `<button class="btn btn-sm" onclick="simAddHalfTimeItem(SIM_HALFTIME_PRESETS[${k}])">${pr.name} (+${pr.cho} g KH)</button>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input type="text" id="sim_free_name" placeholder="Besin adı" style="flex:2" aria-label="Besin adı">
+          <input type="number" id="sim_free_cho" placeholder="KH (g)" min="0" style="flex:1" aria-label="Karbonhidrat gram">
+          <button class="btn" onclick="simAddCustomHalfTime()" aria-label="Ekle"><i class="fas fa-plus"></i></button>
+        </div>
+        <div id="sim_halftime_list" style="font-size:.82rem"></div>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn" id="simTimerBtn" onclick="simToggleTimer()" style="border-color:var(--yellow);color:var(--yellow)"></button>
+          <span id="simTimerDisplay" role="timer" style="font-size:1.1rem;font-weight:700;color:var(--yellow)"></span>
+        </div>
+      </div>`;
+  } else {
+    menuCard = `
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-table" style="color:var(--purple)"></i> 9-Grup Değişim Tablosu <span style="font-size:.7rem">(tüm takım için tek menü)</span></div>
+          <div id="simTotals"></div>
+          <div class="table-scroll">
+            <table style="width:100%;border-collapse:collapse;font-size:.73rem">
+              <thead><tr style="background:var(--bg3)">
+                <th style="text-align:left;padding:5px 6px;border:1px solid var(--border)">Grup</th>
+                ${SIM_MEALS.map(h => `<th style="padding:4px 2px;border:1px solid var(--border);text-align:center;color:var(--accent)">${h}</th>`).join('')}
+              </tr></thead>
+              <tbody>
+                ${(window._EXG || []).map((g, i) => `<tr>
+                  <td style="padding:3px 5px;border:1px solid var(--border);background:var(--bg2);white-space:nowrap">
+                    <span style="color:${g.c};font-weight:700;font-size:.7rem">${g.abbr}</span>
+                    <div style="font-size:.58rem;color:var(--text2)">${g.isGram ? 'gram' : 'porsiyon'}</div>
+                  </td>
+                  ${[0,1,2,3,4,5].map(j => `<td style="padding:1px;border:1px solid var(--border)">
+                    <input type="number" min="0" step="${g.isGram ? 5 : 0.5}" value="${esc(s.exTable[i]?.[j] ?? '')}"
+                      aria-label="${g.n} — ${SIM_MEALS[j]}" oninput="simCellInput(${i},${j},this.value)"
+                      style="width:42px;text-align:center;background:var(--bg);border:none;color:var(--text);padding:2px 1px;font-size:.78rem">
+                  </td>`).join('')}
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+          <button class="btn btn-sm" style="margin-top:8px" onclick="simClearTable()"><i class="fas fa-eraser"></i> Tabloyu temizle</button>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fas fa-plus-circle" style="color:var(--blue)"></i> Serbest Besin Girişi</div>
+          <div style="font-size:.78rem;color:var(--text2);margin-bottom:8px">Taze meyve, belirli bir ürün vb. — gramı ve <b>100 g başına</b> değerleri girin. Kcal boşsa makrolardan hesaplanır.</div>
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr auto;gap:4px;margin-bottom:6px;font-size:.7rem;font-weight:600;color:var(--text2)">
+            <span>Besin</span><span style="text-align:center">Gram</span><span style="text-align:center">KH</span><span style="text-align:center">Pro</span><span style="text-align:center">Yağ</span><span style="text-align:center">kcal</span><span></span>
+          </div>
+          ${s.freeItems.map((it, k) => `
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr auto;gap:4px;margin-bottom:4px;align-items:center;font-size:.8rem">
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(it.name)}">${esc(it.name)}</span>
+              <span style="text-align:center">${it.grams || 100}</span>
+              <span style="text-align:center;color:var(--yellow)">${it.cho || 0}</span>
+              <span style="text-align:center;color:var(--green)">${it.pro || 0}</span>
+              <span style="text-align:center;color:var(--red)">${it.fat || 0}</span>
+              <span style="text-align:center;color:var(--text2)">${it.kcal || '—'}</span>
+              <button class="btn btn-sm" style="padding:1px 6px;color:var(--red);border-color:var(--red)" onclick="simRemoveFreeItem(${k})" aria-label="${esc(it.name)} sil">×</button>
+            </div>`).join('') || '<div style="font-size:.78rem;color:var(--text2);margin-bottom:6px">Henüz serbest besin yok.</div>'}
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr auto;gap:4px;margin-top:8px;align-items:center">
+            <input type="text"   id="sim_fi_name"  placeholder="Besin adı" style="font-size:.78rem;padding:6px;min-width:0" aria-label="Besin adı">
+            <input type="number" id="sim_fi_grams" placeholder="g" value="100" min="1" style="font-size:.78rem;text-align:center;padding:6px 2px;min-width:0" aria-label="Gram">
+            <input type="number" id="sim_fi_cho"   placeholder="KH" min="0" style="font-size:.78rem;text-align:center;padding:6px 2px;min-width:0" aria-label="KH 100 g başına">
+            <input type="number" id="sim_fi_pro"   placeholder="Pro" min="0" style="font-size:.78rem;text-align:center;padding:6px 2px;min-width:0" aria-label="Protein 100 g başına">
+            <input type="number" id="sim_fi_fat"   placeholder="Yağ" min="0" style="font-size:.78rem;text-align:center;padding:6px 2px;min-width:0" aria-label="Yağ 100 g başına">
+            <input type="number" id="sim_fi_kcal"  placeholder="kcal" min="0" style="font-size:.78rem;text-align:center;padding:6px 2px;min-width:0" aria-label="Kcal 100 g başına">
+            <button class="btn btn-sm" style="background:var(--blue);border-color:var(--blue);color:#fff" onclick="simAddFreeItem()" aria-label="Ekle"><i class="fas fa-plus"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="fas fa-users" style="color:${sc.color}"></i> Takım Karşılama Tablosu</div>
+        <div id="simTeamTable"></div>
+      </div>`;
+  }
+  const notesCard = `
+    <div class="card" style="border-left:3px solid var(--red)">
+      <div class="card-title"><i class="fas fa-file-pdf" style="color:var(--red)"></i> Rapor & Notlar</div>
+      <textarea id="sim_notes" rows="3" placeholder="Diyetisyen notu (otomatik kaydedilir)…" style="margin-bottom:10px" oninput="simNotesInput(this.value)">${esc(s.notes || '')}</textarea>
+      <button class="btn" style="background:var(--red);border-color:var(--red);color:#fff" onclick="printSimReport()"><i class="fas fa-file-pdf"></i> Takım Yemeği Raporu PDF</button>
+    </div>`;
+  box.innerHTML = `
+    <div class="card">
+      <div class="card-title"><i class="fas fa-kitchen-set" style="color:var(--orange)"></i> Senaryo</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" role="group" aria-label="Senaryo seçimi">${scenarioBtns}</div>
+    </div>
+    ${infoCard}${menuCard}${notesCard}`;
+  if (sc.isSpecial) { simRenderHalfTimeList(); simUpdateTimerUI(); }
+  else simUpdateDerived();
+}
+function simSetScenario(id) { _simScenario = id; renderSimPage(); }
+
+// Toplamlar ve takım tablosu — yazarken yalnızca bu kısım yenilenir (odak kaybolmaz)
+function simUpdateDerived() {
+  const sc = SIM_SCENARIOS[_simScenario];
+  const tot = calcSimTotal();
+  const totEl = document.getElementById('simTotals');
+  if (totEl) {
+    const fatWarn = sc.fatMaxG && tot.fat > sc.fatMaxG ? `<div class="alert alert-yellow" style="margin:8px 0 0"><i class="fas fa-triangle-exclamation"></i> Menüde ${Math.round(tot.fat)} g yağ var — maç öncesi öğün için &lt;${sc.fatMaxG} g önerilir.</div>` : '';
+    totEl.innerHTML = `
+      <div style="background:var(--bg3);padding:8px;border-radius:8px;margin-bottom:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center">
+        <div><div style="font-size:1.1rem;font-weight:700;color:var(--accent)">${Math.round(tot.kcal)}</div><div style="font-size:.7rem;color:var(--text2)">kcal</div></div>
+        <div><div style="font-size:1.1rem;font-weight:700;color:var(--yellow)">${Math.round(tot.cho)}</div><div style="font-size:.7rem;color:var(--text2)">KH (g)</div></div>
+        <div><div style="font-size:1.1rem;font-weight:700;color:var(--green)">${Math.round(tot.pro)}</div><div style="font-size:.7rem;color:var(--text2)">Pro (g)</div></div>
+        <div><div style="font-size:1.1rem;font-weight:700;color:var(--red)">${Math.round(tot.fat)}</div><div style="font-size:.7rem;color:var(--text2)">Yağ (g)</div></div>
+      </div>${fatWarn}`;
+  }
+  const tblEl = document.getElementById('simTeamTable');
+  if (!tblEl) return;
+  const cov = simCoverage(_simScenario);
+  const short = cov.filter(c => c.choPct !== null && c.choPct < 90);
+  const avgGap = short.length ? Math.round(short.reduce((a, c) => a + (c.tgt.cho * 0.9 - c.got.cho), 0) / short.length) : 0;
+  const anyEst = cov.some(c => c.tgt?.estimated);
+  const td = 'padding:5px 8px;border:1px solid var(--border)';
+  tblEl.innerHTML = `
+    <div class="table-scroll"><table style="width:100%;border-collapse:collapse;font-size:.8rem">
+      <thead><tr style="background:var(--bg3)">
+        <th style="${td};text-align:left">Oyuncu</th><th style="${td}">Mevki</th>
+        <th style="${td};text-align:right;color:var(--yellow)">KH hedef</th><th style="${td};text-align:right;color:var(--yellow)">Menü KH</th><th style="${td}">KH %</th>
+        <th style="${td};text-align:right;color:var(--green)">Pro hedef</th><th style="${td};text-align:right;color:var(--green)">Menü Pro</th><th style="${td}">Pro %</th>
+        <th style="${td}">Durum</th>
+      </tr></thead>
+      <tbody>${cov.map(c => `<tr>
+        <td style="${td}">${esc(c.p.name)}${c.tgt?.estimated ? ' <span title="Kilo verisi yok, tahmini hedef" style="color:var(--text2)">*</span>' : ''}</td>
+        <td style="${td};text-align:center">${esc(c.p.position)}</td>
+        <td style="${td};text-align:right">${c.tgt ? Math.round(c.tgt.cho) : '—'}</td>
+        <td style="${td};text-align:right">${Math.round(c.got.cho)}</td>
+        <td style="${td};text-align:center;color:${simPctColor(c.choPct)};font-weight:700">${c.choPct !== null ? c.choPct + '%' : '—'}</td>
+        <td style="${td};text-align:right">${c.tgt ? Math.round(c.tgt.pro) : '—'}</td>
+        <td style="${td};text-align:right">${Math.round(c.got.pro)}</td>
+        <td style="${td};text-align:center;color:${simPctColor(c.proPct)};font-weight:700">${c.proPct !== null ? c.proPct + '%' : '—'}</td>
+        <td style="${td};text-align:center;font-size:1rem">${c.status}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+    ${anyEst ? '<div style="font-size:.72rem;color:var(--text2);margin-top:6px">* Kilo verisi olmayan oyuncular için tahmini kilo kullanıldı.</div>' : ''}
+    ${calcSimTotal().kcal === 0 ? '<div class="alert alert-blue" style="margin-top:10px"><i class="fas fa-circle-info"></i> Değişim tablosuna veya serbest besine porsiyon girin; karşılama yüzdeleri otomatik hesaplanır.</div>'
+      : short.length ? `<div class="alert alert-yellow" style="margin-top:10px"><i class="fas fa-triangle-exclamation"></i> <b>${short.length} oyuncu</b> KH hedefinin %90'ının altında (ortalama ~${avgGap} g eksik). Bu oyunculara ek KH (ör. muz ≈27 g, 500 ml sporcu içeceği ≈35 g) planlayın.</div>`
+      : '<div class="alert alert-green" style="margin-top:10px"><i class="fas fa-check-circle"></i> Tüm oyuncular KH hedefini karşılıyor.</div>'}`;
+}
+let _simSaveT = null;
+function simQueueSave() { clearTimeout(_simSaveT); _simSaveT = setTimeout(triggerAutoSave, 700); }
+function simCellInput(i, j, v) { simState().exTable[i][j] = v; simUpdateDerived(); simQueueSave(); }
+function simNotesInput(v) { simState().notes = v; simQueueSave(); }
+async function simClearTable() {
+  const ok = await confirmModal.show({ icon:'🧹', title:'Tablo temizlensin mi?', msg:`${SIM_SCENARIOS[_simScenario].label} menüsündeki tüm porsiyonlar silinecek.`, ok:'Evet, Temizle', danger:true });
+  if (!ok) return;
+  simState().exTable = emptySimTable(); triggerAutoSave(); renderSimPage();
+}
+function simAddFreeItem() {
+  const name = document.getElementById('sim_fi_name').value.trim();
+  if (!name) { showToast('Besin adı girin', 'red'); return; }
+  const v = id => parseFloat(document.getElementById(id).value) || 0;
+  const item = { name, grams: v('sim_fi_grams') || 100, cho: v('sim_fi_cho'), pro: v('sim_fi_pro'), fat: v('sim_fi_fat'), kcal: v('sim_fi_kcal') };
+  if (!item.cho && !item.pro && !item.fat && !item.kcal) { showToast('En az bir besin değeri girin', 'red'); return; }
+  simState().freeItems.push(item); triggerAutoSave(); renderSimPage();
+  document.getElementById('sim_fi_name')?.focus();
+}
+function simRemoveFreeItem(k) { simState().freeItems.splice(k, 1); triggerAutoSave(); renderSimPage(); }
+
+// ── Devre arası ──
+function simAddHalfTimeItem(preset) { simState('mac_arasi').items.push(Object.assign({}, preset)); triggerAutoSave(); simRenderHalfTimeList(); }
+function simAddCustomHalfTime() {
+  const name = document.getElementById('sim_free_name').value.trim();
+  const cho = parseFloat(document.getElementById('sim_free_cho').value) || 0;
+  if (!name || !cho) { showToast('Besin adı ve KH değeri girin', 'red'); return; }
+  simAddHalfTimeItem({ name, cho, grams: 0 });
+  document.getElementById('sim_free_name').value = ''; document.getElementById('sim_free_cho').value = '';
+}
+function simRemoveHalfTimeItem(k) { simState('mac_arasi').items.splice(k, 1); triggerAutoSave(); simRenderHalfTimeList(); }
+function simRenderHalfTimeList() {
+  const items = simState('mac_arasi').items;
+  const total = items.reduce((a, it) => a + (it.cho || 0), 0);
+  const color = total < 30 ? 'var(--red)' : total <= 60 ? 'var(--green)' : 'var(--yellow)';
+  const bar = document.getElementById('simHalfBar');
+  if (bar) bar.innerHTML = `
+    <div style="margin-bottom:12px;padding:12px;background:var(--bg3);border-radius:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:.85rem;font-weight:600">Toplam KH: <span style="color:${color}">${Math.round(total)} g</span></span>
+        <span style="font-size:.8rem;color:var(--text2)">Hedef: 30-60 g</span>
+      </div>
+      <div style="background:var(--bg2);border-radius:6px;height:10px;overflow:hidden"><div style="width:${Math.min(100, Math.round(total / 60 * 100))}%;height:100%;background:${color};border-radius:6px;transition:width .3s"></div></div>
+      ${total < 30 ? '<div style="font-size:.78rem;color:var(--red);margin-top:6px">⚠️ Hedefin altında — en az 30 g KH gerekli</div>' : ''}
+      ${total > 60 ? '<div style="font-size:.78rem;color:var(--yellow);margin-top:6px">⚠️ Hedefin üzerinde — mide rahatsızlığı riski</div>' : ''}
+    </div>`;
+  const el = document.getElementById('sim_halftime_list');
+  if (!el) return;
+  el.innerHTML = items.length ? items.map((it, k) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:var(--bg3);border-radius:6px;margin-bottom:4px">
+      <span>${esc(it.name)} — <b style="color:var(--yellow)">${it.cho} g KH</b></span>
+      <button class="btn btn-sm" style="color:var(--red);border-color:var(--red);padding:1px 6px" onclick="simRemoveHalfTimeItem(${k})" aria-label="${esc(it.name)} sil">×</button>
+    </div>`).join('') : '<span style="color:var(--text2)">Henüz eklenmedi.</span>';
+}
+// ── 15 dakikalık sayaç ──
+function simUpdateTimerUI() {
+  const btn = document.getElementById('simTimerBtn'), disp = document.getElementById('simTimerDisplay');
+  if (!btn || !disp) return;   // başka sayfadaysa sessizce geç
+  if (_simTimerInterval) {
+    btn.innerHTML = '<i class="fas fa-stop"></i> Durdur';
+    disp.textContent = `${Math.floor(_simTimerSec / 60)}:${String(_simTimerSec % 60).padStart(2, '0')}`;
+  } else {
+    btn.innerHTML = '<i class="fas fa-stopwatch"></i> 15 dk Sayaç Başlat';
+    if (_simTimerSec !== -1) disp.textContent = '';
+  }
+}
+function simToggleTimer() {
+  if (_simTimerInterval) { clearInterval(_simTimerInterval); _simTimerInterval = null; _simTimerSec = 0; simUpdateTimerUI(); return; }
+  _simTimerSec = 15 * 60;
+  _simTimerInterval = setInterval(() => {
+    _simTimerSec--;
+    if (_simTimerSec <= 0) {
+      clearInterval(_simTimerInterval); _simTimerInterval = null; _simTimerSec = -1;
+      simUpdateTimerUI();
+      const disp = document.getElementById('simTimerDisplay'); if (disp) disp.textContent = '⏰ Süre doldu!';
+      showToast('⏰ Devre arası süresi doldu!', 'yellow');
+      return;
+    }
+    simUpdateTimerUI();
+  }, 1000);
+  simUpdateTimerUI();
+}
+
+// ── PDF raporu ──
+function printSimReport() {
+  const sc = SIM_SCENARIOS[_simScenario];
+  const s = simState();
+  const w = openPrintWindow(); if (!w) return;
+  let body = '';
+  if (sc.isSpecial) {
+    const total = s.items.reduce((a, it) => a + (it.cho || 0), 0);
+    body = `<h3>Devre Arası Besinleri</h3>
+      <table><thead><tr><th>Besin</th><th>KH (g)</th></tr></thead><tbody>
+      ${s.items.map(it => `<tr><td>${esc(it.name)}</td><td style="text-align:center">${it.cho}</td></tr>`).join('') || '<tr><td colspan="2">Besin eklenmemiş</td></tr>'}
+      <tr><td><b>Toplam</b></td><td style="text-align:center"><b>${Math.round(total)} g</b> (hedef 30-60 g)</td></tr></tbody></table>`;
+  } else {
+    const tot = calcSimTotal();
+    const menuText = (window._exMenuText ? window._exMenuText(s.exTable.map(r => r.map(v => parseFloat(v) || 0))) : '').trim();
+    const menuHTML = menuText ? menuText.split(/\n\s*\n/).map(b => { const l = b.split('\n'); return `<div class="meal"><b>${esc(l[0])}</b><ul>${l.slice(1).map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`; }).join('') : '';
+    const free = s.freeItems.length ? `<div class="meal"><b>Ek besinler</b><ul>${s.freeItems.map(it => `<li>${esc(it.name)} — ${it.grams || 100} g</li>`).join('')}</ul></div>` : '';
+    body = `<h3>Menü (takımın tamamı için)</h3>
+      <div class="info"><b>Toplam:</b> ${Math.round(tot.kcal)} kcal · KH ${Math.round(tot.cho)} g · Protein ${Math.round(tot.pro)} g · Yağ ${Math.round(tot.fat)} g</div>
+      <div class="menu">${menuHTML || ''}${free}${!menuHTML && !free ? '<p>Menüye henüz besin girilmemiş.</p>' : ''}</div>
+      <h3>Oyuncu Bazında Karşılama</h3>
+      <table><thead><tr><th>Oyuncu</th><th>Mevki</th><th>KH hedef (g)</th><th>Menü KH (g)</th><th>KH %</th><th>Pro hedef (g)</th><th>Menü Pro (g)</th><th>Pro %</th><th>Durum</th></tr></thead>
+      <tbody>${simCoverage(_simScenario).map(c => `<tr><td>${esc(c.p.name)}</td><td>${esc(c.p.position)}</td>
+        <td>${c.tgt ? Math.round(c.tgt.cho) : '—'}</td><td>${Math.round(c.got.cho)}</td><td>${c.choPct !== null ? c.choPct + '%' : '—'}</td>
+        <td>${c.tgt ? Math.round(c.tgt.pro) : '—'}</td><td>${Math.round(c.got.pro)}</td><td>${c.proPct !== null ? c.proPct + '%' : '—'}</td>
+        <td style="text-align:center">${c.status}</td></tr>`).join('')}</tbody></table>`;
+  }
+  w.document.write(`<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8"><title>Takım Yemeği Raporu — ${esc(sc.label)}</title>
+    <style>body{font-family:Arial,sans-serif;padding:30px;color:#111;max-width:1000px;margin:0 auto}
+    h1{font-size:1.3rem;margin-bottom:4px}h2{font-size:1rem;color:#555;font-weight:400;margin-bottom:4px}h3{font-size:1rem;margin:20px 0 6px;color:#0d1b4b}
+    .info{background:#f5f5f5;padding:10px 14px;border-radius:6px;margin:10px 0;font-size:.88rem}
+    .menu{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+    .meal{border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;font-size:.82rem;page-break-inside:avoid}.meal ul{margin:4px 0 0 16px}
+    table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:6px}
+    th{background:#f0f0f0;padding:6px 8px;border:1px solid #ccc;text-align:center}td{padding:5px 8px;border:1px solid #ddd}
+    .notes{margin-top:20px;border-top:1px solid #ddd;padding-top:14px;font-size:.85rem;white-space:pre-line}
+    @media print{body{padding:10px;print-color-adjust:exact;-webkit-print-color-adjust:exact}}</style>
+    </head><body>
+    <h1>Takım Yemeği Raporu</h1>
+    <h2>${sc.icon} ${esc(sc.label)} · ${teamGender === 'kadin' ? 'Kadın' : 'Erkek'} Takımı · ${new Date().toLocaleDateString('tr-TR')}</h2>
+    <div class="info"><b>Zamanlama:</b> ${sc.timing}<br><b>Bilimsel temel:</b> ${sc.note}</div>
+    ${body}
+    ${s.notes ? `<div class="notes"><b>Diyetisyen notu:</b>\n${esc(s.notes)}</div>` : ''}
+    ${PRINT_FOOTER()}</body></html>`);
+  w.document.close();
+  setTimeout(() => { w.focus(); w.print(); }, 400);
+}
+
+
+// ===================== ERGOJENİK STRATEJİLER =====================
+const ERGO_PROTOCOLS = {
+  kafein: {
+    id:'kafein', label:'Kafein', icon:'☕', color:'var(--blue)',
+    dosePerKg:[3, 6], unit:'mg', perKgUnit:'mg/kg', maxDose:400,
+    timing:'Maçtan / antrenmandan 60 dakika önce',
+    form:'Kapsül veya anhidr kafein tercih edilmeli (kahvedeki doz değişken)',
+    mechanism:'Adenozin reseptör antagonizması → uyanıklık ↑, algılanan efor ↓, sprint kapasitesi ↑',
+    sideEffects:['Yüksek dozda GI rahatsızlık', 'Uyku bozukluğu (geç saatte alım)', 'Taşikardi / anksiyete'],
+    contraindications:['Kardiyak aritmi öyküsü', 'Hipertansiyon'],
+    evidence:'A — meta-analiz düzeyinde kanıt (Burke 2013, Grgic 2020)'
+  },
+  kh_rinse: {
+    id:'kh_rinse', label:'KH Ağız Çalkalama', icon:'💧', color:'var(--teal)',
+    fixedDose:25, unit:'ml',
+    timing:'Devre arası — 10 saniye çalkala, tükür',
+    form:'%6.4 KH solüsyonu veya kafeinli sporcu içeceği',
+    mechanism:'Ağızdaki KH reseptörleri → motor korteks aktivasyonu (kalori almaya gerek yok)',
+    sideEffects:['Yanlışlıkla yutulursa ek KH alımı'],
+    contraindications:[],
+    evidence:'A — futbol devre arası için özellikle uygun (Kasper 2016)',
+    hasSpecialUI:true, timerSec:10
+  },
+  kreatin: {
+    id:'kreatin', label:'Kreatin', icon:'💪', color:'var(--green)',
+    unit:'g/gün', minAge:18,
+    phases: {
+      yukleme: { label:'Yükleme (5-7 gün)', dose:'20', freq:'4 × 5 g/gün', days:7, note:'KH ile birlikte al — insülin kreatin alımını ↑' },
+      idame:   { label:'İdame',             dose:'3–5', freq:'3-5 g/gün', note:'Egzersiz sonrası ideal zamanlama' },
+      dusuk:   { label:'Düşük doz (28 gün)', dose:'3', freq:'3 g/gün × 28 gün', days:28, note:'Yükleme yerine — GI toleransı düşük oyuncular için' }
+    },
+    timing:'Egzersiz sonrası (idame) veya günün herhangi bir saati',
+    form:'Kreatin monohidrat (Creapure® tercih)',
+    mechanism:'PCr havuzu ↑ → tekrarlı sprint kapasitesi ↑, kısa süreli güç ↑',
+    sideEffects:['Yükleme fazında hafif GI rahatsızlık', 'Kilo artışı (su tutulumu ~1-2 kg)'],
+    contraindications:['Böbrek hastalığı', '18 yaş altı (dikkat — hekim onayı)'],
+    evidence:'A — ISSN pozisyon bildirisi (Kreider 2017); meta-analiz (Lanhers 2017)'
+  },
+  beta_alanin: {
+    id:'beta_alanin', label:'Beta-Alanin', icon:'⚡', color:'var(--purple)',
+    doseMin:3.2, doseMax:6.4, unit:'g/gün',
+    timing:'Her gün — antrenman veya maçtan bağımsız. 4-6 haftalık kür',
+    form:'1.6 g bölünmüş dozlar (parestezi ↓). Yemekle al.',
+    mechanism:'Kas karnozin sentezi ↑ → tampon kapasitesi ↑, yorgunluğa direnç ↑',
+    sideEffects:['Parestezi (karıncalanma) — zararsız, doza bağlı'],
+    contraindications:[],
+    evidence:'B — sprint yoğunluklu antrenmanlarda etkili (Hobson 2012)'
+  },
+  sod_bikarbonat: {
+    id:'sod_bikarbonat', label:'Sodyum Bikarbonat', icon:'🧪', color:'var(--orange)',
+    dosePerKg:[0.2, 0.3], unit:'g', perKgUnit:'g/kg',
+    timing:'Maçtan 60-90 dakika önce — antrenmanda deneme zorunlu',
+    form:'0.2-0.3 g/kg + 1-1.5 L su ile. KH ile birlikte alınması GI toleransı ↑',
+    mechanism:'Hücre dışı tamponlama → asidoz gecikmesi, yüksek yoğunluk kapasitesi ↑',
+    sideEffects:['Bulantı, diyare (bireysel değişkenlik yüksek)', 'Maç günü ilk kez kullanılmamalı'],
+    contraindications:['Önceden GI şikâyeti olan oyuncular'],
+    evidence:'B — dikkatli bireyselleştirme gerekli (Peart 2012)'
+  }
+};
+const ERGO_REF_KG = 70;
+let _ergoTab = 'kafein';
+let _ergoRinseTimer = null, _ergoRinseRemain = 0, _ergoRinseDone = false;
+
+function getErgoWeight(pidx) {
+  const p = players[pidx];
+  const nk = p.nutritionData || {};
+  if (nk.bwCho || nk.weight) return { kg: nk.bwCho || nk.weight, est: false };
+  for (let s = 8; s >= 1; s--) if (hasVal(p.sessions[s]?.weight)) return { kg: p.sessions[s].weight, est: false };
+  return { kg: teamGender === 'kadin' ? 60 : 75, est: true };
+}
+function ergoEntry(pidx, protoId) {
+  const p = players[pidx];
+  if (!p.ergoData) p.ergoData = {};
+  if (!p.ergoData[protoId]) p.ergoData[protoId] = protoId === 'kreatin' ? { active:false, phase:'idame', startDate:'', notes:'' } : { active:false, notes:'' };
+  return p.ergoData[protoId];
+}
+// kg verilirse o kiloya göre, yoksa oyuncunun kilosuna göre
+function calcErgoDose(pidx, protoId, kgOverride) {
+  const sc = ERGO_PROTOCOLS[protoId];
+  if (sc.dosePerKg) {
+    const kg = kgOverride || getErgoWeight(pidx).kg;
+    const r = v => sc.unit === 'g' ? Math.round(v * 10) / 10 : Math.round(v);
+    let lo = r(sc.dosePerKg[0] * kg), hi = r(sc.dosePerKg[1] * kg);
+    const capped = sc.maxDose && hi > sc.maxDose;
+    if (sc.maxDose) { lo = Math.min(lo, sc.maxDose); hi = Math.min(hi, sc.maxDose); }
+    return { text: lo === hi ? `${lo} ${sc.unit}` : `${lo}–${hi} ${sc.unit}`, capped };
+  }
+  if (sc.doseMin) return { text: `${sc.doseMin}–${sc.doseMax} ${sc.unit}` };
+  if (sc.fixedDose) return { text: `${sc.fixedDose} ${sc.unit}` };
+  if (sc.phases) {
+    const ph = sc.phases[(pidx != null && players[pidx]?.ergoData?.[protoId]?.phase) || 'idame'] || sc.phases.idame;
+    return { text: `${ph.dose} g/gün` };
+  }
+  return null;
+}
+function ergoAgeFlag(pidx, protoId) {
+  const sc = ERGO_PROTOCOLS[protoId];
+  if (!sc.minAge) return false;
+  const age = getAge(players[pidx].birthDate);
+  return age !== null && age < sc.minAge;
+}
+// Kreatin fazı bittiyse uyarı metni
+function ergoPhaseStatus(ed) {
+  const ph = ERGO_PROTOCOLS.kreatin.phases[ed.phase];
+  if (!ph?.days || !ed.startDate) return '';
+  const start = parseISODate(ed.startDate);
+  if (!start) return '';
+  const day = Math.floor((new Date() - start) / 86400000) + 1;
+  if (day < 1) return `<span style="color:var(--text2)">Başlamadı</span>`;
+  if (day > ph.days) return `<span style="color:var(--yellow)">✓ ${ph.days} gün tamam → İdameye geç</span>`;
+  return `<span style="color:var(--text2)">Gün ${day}/${ph.days}</span>`;
+}
+
+function renderErgoPage() {
+  const box = document.getElementById('ergogenContent');
+  if (!players.length) { box.innerHTML = noPlayersHTML(); return; }
+  const sc = ERGO_PROTOCOLS[_ergoTab];
+  const tabs = Object.values(ERGO_PROTOCOLS).map(p => `
+    <button class="btn${_ergoTab === p.id ? ' btn-primary' : ''}" aria-pressed="${_ergoTab === p.id}"
+      style="${_ergoTab === p.id ? `background:${p.color};border-color:${p.color};color:#fff;` : ''}font-size:.8rem"
+      onclick="ergoSetTab('${p.id}')">${p.icon} ${p.label}</button>`).join('');
+  const ref = calcErgoDose(null, _ergoTab, ERGO_REF_KG);
+  const refLabel = sc.dosePerKg ? `${sc.dosePerKg[0] === sc.dosePerKg[1] ? sc.dosePerKg[0] : sc.dosePerKg.join('–')} ${sc.perKgUnit}<div style="font-size:.7rem;color:var(--text2);font-weight:400">${ERGO_REF_KG} kg için: ${ref.text}</div>`
+    : sc.phases ? 'Faza göre' : ref?.text || '—';
+  const infoCard = `
+    <div class="card" style="border-left:3px solid ${sc.color}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+        <div style="flex:1;min-width:220px">
+          <div class="card-title" style="color:${sc.color}">${sc.icon} ${sc.label}</div>
+          <div style="font-size:.82rem;color:var(--text2)">${esc(sc.mechanism)}</div>
+        </div>
+        <div style="background:var(--bg3);padding:8px 14px;border-radius:8px;text-align:center;min-width:140px">
+          <div style="font-size:.7rem;color:var(--text2);margin-bottom:2px">Doz (referans)</div>
+          <div style="font-size:1rem;font-weight:700;color:${sc.color}">${refLabel}</div>
+        </div>
+      </div>
+      <div class="grid2" style="margin-top:12px;gap:10px">
+        <div>
+          <div style="font-size:.78rem;font-weight:600;margin-bottom:4px"><i class="fas fa-clock" style="color:var(--accent)"></i> Zamanlama</div>
+          <div style="font-size:.82rem">${esc(sc.timing)}</div>
+          <div style="font-size:.78rem;color:var(--text2);margin-top:4px"><i class="fas fa-pills"></i> ${esc(sc.form)}</div>
+        </div>
+        <div>
+          <div style="font-size:.78rem;font-weight:600;margin-bottom:4px"><i class="fas fa-triangle-exclamation" style="color:var(--yellow)"></i> Yan Etkiler</div>
+          <ul style="margin:0 0 0 16px;font-size:.82rem">${sc.sideEffects.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
+          ${sc.contraindications.length ? `<div style="margin-top:8px;font-size:.82rem"><b style="color:var(--red)">⚠️ Kontrendikasyonlar:</b><ul style="margin:4px 0 0 16px">${sc.contraindications.map(c => `<li>${esc(c)}</li>`).join('')}</ul></div>` : ''}
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:6px 10px;background:var(--bg3);border-radius:6px;font-size:.78rem">
+        <i class="fas fa-microscope" style="color:var(--green)"></i> <b>Kanıt düzeyi:</b> ${esc(sc.evidence)}
+        · <i class="fas fa-shield-halved" style="color:var(--blue)"></i> Yalnızca <b>Informed Sport / NSF Certified for Sport</b> sertifikalı ürün kullanın.
+      </div>
+    </div>`;
+
+  let specialUI = '';
+  if (sc.hasSpecialUI) {
+    const tile = (v, l) => `<div style="background:var(--bg3);padding:10px;border-radius:8px;text-align:center"><div style="font-size:1.3rem;font-weight:700;color:var(--teal)">${v}</div><div style="font-size:.72rem;color:var(--text2)">${l}</div></div>`;
+    specialUI = `
+      <div class="card" style="border-left:3px solid var(--teal)">
+        <div class="card-title"><i class="fas fa-droplet" style="color:var(--teal)"></i> Devre Arası Ağız Çalkalama Protokolü</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+          ${tile('25', 'ml solüsyon')}${tile('10', 'saniye çalkala')}${tile('TÜKÜR', 'yutma!')}
+        </div>
+        <div style="background:var(--bg3);padding:10px;border-radius:8px;margin-bottom:12px;font-size:.82rem">
+          <b>Solüsyon hazırlama:</b> 500 ml suda 32 g maltodekstrin veya şeker çöz (%6.4) → 25 ml porsiyonlara böl.
+          Alternatif: kafeinli sporcu içeceği — 25 ml al.
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <button class="btn" id="ergoRinseBtn" onclick="ergoToggleRinseTimer()" style="border-color:var(--teal);color:var(--teal);min-width:170px"></button>
+          <div id="ergoRinseDisplay" role="timer" style="font-size:2rem;font-weight:700;color:var(--teal);min-width:60px;text-align:center"></div>
+          <div id="ergoRinseMsg" aria-live="assertive" style="font-size:1rem;font-weight:700;color:var(--green)"></div>
+        </div>
+      </div>`;
+  }
+  let kreatinExtra = '';
+  if (_ergoTab === 'kreatin') {
+    const cols = { yukleme:'var(--yellow)', idame:'var(--green)', dusuk:'var(--blue)' };
+    kreatinExtra = `
+      <div class="card">
+        <div class="card-title"><i class="fas fa-chart-line" style="color:var(--green)"></i> Kreatin Faz Protokolü</div>
+        <div class="grid3" style="gap:12px">
+          ${Object.entries(ERGO_PROTOCOLS.kreatin.phases).map(([k, f]) => `
+            <div style="background:var(--bg3);padding:14px;border-radius:10px;border:2px solid ${cols[k]}">
+              <div style="font-weight:700;margin-bottom:6px;color:${cols[k]}">${esc(f.label)}</div>
+              <div style="font-size:1.6rem;font-weight:700">${f.dose} g<span style="font-size:.85rem;font-weight:400;color:var(--text2)">/gün</span></div>
+              <div style="font-size:.8rem;color:var(--text2);margin-top:4px">${esc(f.freq)}</div>
+              <div style="font-size:.78rem;margin-top:6px;color:var(--accent)">${esc(f.note)}</div>
+            </div>`).join('')}
+        </div>
+        <div style="font-size:.78rem;color:var(--text2);margin-top:10px">Faz ve başlangıç tarihini aşağıdaki tabloda oyuncu bazında seçin; yükleme bitince "İdameye geç" uyarısı çıkar.</div>
+      </div>`;
+  }
+
+  const td = 'padding:5px 8px;border:1px solid var(--border);white-space:nowrap';
+  const isKr = _ergoTab === 'kreatin';
+  const rows = players.map((p, i) => {
+    const ed = (p.ergoData || {})[_ergoTab] || {};
+    const w = getErgoWeight(i);
+    const dose = calcErgoDose(i, _ergoTab);
+    const young = ergoAgeFlag(i, _ergoTab);
+    return `<tr${young ? ' style="background:var(--alert-red-bg)"' : ''}>
+      <td style="${td}">${esc(p.name)}${young ? ` <span class="badge badge-red" title="18 yaş altı">${getAge(p.birthDate)} yaş</span>` : ''}</td>
+      <td style="${td};text-align:center">${esc(p.position)}</td>
+      <td style="${td};text-align:center">${Math.round(w.kg)} kg${w.est ? ' <span title="Kilo verisi yok, tahmini" style="color:var(--text2)">*</span>' : ''}</td>
+      ${isKr ? `<td style="${td};text-align:center">
+          <select style="padding:3px 6px;font-size:.78rem;width:auto" aria-label="${esc(p.name)} kreatin fazı" onchange="ergoSetField(${i},'phase',this.value)">
+            ${Object.entries(ERGO_PROTOCOLS.kreatin.phases).map(([k, f]) => `<option value="${k}" ${(ed.phase || 'idame') === k ? 'selected' : ''}>${esc(f.label)}</option>`).join('')}
+          </select></td>
+        <td style="${td};text-align:center"><input type="date" value="${esc(ed.startDate || '')}" style="padding:3px 6px;font-size:.78rem;width:auto" aria-label="${esc(p.name)} başlangıç tarihi" onchange="ergoSetField(${i},'startDate',this.value)"><div style="font-size:.7rem">${ergoPhaseStatus(ed)}</div></td>` : ''}
+      <td style="${td};text-align:center;font-weight:600;color:${sc.color}">${dose ? dose.text : '—'}${dose?.capped ? ' <span title="Üst sınır (400 mg) uygulandı" style="color:var(--yellow)">⚑</span>' : ''}</td>
+      <td style="${td};text-align:center">
+        <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="checkbox" ${ed.active ? 'checked' : ''} onchange="ergoTogglePlayer(${i}, this.checked, this)" style="width:16px;height:16px">
+          <span id="ergoState_${i}" style="font-size:.82rem;color:${ed.active ? 'var(--green)' : 'var(--text2)'}">${ed.active ? 'Aktif' : 'Pasif'}</span>
+        </label>
+      </td>
+      <td style="padding:4px 6px;border:1px solid var(--border)">
+        <input type="text" value="${esc(ed.notes || '')}" placeholder="Not ekle..." aria-label="${esc(p.name)} notu"
+          oninput="ergoSetField(${i},'notes',this.value,true)" style="font-size:.78rem;background:transparent;border:none;padding:4px;min-width:160px">
+      </td>
+    </tr>`;
+  }).join('');
+  const activeCnt = players.filter(p => p.ergoData?.[_ergoTab]?.active).length;
+  const youngActive = players.filter((p, i) => p.ergoData?.[_ergoTab]?.active && ergoAgeFlag(i, _ergoTab)).length;
+  const anyEst = players.some((p, i) => getErgoWeight(i).est);
+  const teamTable = `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <div class="card-title" style="margin:0"><i class="fas fa-users" style="color:${sc.color}"></i> Takım Atama Tablosu</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span id="ergoActiveCnt" style="font-size:.82rem;color:var(--text2)">${activeCnt} / ${players.length} oyuncu aktif</span>
+          <button class="btn btn-sm" onclick="ergoSetAll(true)">Tümü Aktif</button>
+          <button class="btn btn-sm" onclick="ergoSetAll(false)">Tümü Pasif</button>
+        </div>
+      </div>
+      ${sc.contraindications.length ? `<div class="alert alert-red"><i class="fas fa-triangle-exclamation"></i> <div><b>Dikkat:</b> ${esc(sc.contraindications.join(' · '))} durumundaki oyunculara uygulamayın.</div></div>` : ''}
+      ${youngActive ? `<div class="alert alert-red"><i class="fas fa-user-shield"></i> <b>${youngActive} oyuncu 18 yaşından küçük</b> ve kreatin aktif — hekim/veli onayı gerekir.</div>` : ''}
+      <div class="table-scroll">
+        <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+          <thead><tr style="background:var(--bg3)">
+            <th style="${td};text-align:left">Oyuncu</th><th style="${td}">Mevki</th><th style="${td}">Kilo</th>
+            ${isKr ? `<th style="${td}">Faz</th><th style="${td}">Başlangıç</th>` : ''}
+            <th style="${td};color:${sc.color}">Doz</th><th style="${td}">Durum</th><th style="${td};text-align:left">Diyetisyen notu</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      ${anyEst ? '<div style="font-size:.72rem;color:var(--text2);margin-top:6px">* Kilo verisi olmayan oyuncularda tahmini kilo kullanıldı — dozu ölçüm sonrası kontrol edin.</div>' : ''}
+    </div>`;
+  const pdfCard = `
+    <div class="card" style="border-left:3px solid var(--red)">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div class="card-title" style="margin:0"><i class="fas fa-file-pdf" style="color:var(--red)"></i> Ergojenik Protokol Raporu</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" style="border-color:var(--red);color:var(--red)" onclick="printErgoReport()"><i class="fas fa-file-pdf"></i> ${esc(sc.label)} Raporu</button>
+          <button class="btn" style="border-color:var(--orange);color:var(--orange)" onclick="printErgoFullReport()"><i class="fas fa-file-pdf"></i> Tüm Protokol Özeti</button>
+        </div>
+      </div>
+    </div>`;
+  box.innerHTML = `
+    <div class="card">
+      <div class="card-title"><i class="fas fa-flask-vial" style="color:var(--orange)"></i> Protokol</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" role="group" aria-label="Protokol seçimi">${tabs}</div>
+    </div>
+    ${infoCard}${specialUI}${kreatinExtra}${teamTable}${pdfCard}`;
+  if (sc.hasSpecialUI) ergoUpdateRinseUI();
+}
+function ergoSetTab(id) { _ergoTab = id; renderErgoPage(); }
+
+let _ergoSaveT = null;
+function ergoSetField(pidx, field, val, debounce) {
+  ergoEntry(pidx, _ergoTab)[field] = val;
+  if (debounce) { clearTimeout(_ergoSaveT); _ergoSaveT = setTimeout(triggerAutoSave, 700); return; }
+  triggerAutoSave();
+  if (field === 'phase' || field === 'startDate') renderErgoPage();
+}
+// Satırı yerinde güncelle (tüm sayfayı yeniden çizmeden)
+function ergoTogglePlayer(pidx, active) {
+  ergoEntry(pidx, _ergoTab).active = active;
+  if (active && !ergoEntry(pidx, _ergoTab).startDate && _ergoTab === 'kreatin') ergoEntry(pidx, _ergoTab).startDate = todayISO();
+  triggerAutoSave();
+  if (_ergoTab === 'kreatin') { renderErgoPage(); return; }
+  const st = document.getElementById('ergoState_' + pidx);
+  if (st) { st.textContent = active ? 'Aktif' : 'Pasif'; st.style.color = active ? 'var(--green)' : 'var(--text2)'; }
+  const cnt = document.getElementById('ergoActiveCnt');
+  if (cnt) cnt.textContent = `${players.filter(p => p.ergoData?.[_ergoTab]?.active).length} / ${players.length} oyuncu aktif`;
+}
+async function ergoSetAll(state) {
+  const sc = ERGO_PROTOCOLS[_ergoTab];
+  if (state && sc.contraindications.length) {
+    const ok = await confirmModal.show({ icon:'⚠️', title:`Tüm oyuncular için ${sc.label} aktif edilsin mi?`,
+      msg:`Kontrendikasyonları kontrol edin: ${sc.contraindications.join(', ')}.`, ok:'Evet, Aktif Et' });
+    if (!ok) return;
+  }
+  players.forEach((p, i) => {
+    const e = ergoEntry(i, _ergoTab);
+    e.active = state;
+    if (state && _ergoTab === 'kreatin' && !e.startDate) e.startDate = todayISO();
+  });
+  triggerAutoSave();
+  renderErgoPage();
+}
+
+// ── 10 saniyelik ağız çalkalama sayacı ──
+function ergoUpdateRinseUI() {
+  const btn = document.getElementById('ergoRinseBtn'), disp = document.getElementById('ergoRinseDisplay'), msg = document.getElementById('ergoRinseMsg');
+  if (!btn) return;   // başka sayfadaysa sessizce geç
+  btn.innerHTML = _ergoRinseTimer ? '<i class="fas fa-stop"></i> Durdur' : '<i class="fas fa-stopwatch"></i> 10 sn Sayaç Başlat';
+  disp.textContent = _ergoRinseTimer ? _ergoRinseRemain : (_ergoRinseDone ? '0' : '');
+  msg.textContent = _ergoRinseDone ? '✅ Tükür!' : (_ergoRinseTimer ? 'Çalkala…' : '');
+}
+function ergoToggleRinseTimer() {
+  if (_ergoRinseTimer) { clearInterval(_ergoRinseTimer); _ergoRinseTimer = null; _ergoRinseDone = false; ergoUpdateRinseUI(); return; }
+  _ergoRinseRemain = ERGO_PROTOCOLS.kh_rinse.timerSec; _ergoRinseDone = false;
+  _ergoRinseTimer = setInterval(() => {
+    _ergoRinseRemain--;
+    if (_ergoRinseRemain <= 0) {
+      clearInterval(_ergoRinseTimer); _ergoRinseTimer = null; _ergoRinseDone = true;
+      try { navigator.vibrate && navigator.vibrate([80, 60, 80]); } catch (e) {}
+    }
+    ergoUpdateRinseUI();
+  }, 1000);
+  ergoUpdateRinseUI();
+}
+
+// ── PDF raporları ──
+const ERGO_PRINT_CSS = 'body{font-family:Arial,sans-serif;padding:28px;color:#111;max-width:1000px;margin:0 auto}h1{font-size:1.3rem}.info{background:#f5f5f5;padding:12px;border-radius:6px;margin:14px 0;font-size:.87rem;line-height:1.6}table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:16px}th{background:#ececec;padding:6px 8px;border:1px solid #ccc;text-align:center}td{padding:5px 8px;border:1px solid #ddd}.warn{color:#c00;font-weight:600}.young{background:#fdecea}.footer{margin-top:16px;font-size:10px;color:#888;border-top:1px solid #ddd;padding-top:8px}@media print{body{padding:10px;print-color-adjust:exact;-webkit-print-color-adjust:exact}}';
+function printErgoReport() {
+  const sc = ERGO_PROTOCOLS[_ergoTab];
+  const w = openPrintWindow(); if (!w) return;
+  const isKr = _ergoTab === 'kreatin';
+  const list = players.map((p, i) => ({ p, i, ed: p.ergoData?.[_ergoTab] || {} }));
+  const rows = list.map(({ p, i, ed }) => {
+    const d = calcErgoDose(i, _ergoTab), young = ergoAgeFlag(i, _ergoTab);
+    return `<tr${young ? ' class="young"' : ''}><td>${esc(p.name)}${young ? ` (${getAge(p.birthDate)} yaş)` : ''}</td><td>${esc(p.position)}</td>
+      <td style="text-align:center">${Math.round(getErgoWeight(i).kg)} kg</td>
+      ${isKr ? `<td>${esc(ERGO_PROTOCOLS.kreatin.phases[ed.phase || 'idame']?.label || '')}</td><td>${esc(ed.startDate || '—')}</td>` : ''}
+      <td style="text-align:center;font-weight:bold">${d ? d.text : '—'}</td>
+      <td style="text-align:center">${ed.active ? '✅ Aktif' : '— Pasif'}</td><td>${esc(ed.notes || '')}</td></tr>`;
+  }).join('');
+  w.document.write(`<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8"><title>Ergojenik Protokol: ${esc(sc.label)}</title><style>${ERGO_PRINT_CSS}</style></head><body>
+    <h1>${sc.icon} Ergojenik Protokol: ${esc(sc.label)}</h1>
+    <div style="color:#555;font-size:.88rem">${teamGender === 'kadin' ? 'Kadın' : 'Erkek'} Takımı · ${new Date().toLocaleDateString('tr-TR')} · ${list.filter(x => x.ed.active).length}/${players.length} oyuncu aktif</div>
+    <div class="info"><b>Mekanizma:</b> ${esc(sc.mechanism)}<br><b>Zamanlama:</b> ${esc(sc.timing)}<br><b>Form:</b> ${esc(sc.form)}<br><b>Kanıt:</b> ${esc(sc.evidence)}<br>
+      ${sc.contraindications.length ? `<span class="warn">⚠️ Kontrendikasyon: ${esc(sc.contraindications.join(', '))}</span><br>` : ''}
+      <b>Ürün güvenliği:</b> Yalnızca Informed Sport / NSF Certified for Sport sertifikalı ürünler.</div>
+    <table><thead><tr><th style="text-align:left">Oyuncu</th><th>Mevki</th><th>Kilo</th>${isKr ? '<th>Faz</th><th>Başlangıç</th>' : ''}<th>Doz</th><th>Durum</th><th style="text-align:left">Not</th></tr></thead><tbody>${rows}</tbody></table>
+    ${PRINT_FOOTER()}</body></html>`);
+  w.document.close();
+  setTimeout(() => { w.focus(); w.print(); }, 400);
+}
+function printErgoFullReport() {
+  const w = openPrintWindow(); if (!w) return;
+  const protos = Object.values(ERGO_PROTOCOLS);
+  const rows = players.map((p, i) => `<tr><td>${esc(p.name)}</td><td>${esc(p.position)}</td><td style="text-align:center">${Math.round(getErgoWeight(i).kg)} kg</td>
+    ${protos.map(sc => { const on = p.ergoData?.[sc.id]?.active; const d = on ? calcErgoDose(i, sc.id) : null; return `<td style="text-align:center">${on ? '✅<br><small>' + (d ? d.text : '') + '</small>' : '—'}</td>`; }).join('')}</tr>`).join('');
+  w.document.write(`<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8"><title>Ergojenik Strateji Özeti</title><style>${ERGO_PRINT_CSS}</style></head><body>
+    <h1>⚡ Ergojenik Strateji Özeti</h1>
+    <div style="color:#555;font-size:.88rem">${teamGender === 'kadin' ? 'Kadın' : 'Erkek'} Takımı · ${new Date().toLocaleDateString('tr-TR')}</div>
+    <table><thead><tr><th style="text-align:left">Oyuncu</th><th>Mevki</th><th>Kilo</th>${protos.map(sc => `<th>${sc.icon} ${esc(sc.label)}</th>`).join('')}</tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr><th colspan="3" style="text-align:right">Aktif oyuncu</th>${protos.map(sc => `<th>${players.filter(p => p.ergoData?.[sc.id]?.active).length}</th>`).join('')}</tr></tfoot></table>
+    ${PRINT_FOOTER()}</body></html>`);
+  w.document.close();
+  setTimeout(() => { w.focus(); w.print(); }, 400);
+}
+
+
+// ===================== MAÇ PROTOKOLLERİ + ORGANOLEPTİK TAKİP =====================
+const MATCH_PHASES = {
+  mac_oncu: {
+    id:'mac_oncu', label:'Maç Önü', icon:'🍽️', color:'var(--blue)',
+    timeWindow:'3-4 saat önce (ana öğün) + 1 saat önce (hafif)',
+    choGkg:[1, 4], proGkg:[0.3, 0.5], fatMax:15, fiberMax:8,
+    hydrMlKg:[5, 7], hydrWindow:'Maçtan 4 saat önce',
+    priorities:[
+      'GI >70 KH kaynakları tercih et (beyaz pirinç, beyaz ekmek, muz)',
+      'Yağ <15 g, lif <8 g — GI riskini en aza indir',
+      'Yeni besin YASAK — tanıdık, daha önce denenmiş menü',
+      'Kafein: maçtan 60 dk önce 3-6 mg/kg (uygunsa)'
+    ],
+    recommendedFoods:['Beyaz pirinç', 'Makarna (az soslu)', 'Beyaz ekmek', 'Muz', 'Yoğurt (az yağlı)', 'Tavuk göğsü (haşlama)', 'Sporcu içeceği'],
+    avoidFoods:['Yüksek yağlı et', 'Kızartma', 'Baklagil', 'Lahana / brokoli', 'Daha önce denenmemiş besin'],
+    evidence:'Thomas 2016 · Burke 2011 · FIFA Konsensüsü 2010'
+  },
+  mac_arasi: {
+    id:'mac_arasi', label:'Maç Arası', icon:'⏱️', color:'var(--yellow)',
+    timeWindow:'15 dakikalık devre arası',
+    choTarget:[30, 60], hydrMl:[150, 300],
+    priorities:[
+      '30-60 g hızlı KH — muz, jel, sporcu içeceği, üzüm, hurma',
+      '150-300 ml sıvı (oda sıcaklığında)',
+      'Katı besin ağırlıklı alma — mide dolgunluğu',
+      'Ağız çalkalama (KH rinse) alternatif / tamamlayıcı'
+    ],
+    recommendedFoods:['Muz (~27 g KH)', 'Enerji jeli (~25 g KH)', 'Sporcu içeceği 500 ml (~35 g KH)', 'Üzüm 100 g (~17 g KH)', 'Hurma 2 adet (~18 g KH)'],
+    avoidFoods:['Katı yemek', 'Protein bar', 'Süt bazlı ürünler', 'Yüksek yağ'],
+    evidence:'Kasper 2016 · Currell 2008'
+  },
+  mac_sonrasi: {
+    id:'mac_sonrasi', label:'Maç Sonrası', icon:'🔄', color:'var(--green)',
+    timeWindow:'İlk 30-60 dakika (kritik pencere)',
+    choGkg:[1.0, 1.2], proGkg:[0.3, 0.4], hydrLitrPerKg:1.5,
+    priorities:[
+      '1.0-1.2 g/kg KH — glikojen yenileme (ilk 2 saat)',
+      '0.3-0.4 g/kg protein — MPS tetikleme (20-40 g)',
+      'Kaybedilen her 1 kg için 1.5 L sıvı — hidrasyon replasmanı',
+      'Sodyum içeren sıvılar — plazma hacminin geri kazanımı',
+      'Toparlanma 48-72 saat sürer — sonraki 2 öğün de kritik'
+    ],
+    recommendedFoods:['Toparlanma shake (KH+Pro)', 'Meyve + yoğurt', 'Sandviç (peynir + hindi)', 'Çikolatalı süt', 'Meyve suyu + protein tozu'],
+    avoidFoods:['Alkol (MPS\'yi baskılar)', 'Yüksek yağ (emilimi geciktirir)', 'Yüksek doz kafein (uykuyu bozar)'],
+    evidence:'Ivy 2004 · Moore 2015 · Shirreffs 2004'
+  }
+};
+const ORGANO_STARS = { 5:'★★★★★', 4:'★★★★☆', 3:'★★★☆☆', 2:'★★☆☆☆', 1:'★☆☆☆☆' };
+const ORGANO_LABEL = { 5:'Mükemmel kabul', 4:'İyi', 3:'Orta', 2:'Düşük kabul', 1:'Reddetti' };
+const organoColor = r => !r ? 'var(--text2)' : r >= 4 ? 'var(--green)' : r >= 3 ? 'var(--yellow)' : 'var(--red)';
+
+// Faz menüleri takım düzeyinde, oyuncu puanları oyuncu düzeyinde saklanır
+let teamMatch = {};
+let _matchPhase = 'mac_oncu';
+
+function matchState(id) {
+  id = id || _matchPhase;
+  if (!teamMatch[id]) teamMatch[id] = { menu: MATCH_PHASES[id].recommendedFoods.map(f => ({ food: f, served: true })), notes: '', hydrPre: '', hydrPost: '' };
+  if (!Array.isArray(teamMatch[id].menu)) teamMatch[id].menu = [];
+  return teamMatch[id];
+}
+function organoRec(pidx, phaseId, food) {
+  return (players[pidx]?.matchProto?.[phaseId]?.meals || []).find(m => m.food === food) || null;
+}
+function organoStats(phaseId, food) {
+  const ratings = players.map((p, i) => organoRec(i, phaseId, food)?.rating || 0).filter(r => r > 0);
+  const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
+  const accepted = players.filter((p, i) => organoRec(i, phaseId, food)?.accepted === true).length;
+  return { avg, n: ratings.length, accepted };
+}
+
+function renderMatchProtoPage() {
+  const box = document.getElementById('matchProtoContent');
+  if (!players.length) { box.innerHTML = noPlayersHTML(); return; }
+  const ph = MATCH_PHASES[_matchPhase];
+  const st = matchState();
+  const tabs = Object.values(MATCH_PHASES).map(p => `
+    <button class="btn${_matchPhase === p.id ? ' btn-primary' : ''}" aria-pressed="${_matchPhase === p.id}"
+      style="${_matchPhase === p.id ? `background:${p.color};border-color:${p.color};color:#fff;` : ''}font-size:.82rem"
+      onclick="matchSetPhase('${p.id}')">${p.icon} ${p.label}</button>`).join('');
+  const chip = (t, c, s) => `<span style="display:inline-block;background:var(--bg3);border:1px solid ${c};color:${c};border-radius:12px;padding:2px 10px;margin:2px;font-size:.77rem">${s} ${esc(t)}</span>`;
+  const tile = (l, v, c) => `<div style="background:var(--bg3);padding:8px;border-radius:8px;text-align:center"><div style="font-size:.7rem;color:var(--text2)">${l}</div><div style="font-weight:700;color:${c}">${v}</div></div>`;
+  const tiles = [];
+  if (ph.choGkg) tiles.push(tile('KH (70 kg için)', `${Math.round(ph.choGkg[0] * 70)}–${Math.round(ph.choGkg[1] * 70)} g`, 'var(--yellow)'));
+  if (ph.proGkg) tiles.push(tile('Protein (70 kg için)', `${Math.round(ph.proGkg[0] * 70)}–${Math.round(ph.proGkg[1] * 70)} g`, 'var(--green)'));
+  if (ph.hydrMlKg) tiles.push(tile(`Sıvı (70 kg) · ${ph.hydrWindow}`, `${ph.hydrMlKg[0] * 70}–${ph.hydrMlKg[1] * 70} ml`, 'var(--blue)'));
+  if (ph.fatMax) tiles.push(tile('Yağ / lif sınırı', `<${ph.fatMax} g / <${ph.fiberMax} g`, 'var(--red)'));
+  if (ph.choTarget) tiles.push(tile('KH hedefi', `${ph.choTarget[0]}–${ph.choTarget[1]} g`, 'var(--yellow)'));
+  if (ph.hydrMl) tiles.push(tile('Sıvı', `${ph.hydrMl[0]}–${ph.hydrMl[1]} ml`, 'var(--blue)'));
+  const infoCard = `
+    <div class="card" style="border-left:3px solid ${ph.color}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="card-title" style="color:${ph.color}">${ph.icon} ${ph.label}</div>
+          <div style="font-size:.8rem;color:var(--text2)"><i class="fas fa-clock"></i> ${esc(ph.timeWindow)}</div>
+        </div>
+        <div style="font-size:.75rem;color:var(--text2);font-style:italic">${esc(ph.evidence)}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px">${tiles.join('')}</div>
+      <div class="grid2" style="margin-top:14px;gap:12px">
+        <div>
+          <div style="font-size:.78rem;font-weight:700;margin-bottom:6px"><i class="fas fa-check-circle" style="color:${ph.color}"></i> Öncelikler</div>
+          <ul style="margin:0 0 0 16px;font-size:.82rem;line-height:1.6">${ph.priorities.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
+        </div>
+        <div>
+          <div style="font-size:.78rem;font-weight:700;margin-bottom:6px"><i class="fas fa-thumbs-up" style="color:var(--green)"></i> Önerilen besinler</div>
+          <div>${ph.recommendedFoods.map(f => chip(f, 'var(--green)', '✓')).join('')}</div>
+          <div style="font-size:.78rem;font-weight:700;margin:10px 0 6px"><i class="fas fa-thumbs-down" style="color:var(--red)"></i> Kaçınılacaklar</div>
+          <div>${ph.avoidFoods.map(f => chip(f, 'var(--red)', '✗')).join('')}</div>
+        </div>
+      </div>
+    </div>`;
+  const hydrCard = _matchPhase !== 'mac_sonrasi' ? '' : `
+    <div class="card" style="border-left:3px solid var(--blue)">
+      <div class="card-title"><i class="fas fa-droplet" style="color:var(--blue)"></i> Hidrasyon Replasmanı (kilo kaybına göre)</div>
+      <div style="font-size:.82rem;color:var(--text2);margin-bottom:12px">Maç öncesi ve sonrası tartım gerekli — kayıp (kg) × 1.5 = ilk 2-4 saatte içilmesi gereken en az sıvı.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;max-width:520px">
+        <div class="form-group" style="margin:0"><label for="hydr_pre">Maç öncesi kilo (kg)</label><input type="number" id="hydr_pre" placeholder="ör. 72.5" step="0.1" value="${esc(st.hydrPre)}"></div>
+        <div class="form-group" style="margin:0"><label for="hydr_post">Maç sonrası kilo (kg)</label><input type="number" id="hydr_post" placeholder="ör. 71.0" step="0.1" value="${esc(st.hydrPost)}"></div>
+        <button class="btn" style="border-color:var(--blue);color:var(--blue)" onclick="calcHydration()">Hesapla</button>
+      </div>
+      <div id="hydr_result" style="margin-top:12px" aria-live="polite"></div>
+    </div>`;
+  const menuHtml = st.menu.map((item, k) => `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <input type="checkbox" ${item.served ? 'checked' : ''} onchange="matchMenuSetServed(${k},this.checked)" aria-label="${esc(item.food)} servis edilecek" style="width:15px;height:15px">
+      <span style="font-size:.85rem;flex:1;${item.served ? '' : 'color:var(--text2);text-decoration:line-through'}">${esc(item.food)}</span>
+      <button class="btn btn-sm" style="color:var(--red);border-color:var(--red);padding:1px 7px" onclick="matchMenuRemove(${k})" aria-label="${esc(item.food)} kaldır">×</button>
+    </div>`).join('') || '<div style="font-size:.82rem;color:var(--text2)">Menü boş.</div>';
+  const organoCard = `
+    <div class="card">
+      <div class="card-title"><i class="fas fa-clipboard-list" style="color:var(--orange)"></i> Organoleptik Kabul Takibi</div>
+      <div class="grid2" style="gap:12px;margin-bottom:14px">
+        <div>
+          <div style="font-size:.82rem;font-weight:600;margin-bottom:8px"><i class="fas fa-utensils" style="color:var(--accent)"></i> Bu fazın menüsü (servis edilecekler)</div>
+          ${menuHtml}
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <input type="text" id="match_food_input" placeholder="Yeni besin ekle..." style="flex:1;font-size:.82rem" aria-label="Yeni besin" onkeydown="if(event.key==='Enter')matchMenuAdd()">
+            <button class="btn btn-sm" style="background:var(--accent);border-color:var(--accent);color:#fff" onclick="matchMenuAdd()" aria-label="Besin ekle"><i class="fas fa-plus"></i></button>
+          </div>
+          <button class="btn btn-sm" style="margin-top:8px" onclick="matchMenuReset()"><i class="fas fa-rotate-left"></i> Önerilen menüye dön</button>
+        </div>
+        <div style="background:var(--bg3);padding:12px;border-radius:8px;font-size:.82rem">
+          <div style="font-weight:600;margin-bottom:6px">📊 Puanlama ölçeği</div>
+          ${[5,4,3,2,1].map(r => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="color:${organoColor(r)};font-size:1rem">${ORGANO_STARS[r]}</span><span>${r} — ${ORGANO_LABEL[r]}</span></div>`).join('')}
+          <div style="margin-top:8px;font-size:.75rem;color:var(--text2)">3★ ve üstü = aldı, 2★ ve altı = reddetti. Ortalaması 3★'ın altında kalan besini menüden çıkarmayı değerlendirin.</div>
+        </div>
+      </div>
+      <div id="organoTableWrap"></div>
+    </div>`;
+  const notesCard = `
+    <div class="card" style="border-left:3px solid var(--red)">
+      <div class="card-title"><i class="fas fa-file-pdf" style="color:var(--red)"></i> Notlar & Raporlar</div>
+      <textarea rows="2" placeholder="${esc(ph.label)} için diyetisyen notu (otomatik kaydedilir)…" style="margin-bottom:10px" oninput="matchNotesInput(this.value)" aria-label="Faz notu">${esc(st.notes || '')}</textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" style="border-color:var(--red);color:var(--red)" onclick="printMatchProtoReport()"><i class="fas fa-file-pdf"></i> ${esc(ph.label)} Kabul Raporu</button>
+        <button class="btn" style="border-color:var(--orange);color:var(--orange)" onclick="printMatchFullReport()"><i class="fas fa-file-pdf"></i> 3 Faz Özet</button>
+      </div>
+    </div>`;
+  box.innerHTML = `
+    <div class="card">
+      <div class="card-title"><i class="fas fa-person-running" style="color:var(--green)"></i> Faz</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" role="group" aria-label="Maç fazı seçimi">${tabs}</div>
+    </div>
+    ${infoCard}${hydrCard}${organoCard}<div id="organoSummaryWrap"></div>${notesCard}`;
+  renderOrganoParts();
+  if (_matchPhase === 'mac_sonrasi' && st.hydrPre && st.hydrPost) calcHydration(true);
+}
+function matchSetPhase(id) { _matchPhase = id; renderMatchProtoPage(); }
+
+// Tabloyu ve uyarıyı yenile; yatay kaydırma konumu korunur
+function renderOrganoParts() {
+  const wrap = document.getElementById('organoTableWrap');
+  if (!wrap) return;
+  const sc = wrap.querySelector('.table-scroll');
+  const left = sc ? sc.scrollLeft : 0, top = sc ? sc.scrollTop : 0;
+  wrap.innerHTML = renderOrganoTable();
+  const sc2 = wrap.querySelector('.table-scroll');
+  if (sc2) { sc2.scrollLeft = left; sc2.scrollTop = top; }
+  document.getElementById('organoSummaryWrap').innerHTML = renderOrganoSummary();
+}
+function renderOrganoTable() {
+  const st = matchState();
+  if (!st.menu.length) return '<div class="empty-msg">Menüye besin ekleyin.</div>';
+  const served = st.menu.filter(m => m.served);
+  if (!served.length) return '<div class="empty-msg">Servis edilecek besin seçin.</div>';
+  const b = 'border:1px solid var(--border)';
+  const stick = (left, w) => `position:sticky;left:${left}px;z-index:1;background:var(--bg2);min-width:${w}px;max-width:${w}px`;
+  const head = players.map(p => `<th style="padding:4px 2px;${b};text-align:center;font-size:.7rem;min-width:64px;white-space:nowrap" title="${esc(p.name)}">${esc(String(p.name).split(' ')[0])}</th>`).join('');
+  const rows = served.map(item => {
+    const k = st.menu.indexOf(item);
+    const s = organoStats(_matchPhase, item.food);
+    const cells = players.map((p, i) => {
+      const rec = organoRec(i, _matchPhase, item.food) || {};
+      const r = rec.rating || 0;
+      return `<td style="padding:3px 2px;${b};text-align:center">
+        <select onchange="organoSetRating(${i},${k},this.value)" aria-label="${esc(p.name)} — ${esc(item.food)} puanı"
+          style="font-size:.72rem;background:var(--bg);color:${organoColor(r)};border:1px solid var(--border);border-radius:4px;padding:1px 2px;width:58px">
+          <option value="0"${!r ? ' selected' : ''}>—</option>
+          ${[5,4,3,2,1].map(v => `<option value="${v}"${r === v ? ' selected' : ''}>${v}★</option>`).join('')}
+        </select>
+        <div style="font-size:.65rem;margin-top:2px;color:${rec.accepted === true ? 'var(--green)' : rec.accepted === false ? 'var(--red)' : 'var(--text2)'}">${rec.accepted === true ? '✓ aldı' : rec.accepted === false ? '✗ red' : '?'}</div>
+      </td>`;
+    }).join('');
+    return `<tr>
+      <th scope="row" style="padding:4px 8px;${b};font-size:.8rem;text-align:left;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${stick(0, 150)}" title="${esc(item.food)}">${esc(item.food)}</th>
+      <td style="padding:4px 6px;${b};text-align:center;font-weight:700;color:${organoColor(s.avg)};${stick(150, 52)}">${s.avg === null ? '—' : s.avg.toFixed(1)}</td>
+      <td style="padding:4px 6px;${b};text-align:center;${stick(202, 58)}">${s.accepted}/${players.length}</td>
+      ${cells}
+    </tr>`;
+  }).join('');
+  return `<div class="table-scroll" style="max-height:520px">
+    <table style="border-collapse:separate;border-spacing:0;font-size:.78rem">
+      <thead><tr style="background:var(--bg3)">
+        <th style="text-align:left;padding:5px 8px;${b};${stick(0, 150)};background:var(--bg3)">Besin</th>
+        <th style="padding:5px 4px;${b};text-align:center;${stick(150, 52)};background:var(--bg3)">Ort.</th>
+        <th style="padding:5px 4px;${b};text-align:center;${stick(202, 58)};background:var(--bg3)">Kabul</th>
+        ${head}
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>
+  <div style="margin-top:8px;font-size:.75rem;color:var(--text2)">Besin adları sabit kalır; oyunculara ulaşmak için tabloyu yana kaydırın. Puan verince kabul durumu otomatik güncellenir.</div>`;
+}
+function renderOrganoSummary() {
+  const low = matchState().menu.filter(m => m.served).map(m => ({ m, s: organoStats(_matchPhase, m.food) })).filter(x => x.s.avg !== null && x.s.avg < 3);
+  if (!low.length) return '';
+  return `<div class="card" style="border:1px solid var(--yellow);border-left:4px solid var(--yellow)">
+    <div class="card-title"><i class="fas fa-triangle-exclamation" style="color:var(--yellow)"></i> Düşük Kabul Uyarısı</div>
+    <div style="font-size:.85rem;margin-bottom:8px">Aşağıdaki besinlerin ortalaması 3★'ın altında — menüden çıkarılması veya hazırlanış şeklinin değiştirilmesi önerilir:</div>
+    ${low.map(({ m, s }) => `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--bg3);border-radius:6px;margin-bottom:4px">
+      <span style="font-size:.85rem">${esc(m.food)} <span style="color:var(--text2);font-size:.75rem">(${s.n} puan)</span></span>
+      <span style="color:var(--red);font-weight:700">★ ${s.avg.toFixed(1)}/5</span></div>`).join('')}
+  </div>`;
+}
+
+function organoSetRating(pidx, menuIdx, val) {
+  const item = matchState().menu[menuIdx];
+  const p = players[pidx];
+  if (!item || !p) return;
+  const rating = parseInt(val) || 0;
+  if (!p.matchProto) p.matchProto = {};
+  if (!p.matchProto[_matchPhase]) p.matchProto[_matchPhase] = { meals: [], notes: '' };
+  const meals = p.matchProto[_matchPhase].meals;
+  const i = meals.findIndex(m => m.food === item.food);
+  if (!rating) { if (i >= 0) meals.splice(i, 1); }
+  else if (i >= 0) { meals[i].rating = rating; meals[i].accepted = rating >= 3; }
+  else meals.push({ food: item.food, rating, accepted: rating >= 3 });
+  triggerAutoSave();
+  renderOrganoParts();
+}
+function matchMenuAdd() {
+  const inp = document.getElementById('match_food_input');
+  const val = inp?.value?.trim();
+  if (!val) return;
+  const st = matchState();
+  if (st.menu.some(m => m.food.toLocaleLowerCase('tr-TR') === val.toLocaleLowerCase('tr-TR'))) { showToast('Bu besin menüde zaten var', 'yellow'); return; }
+  st.menu.push({ food: val, served: true });
+  triggerAutoSave();
+  renderMatchProtoPage();
+  document.getElementById('match_food_input')?.focus();
+}
+async function matchMenuRemove(k) {
+  const st = matchState(), item = st.menu[k];
+  if (!item) return;
+  const rated = organoStats(_matchPhase, item.food).n;
+  if (rated) {
+    const ok = await confirmModal.show({ icon:'🗑️', title:`"${item.food}" menüden çıkarılsın mı?`, msg:`${rated} oyuncunun puanı bu besin için saklı kalır; aynı adla tekrar eklerseniz geri gelir.`, ok:'Evet, Çıkar', danger:true });
+    if (!ok) return;
+  }
+  st.menu.splice(k, 1);
+  triggerAutoSave();
+  renderMatchProtoPage();
+}
+function matchMenuSetServed(k, state) {
+  const item = matchState().menu[k];
+  if (item) item.served = state;
+  triggerAutoSave();
+  renderMatchProtoPage();
+}
+async function matchMenuReset() {
+  const ok = await confirmModal.show({ icon:'↩️', title:'Önerilen menüye dönülsün mü?', msg:'Bu fazın menüsü önerilen besinlerle değiştirilecek. Oyuncu puanları silinmez.', ok:'Evet' });
+  if (!ok) return;
+  matchState().menu = MATCH_PHASES[_matchPhase].recommendedFoods.map(f => ({ food: f, served: true }));
+  triggerAutoSave();
+  renderMatchProtoPage();
+}
+let _matchNoteT = null;
+function matchNotesInput(v) { matchState().notes = v; clearTimeout(_matchNoteT); _matchNoteT = setTimeout(triggerAutoSave, 700); }
+
+function calcHydration(silent) {
+  const preEl = document.getElementById('hydr_pre'), postEl = document.getElementById('hydr_post'), res = document.getElementById('hydr_result');
+  if (!preEl || !res) return;
+  const pre = parseFloat(preEl.value), post = parseFloat(postEl.value);
+  const st = matchState('mac_sonrasi');
+  st.hydrPre = preEl.value; st.hydrPost = postEl.value;
+  if (!silent) triggerAutoSave();
+  if (!pre || !post || pre <= post || pre - post > 6) {
+    if (!silent) res.innerHTML = '<div class="alert alert-yellow"><i class="fas fa-circle-info"></i> Geçerli değer girin (maç öncesi kilo &gt; maç sonrası kilo, fark 6 kg\'dan az).</div>';
+    return;
+  }
+  const loss = pre - post, pct = loss / pre * 100, fluid = Math.round(loss * 1.5 * 1000);
+  const c = pct >= 3 ? 'var(--red)' : pct >= 2 ? 'var(--yellow)' : 'var(--green)';
+  const tile = (l, v, col) => `<div style="background:var(--bg3);padding:10px;border-radius:8px;text-align:center"><div style="font-size:.7rem;color:var(--text2)">${l}</div><div style="font-weight:700;font-size:1.2rem;color:${col}">${v}</div></div>`;
+  res.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+      ${tile('Kilo kaybı', loss.toFixed(2) + ' kg', 'var(--orange)')}${tile('Dehidrasyon oranı', '%' + pct.toFixed(1), c)}${tile('En az sıvı (1.5×)', fluid + ' ml', 'var(--blue)')}
+    </div>
+    ${pct >= 3 ? '<div class="alert alert-red" style="margin-top:8px">⚠️ %3 üzeri kayıp — kognitif ve fiziksel performans belirgin etkilenir; sodyumlu sıvıyla hızlı replasman</div>'
+      : pct >= 2 ? '<div class="alert alert-yellow" style="margin-top:8px">Dikkat: %2 üzeri dehidrasyon — toparlanmada sıvı öncelikli</div>'
+      : '<div class="alert alert-green" style="margin-top:8px">✅ Kabul edilebilir sıvı kaybı</div>'}`;
+}
+
+// ── PDF raporları ──
+const MATCH_PRINT_CSS = 'body{font-family:Arial,sans-serif;padding:24px;color:#111}h1{font-size:1.2rem}h2{font-size:1rem;color:#333;margin-top:20px}table{width:100%;border-collapse:collapse;font-size:.74rem;margin-top:10px}th{background:#f0f0f0;padding:4px 5px;border:1px solid #ccc;text-align:center}td{padding:3px 5px;border:1px solid #ddd}.low{background:#fdecea}.notes{margin-top:10px;font-size:.85rem;white-space:pre-line}.footer{margin-top:16px;font-size:10px;color:#888;border-top:1px solid #ddd;padding-top:8px}@media print{body{padding:8px;print-color-adjust:exact;-webkit-print-color-adjust:exact}}';
+function printMatchProtoReport() {
+  const ph = MATCH_PHASES[_matchPhase], st = matchState();
+  const served = st.menu.filter(m => m.served);
+  const w = openPrintWindow(); if (!w) return;
+  const rows = served.map(item => {
+    const s = organoStats(_matchPhase, item.food);
+    const cols = players.map((p, i) => { const r = organoRec(i, _matchPhase, item.food); return `<td style="text-align:center">${r?.rating ? r.rating + '★' : '—'}<br><span style="font-size:.65rem;color:${r?.accepted ? 'green' : 'red'}">${r?.accepted === true ? '✓' : r?.accepted === false ? '✗' : ''}</span></td>`; }).join('');
+    return `<tr${s.avg !== null && s.avg < 3 ? ' class="low"' : ''}><td style="text-align:left;white-space:nowrap">${esc(item.food)}</td><td style="font-weight:bold;text-align:center">${s.avg === null ? '—' : s.avg.toFixed(1)}</td><td style="text-align:center">${s.accepted}/${players.length}</td>${cols}</tr>`;
+  }).join('') || `<tr><td colspan="${players.length + 3}">Servis edilen besin yok.</td></tr>`;
+  w.document.write(`<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8"><title>Organoleptik Kabul: ${esc(ph.label)}</title>
+    <style>${MATCH_PRINT_CSS}@page{size:A4 landscape;margin:10mm}</style></head><body>
+    <h1>${ph.icon} Organoleptik Kabul Raporu: ${esc(ph.label)}</h1>
+    <div style="color:#555;font-size:.85rem">${teamGender === 'kadin' ? 'Kadın' : 'Erkek'} Takımı · ${new Date().toLocaleDateString('tr-TR')} · Ölçek: 5 mükemmel … 1 reddetti (≥3 = aldı)</div>
+    <table><thead><tr><th style="text-align:left">Besin</th><th>Ort.</th><th>Kabul</th>${players.map(p => `<th style="font-size:.65rem">${esc(String(p.name).split(' ')[0])}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
+    ${st.notes ? `<div class="notes"><b>Diyetisyen notu:</b>\n${esc(st.notes)}</div>` : ''}
+    ${PRINT_FOOTER()}</body></html>`);
+  w.document.close();
+  setTimeout(() => { w.focus(); w.print(); }, 400);
+}
+function printMatchFullReport() {
+  const w = openPrintWindow(); if (!w) return;
+  const sections = Object.values(MATCH_PHASES).map(ph => {
+    const st = matchState(ph.id);
+    const served = st.menu.filter(m => m.served);
+    const rows = served.map(item => {
+      const s = organoStats(ph.id, item.food);
+      return `<tr${s.avg !== null && s.avg < 3 ? ' class="low"' : ''}><td>${esc(item.food)}${s.avg !== null && s.avg < 3 ? ' ⚠️' : ''}</td><td style="text-align:center">${s.avg === null ? '—' : s.avg.toFixed(1)}</td><td style="text-align:center">${s.n}</td><td style="text-align:center">${s.accepted}/${players.length}</td></tr>`;
+    }).join('');
+    return `<h2>${ph.icon} ${esc(ph.label)} <span style="font-weight:400;font-size:.8rem;color:#666">— ${esc(ph.timeWindow)}</span></h2>
+      ${served.length ? `<table><thead><tr><th style="text-align:left">Besin</th><th>Ort. puan</th><th>Puanlayan</th><th>Kabul</th></tr></thead><tbody>${rows}</tbody></table>` : '<p style="color:#888">Servis edilen besin yok.</p>'}
+      ${st.notes ? `<div class="notes"><b>Not:</b> ${esc(st.notes)}</div>` : ''}`;
+  }).join('');
+  w.document.write(`<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8"><title>3 Faz Beslenme Protokolü Özeti</title><style>${MATCH_PRINT_CSS}table{font-size:.82rem}</style></head><body>
+    <h1>⚽ 3 Faz Beslenme Protokolü — Organoleptik Özet</h1>
+    <div style="color:#555;font-size:.85rem">${teamGender === 'kadin' ? 'Kadın' : 'Erkek'} Takımı · ${new Date().toLocaleDateString('tr-TR')}</div>
+    ${sections}${PRINT_FOOTER()}</body></html>`);
+  w.document.close();
+  setTimeout(() => { w.focus(); w.print(); }, 400);
+}
+
+
+// ===================== FİZYOTERAPİST ENTEGRASYONU (sinyal takibi + soru/yanıt) =====================
+// Veriler Apps Script'teki FizyoKayitlari / DiyetisyenSorulari / Fizyoterapistler sayfalarından gelir.
+// Fizyoterapistler kendi telefon formlarından (fizyo.html) bildirir; diyetisyen burada takip sürecini yürütür.
+const PHY_SIGNALS = {
+  psikolojik: { label:'Psikolojik', icon:'🧠', color:'#8B5CF6', items:{ ruh_hali:'Ruh hali düşük', motivasyon:'Motivasyon kaybı', kaygi:'Kaygı / stres', uyku:'Uyku sorunu', sakatlik_korkusu:'Sakatlık korkusu', icine_kapanma:'İçine kapanma / takımdan uzaklaşma' },
+    guide:'Destekleyici, yargısız bir görüşme planlayın. Uyku/stres için akşam rutini, kafein zamanlaması ve öğün düzenini gözden geçirin. Belirtiler 1-2 haftadan uzun sürerse veya şiddetliyse spor psikoloğuna yönlendirin.' },
+  beslenme:   { label:'Beslenme davranışı', icon:'🍽️', color:'#F97316', items:{ istah_azalma:'İştah azalması', istah_artis:'Aşırı yeme', ogun_atlama:'Öğün atlama', kilo_kaygisi:'Kilo / beden kaygısı', kisitlama:'Kısıtlayıcı yeme', sindirim:'Sindirim şikâyeti' },
+    guide:'Kilo ve "diyet" üzerine konuşmaktan kaçının; enerji alımını ve kadın sporcularda menstrüel düzeni kontrol edin (RED-S taraması). Kısıtlayıcı yeme veya beden kaygısı şüphesinde hekim ve spor psikoloğuyla birlikte ilerleyin; enerji kısıtlaması önermeyin.' },
+  fiziksel:   { label:'Fiziksel', icon:'💪', color:'#3B82F6', items:{ agri:'Ağrı', gerginlik:'Kas gerginliği', sakatlik:'Sakatlık / şüphesi', toparlanma:'Toparlanmada gecikme', yorgunluk:'Aşırı yorgunluk' },
+    guide:'Sakatlık/toparlanma döneminde enerji açığı yaratmayın; protein 1.6-2.2 g/kg ve öğünlere eşit dağılım sağlayın. Yük planını fizyoterapistle eşleştirin; Hooper ve GPS verisiyle birlikte değerlendirin.' },
+  uygulama:   { label:'Uygulamaya yanıt', icon:'🧊', color:'#14B8A6', items:{ tolerans_dusuk:'Soğuğa düşük tolerans', uygulama_kaygisi:'Uygulamadan kaçınma / kaygı' },
+    guide:'Soğuk uygulamaya tolerans düşükse kontrast duş veya sıcak uygulama alternatifini fizyoterapistle konuşun. CWI yapılan günlerde protein zamanlamasını kaydırın.' }
+};
+// Öncelikli kabul edilen sinyaller (şiddetten bağımsız)
+const PHY_PRIORITY = ['kisitlama', 'kilo_kaygisi', 'ruh_hali', 'icine_kapanma'];
+const PHY_RESPONSES = { rahatladi:['😌 Rahatladı', '#10B981'], notr:['😐 Nötr', '#64748B'], rahatsiz:['😣 Rahatsız oldu', '#F59E0B'], reddetti:['🙅 Reddetti', '#EF4444'] };
+const PHY_FOLLOW = { yeni:['Yeni', 'var(--blue)'], izleniyor:['İzleniyor', 'var(--yellow)'], mudahale:['Müdahale planlandı', 'var(--orange)'], yonlendirildi:['Uzmana yönlendirildi', 'var(--purple)'], kapandi:['Kapandı', 'var(--green)'] };
+const PHY_SEV = ['', 'Hafif', 'Orta', 'Ciddi'];
+const CRYO_TYPES = {
+  cwi:        { label:'Buz Banyosu (CWI)', icon:'🧊', mpsRisk:'high',     nutritionAdj:'CWI öncesi protein al (30 dk önce) VEYA CWI bitiminden 2 saat sonra toparlanma öğünü.' },
+  cryo:       { label:'Kriyoterapi (WBC)', icon:'❄️', mpsRisk:'moderate', nutritionAdj:'Kriyoterapi bittikten 60 dakika sonra toparlanma öğünü önerilir.' },
+  kontrast:   { label:'Kontrast Duş',      icon:'🚿', mpsRisk:'low',      nutritionAdj:'Standart toparlanma: bitiminden 30 dk içinde KH+Pro öğünü.' },
+  buz_paketi: { label:'Buz Paketi (Lokal)', icon:'🩹', mpsRisk:'low',     nutritionAdj:'Beslenme zamanlamasında değişiklik gerekmez.' },
+  sicak:      { label:'Sıcak Uygulama',    icon:'♨️', mpsRisk:'none',     nutritionAdj:'Toparlanma öğünü ile eş zamanlı veya hemen öncesinde uygun.' }
+};
+const PHY_RISK = { high:['⚠️ Yüksek', 'var(--red)'], moderate:['〰️ Orta', 'var(--yellow)'], low:['✅ Düşük', 'var(--green)'], none:['✅ Yok', 'var(--green)'] };
+const PHY_TOPICS = { soguk:'Soğuk uygulama', psikolojik:'Psikolojik durum', beslenme:'Beslenme', toparlanma:'Toparlanma / sakatlık', genel:'Genel' };
+
+let _phyView = 'signals', _phyFilter = 'acik', _phyCat = '', _phyAthlete = '';
+const _phy = { loaded:false, loading:false, error:'', reports:[], questions:[], physios:[], athletes:[], at:0 };
+
+function phyApi() {
+  const url = window.stApi ? window.stApi.url() : '';
+  return { url, secret: window.stApi ? window.stApi.secret : 'YA2026' };
+}
+async function phyGet(params) {
+  const { url, secret } = phyApi();
+  if (!url) throw new Error('Apps Script URL ayarlı değil (Sporcu Beslenme → Ayarlar)');
+  const u = new URL(url); u.searchParams.set('secret', secret);
+  Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== '') u.searchParams.set(k, v); });
+  const r = await fetch(u.toString()); if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json(); if (!j.ok) throw new Error(j.error || 'Sunucu hatası'); return j;
+}
+async function phyPost(params) {
+  const { url, secret } = phyApi();
+  if (!url) throw new Error('Apps Script URL ayarlı değil');
+  const r = await fetch(url, { method:'POST', headers:{ 'Content-Type':'text/plain' }, body: JSON.stringify(Object.assign({ secret }, params)) });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json(); if (!j.ok) throw new Error(j.error || 'Sunucu hatası'); return j;
+}
+function phyDaysAgo(n) { const d = new Date(Date.now() - n * 86400000); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function phySignals(r) { try { const a = JSON.parse(r.Sinyaller || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+function phyCatOf(code) { return Object.keys(PHY_SIGNALS).find(c => PHY_SIGNALS[c].items[code]) || null; }
+function phyHasSignal(r) { return phySignals(r).length > 0 || r.Yanit === 'rahatsiz' || r.Yanit === 'reddetti'; }
+function phyIsPriority(r) { return Number(r.Siddet) >= 3 || phySignals(r).some(s => PHY_PRIORITY.includes(s)); }
+function phyOpen(r) { return phyHasSignal(r) && r.TakipDurum !== 'kapandi'; }
+function phyPlayerIdx(name) { const n = String(name || '').toLocaleLowerCase('tr-TR').trim(); return players.findIndex(p => String(p.name).toLocaleLowerCase('tr-TR').trim() === n); }
+
+async function physioRefresh(silent) {
+  if (_phy.loading) return;
+  _phy.loading = true; _phy.error = '';
+  if (!silent && currentPageId() === 'p-physio') renderPhysioPage();
+  try {
+    const [rep, q, f, a] = await Promise.all([
+      phyGet({ action:'getPhysioReports', from: phyDaysAgo(45) }), phyGet({ action:'getQuestions' }),
+      phyGet({ action:'getPhysios' }), phyGet({ action:'getAthletes' })
+    ]);
+    _phy.reports = (rep.data || []).sort((x, y) => String(y.TarihSaat).localeCompare(String(x.TarihSaat)));
+    _phy.questions = (q.data || []).sort((x, y) => String(y.TarihSaat).localeCompare(String(x.TarihSaat)));
+    _phy.physios = f.data || []; _phy.athletes = a.data || [];
+    _phy.loaded = true; _phy.at = Date.now();
+  } catch (e) { _phy.error = e.message; }
+  finally { _phy.loading = false; }
+  physioUpdateBadge();
+  if (currentPageId() === 'p-physio') renderPhysioPage();
+}
+function physioUpdateBadge() {
+  const n = _phy.reports.filter(r => r.TakipDurum === 'yeni').length;
+  document.querySelectorAll('.nav-btn[data-page="p-physio"]').forEach(b => {
+    let bd = b.querySelector('.nav-count');
+    if (!n) { if (bd) bd.remove(); return; }
+    if (!bd) { bd = document.createElement('span'); bd.className = 'nav-count'; bd.style.cssText = 'margin-left:auto;background:var(--red);color:#fff;border-radius:10px;font-size:.66rem;font-weight:700;padding:1px 7px'; b.appendChild(bd); }
+    bd.textContent = n; bd.title = `${n} yeni sinyal`;
+  });
+}
+
+function renderPhysioPage() {
+  const box = document.getElementById('physioContent');
+  const views = [['signals', '🚩 Sinyal Takibi'], ['questions', '💬 Sorular'], ['apps', '🧊 Uygulamalar'], ['physios', '👥 Fizyoterapistler']];
+  const newCnt = _phy.reports.filter(r => r.TakipDurum === 'yeni').length;
+  const openQ = _phy.questions.filter(q => q.Durum !== 'yanitlandi').length;
+  const ansQ = _phy.questions.filter(q => q.Durum === 'yanitlandi' && q.YanitTarih && Date.now() - new Date(String(q.YanitTarih).replace(' ', 'T')).getTime() < 3 * 86400000).length;
+  const badges = { signals: newCnt, questions: ansQ };
+  const top = `
+    <div class="card">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        ${views.map(([k, l]) => `<button class="btn${_phyView === k ? ' btn-primary' : ''}" aria-pressed="${_phyView === k}" onclick="_phyView='${k}';renderPhysioPage()">${l}${badges[k] ? ` <span class="badge badge-red">${badges[k]}</span>` : ''}</button>`).join('')}
+        <span style="margin-left:auto;font-size:.75rem;color:var(--text2)">${_phy.at ? 'Güncellendi ' + new Date(_phy.at).toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit' }) : ''}</span>
+        <button class="btn btn-sm" onclick="physioRefresh()" ${_phy.loading ? 'disabled' : ''}><i class="fas fa-rotate${_phy.loading ? ' fa-spin' : ''}"></i> Yenile</button>
+      </div>
+      ${openQ ? `<div style="font-size:.75rem;color:var(--text2);margin-top:8px">${openQ} soru fizyoterapistin yanıtını bekliyor.</div>` : ''}
+    </div>`;
+  let body = '';
+  if (_phy.error) body = `<div class="alert alert-red"><i class="fas fa-triangle-exclamation"></i> <div>Veriler alınamadı: ${esc(_phy.error)}<br><span style="font-size:.78rem">Code.gs'in son sürümünün yayınlandığından ve Sporcu Beslenme sayfasındaki Apps Script URL'sinin doğru olduğundan emin olun.</span></div></div>`;
+  else if (!_phy.loaded) body = `<div class="card empty-msg"><i class="fas fa-spinner fa-spin"></i> Fizyoterapist kayıtları yükleniyor…</div>`;
+  else body = { signals: phyViewSignals, questions: phyViewQuestions, apps: phyViewApps, physios: phyViewPhysios }[_phyView]();
+  box.innerHTML = top + body;
+  if (!_phy.loaded && !_phy.loading && !_phy.error) physioRefresh(true);
+}
+
+// ── 1) Sinyal takibi ──
+function phyViewSignals() {
+  const sig = _phy.reports.filter(phyHasSignal);
+  const week = sig.filter(r => String(r.Tarih) >= phyDaysAgo(7));
+  const kpi = (v, l, c, sub) => `<div class="stat-tile"><div class="val" style="color:${c}">${v}</div><div class="lbl">${l}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;
+  const kpis = `<div class="grid4" style="margin-bottom:14px">
+    ${kpi(sig.filter(r => r.TakipDurum === 'yeni').length, 'Yeni sinyal', 'var(--blue)', 'henüz ele alınmadı')}
+    ${kpi(sig.filter(r => phyOpen(r) && phyIsPriority(r)).length, 'Öncelikli açık', 'var(--red)', 'ciddi / psikolojik / yeme')}
+    ${kpi(sig.filter(r => ['izleniyor', 'mudahale', 'yonlendirildi'].includes(r.TakipDurum)).length, 'Süreçte', 'var(--yellow)', 'izleniyor · müdahale · yönlendirildi')}
+    ${kpi(new Set(week.map(r => String(r.SporcuID))).size, 'Sinyal veren oyuncu', 'var(--purple)', 'son 7 gün')}
+  </div>`;
+  // Oyuncu bazında sinyal özeti (14 gün)
+  const by = {};
+  sig.filter(r => String(r.Tarih) >= phyDaysAgo(14)).forEach(r => {
+    const k = String(r.SporcuID);
+    const o = by[k] || (by[k] = { id:k, name:r.SporcuAdi, n:0, cats:new Set(), sev:0, last:'', open:0, pri:false });
+    o.n++; phySignals(r).forEach(s => { const c = phyCatOf(s); if (c) o.cats.add(c); });
+    if (r.Yanit === 'rahatsiz' || r.Yanit === 'reddetti') o.cats.add('uygulama');
+    o.sev = Math.max(o.sev, Number(r.Siddet) || 0); if (String(r.Tarih) > o.last) o.last = String(r.Tarih);
+    if (phyOpen(r)) o.open++; if (phyIsPriority(r)) o.pri = true;
+  });
+  const people = Object.values(by).sort((a, b) => (b.pri - a.pri) || (b.n - a.n));
+  const peopleCard = `
+    <div class="card">
+      <div class="card-title"><i class="fas fa-user-clock" style="color:var(--purple)"></i> Sinyal veren oyuncular (son 14 gün) ${_phyAthlete ? `<button class="btn btn-sm" onclick="_phyAthlete='';renderPhysioPage()">Filtreyi kaldır ✕</button>` : ''}</div>
+      ${people.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">${people.map(o => `
+        <button onclick="_phyAthlete='${esc(o.id)}';renderPhysioPage()" style="text-align:left;background:var(--bg3);border:1px solid ${_phyAthlete === o.id ? 'var(--accent)' : o.pri ? 'var(--red)' : 'var(--border)'};border-radius:10px;padding:10px;cursor:pointer;color:var(--text);font:inherit">
+          <div style="display:flex;justify-content:space-between;gap:6px"><b style="font-size:.85rem">${esc(o.name)}</b>${o.pri ? '<span class="badge badge-red">Öncelikli</span>' : o.n >= 2 ? '<span class="badge badge-yellow">Tekrarlayan</span>' : ''}</div>
+          <div style="font-size:.75rem;color:var(--text2);margin-top:3px">${o.n} bildirim · ${o.open} açık · en yüksek: ${PHY_SEV[o.sev] || '—'} · son ${esc(o.last)}</div>
+          <div style="margin-top:5px">${[...o.cats].map(c => `<span style="display:inline-block;font-size:.68rem;padding:1px 7px;border-radius:9px;margin:1px 3px 0 0;background:${PHY_SIGNALS[c].color};color:#fff">${PHY_SIGNALS[c].icon} ${PHY_SIGNALS[c].label}</span>`).join('')}</div>
+        </button>`).join('')}</div>` : '<div class="empty-msg">Son 14 günde sinyal bildirilmedi.</div>'}
+    </div>`;
+  // Gelen kutusu
+  let list = sig;
+  if (_phyFilter === 'acik') list = list.filter(phyOpen);
+  else if (_phyFilter !== 'tumu') list = list.filter(r => (r.TakipDurum || 'yeni') === _phyFilter);
+  if (_phyCat) list = list.filter(r => phySignals(r).some(s => phyCatOf(s) === _phyCat) || (_phyCat === 'uygulama' && ['rahatsiz', 'reddetti'].includes(r.Yanit)));
+  if (_phyAthlete) list = list.filter(r => String(r.SporcuID) === _phyAthlete);
+  list = [...list].sort((a, b) => (phyIsPriority(b) && phyOpen(b)) - (phyIsPriority(a) && phyOpen(a)) || String(b.TarihSaat).localeCompare(String(a.TarihSaat)));
+  const filters = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+      <select style="width:auto" aria-label="Durum filtresi" onchange="_phyFilter=this.value;renderPhysioPage()">
+        ${[['acik', 'Açık olanlar'], ['tumu', 'Tümü'], ...Object.entries(PHY_FOLLOW).map(([k, v]) => [k, v[0]])].map(([k, l]) => `<option value="${k}" ${_phyFilter === k ? 'selected' : ''}>${l}</option>`).join('')}
+      </select>
+      <select style="width:auto" aria-label="Kategori filtresi" onchange="_phyCat=this.value;renderPhysioPage()">
+        <option value="">Tüm kategoriler</option>
+        ${Object.entries(PHY_SIGNALS).map(([k, g]) => `<option value="${k}" ${_phyCat === k ? 'selected' : ''}>${g.icon} ${g.label}</option>`).join('')}
+      </select>
+      <span style="font-size:.78rem;color:var(--text2)">${list.length} kayıt</span>
+    </div>`;
+  const cards = list.length ? list.map(phySignalCard).join('') : '<div class="empty-msg">Bu filtrede kayıt yok.</div>';
+  return kpis + peopleCard + `<div class="card"><div class="card-title"><i class="fas fa-inbox" style="color:var(--blue)"></i> Gelen bildirimler ve takip süreci</div>${filters}${cards}</div>`;
+}
+function phySignalCard(r) {
+  const sigs = phySignals(r);
+  const cats = [...new Set(sigs.map(phyCatOf).filter(Boolean).concat(['rahatsiz', 'reddetti'].includes(r.Yanit) ? ['uygulama'] : []))];
+  const fu = PHY_FOLLOW[r.TakipDurum || 'yeni'];
+  const pri = phyIsPriority(r) && phyOpen(r);
+  const pidx = phyPlayerIdx(r.SporcuAdi);
+  const ct = CRYO_TYPES[r.Uygulama];
+  const rp = PHY_RESPONSES[r.Yanit];
+  const q = r.SoruID ? _phy.questions.find(x => String(x.ID) === String(r.SoruID)) : null;
+  const id = esc(r.ID);
+  return `
+    <div style="border:1px solid ${pri ? 'var(--red)' : 'var(--border)'};border-left:4px solid ${pri ? 'var(--red)' : fu[1]};border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg2)">
+      <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:flex-start">
+        <div>
+          <div style="font-weight:700">${esc(r.SporcuAdi)} ${pri ? '<span class="badge badge-red">Öncelikli</span>' : ''} ${Number(r.Siddet) ? `<span class="badge badge-${Number(r.Siddet) >= 3 ? 'red' : Number(r.Siddet) === 2 ? 'yellow' : 'blue'}">${PHY_SEV[Number(r.Siddet)]}</span>` : ''}</div>
+          <div style="font-size:.75rem;color:var(--text2);margin-top:2px">🩺 ${esc(r.FizyoAdi)} · ${esc(r.Tarih)} · bildirim ${esc(String(r.TarihSaat).slice(11, 16))}</div>
+        </div>
+        <span class="badge" style="background:var(--bg3);color:${fu[1]};border:1px solid ${fu[1]}">${fu[0]}</span>
+      </div>
+      ${q ? `<div style="font-size:.75rem;color:var(--text2);margin-top:6px"><i class="fas fa-reply"></i> Sorunuza yanıt: “${esc(q.Soru)}”</div>` : ''}
+      ${r.Tip === 'uygulama' ? `<div style="font-size:.82rem;margin-top:8px">${ct ? ct.icon + ' ' + esc(ct.label) : esc(r.Uygulama)}${r.Sure ? ' · ' + esc(r.Sure) + ' dk' : ''}${r.Sicaklik !== '' && r.Sicaklik != null ? ' · ' + esc(r.Sicaklik) + '°C' : ''} ${rp ? `· <b style="color:${rp[1]}">${rp[0]}</b>` : ''}</div>` : ''}
+      ${sigs.length ? `<div style="margin-top:8px">${sigs.map(s => { const c = phyCatOf(s); return c ? `<span style="display:inline-block;font-size:.75rem;padding:2px 9px;border-radius:10px;margin:2px 4px 0 0;background:${PHY_SIGNALS[c].color};color:#fff">${PHY_SIGNALS[c].icon} ${esc(PHY_SIGNALS[c].items[s])}</span>` : ''; }).join('')}</div>` : ''}
+      ${r.Not ? `<div style="font-size:.85rem;margin-top:8px;padding:8px 10px;background:var(--bg3);border-radius:8px">“${esc(r.Not)}”</div>` : ''}
+      ${cats.length ? `<details style="margin-top:8px"><summary style="cursor:pointer;font-size:.8rem;color:var(--accent)">Önerilen süreç</summary>
+        ${cats.map(c => `<div style="font-size:.8rem;margin-top:6px;padding-left:10px;border-left:3px solid ${PHY_SIGNALS[c].color}"><b>${PHY_SIGNALS[c].icon} ${PHY_SIGNALS[c].label}:</b> ${PHY_SIGNALS[c].guide}</div>`).join('')}
+        ${ct && CRYO_TYPES[r.Uygulama].mpsRisk === 'high' ? `<div style="font-size:.8rem;margin-top:6px;padding-left:10px;border-left:3px solid var(--blue)"><b>Beslenme zamanlaması:</b> ${ct.nutritionAdj}</div>` : ''}
+      </details>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
+        <select id="fu_s_${id}" style="width:auto;font-size:.8rem" aria-label="Takip durumu">${Object.entries(PHY_FOLLOW).map(([k, v]) => `<option value="${k}" ${(r.TakipDurum || 'yeni') === k ? 'selected' : ''}>${v[0]}</option>`).join('')}</select>
+        <input id="fu_n_${id}" value="${esc(r.TakipNot || '')}" placeholder="Takip notu (ör. Pazartesi görüşme)" style="flex:1;min-width:180px;font-size:.8rem" aria-label="Takip notu">
+        <button class="btn btn-sm btn-primary" onclick="phySaveFollowup('${id}')"><i class="fas fa-save"></i> Kaydet</button>
+        ${pidx >= 0 ? `<button class="btn btn-sm" onclick="goToPlayer(${pidx})"><i class="fas fa-user"></i> Profil</button>` : ''}
+        <button class="btn btn-sm" onclick="phyAskAbout('${esc(r.SporcuID)}')"><i class="fas fa-comment"></i> Soru sor</button>
+      </div>
+      ${r.TakipTarih ? `<div style="font-size:.7rem;color:var(--text2);margin-top:4px">Son güncelleme: ${esc(r.TakipTarih)}</div>` : ''}
+    </div>`;
+}
+async function phySaveFollowup(id) {
+  const durum = document.getElementById('fu_s_' + id).value, not = document.getElementById('fu_n_' + id).value.trim();
+  try {
+    await phyPost({ action:'updateFollowup', reportId:id, durum, not });
+    const r = _phy.reports.find(x => String(x.ID) === String(id));
+    if (r) { r.TakipDurum = durum; r.TakipNot = not; r.TakipTarih = new Date().toLocaleString('sv-SE').slice(0, 19); }
+    // Takip kaydını oyuncunun görüşme notlarına da işle (yerel panel verisi)
+    const pidx = r ? phyPlayerIdx(r.SporcuAdi) : -1;
+    if (pidx >= 0 && (durum === 'mudahale' || durum === 'yonlendirildi')) {
+      players[pidx].consultations.push({ date: todayISO(), note: `[Fizyoterapist bildirimi — ${r.FizyoAdi}] ${phySignals(r).map(s => PHY_SIGNALS[phyCatOf(s)]?.items[s]).filter(Boolean).join(', ')}${r.Not ? ' · “' + r.Not + '”' : ''}`, actions: `${PHY_FOLLOW[durum][0]}${not ? ': ' + not : ''}`, createdAt: new Date().toISOString() });
+      triggerAutoSave();
+    }
+    physioUpdateBadge();
+    showToast('Takip durumu kaydedildi' + (pidx >= 0 && (durum === 'mudahale' || durum === 'yonlendirildi') ? ' — oyuncunun görüşme notlarına eklendi' : ''));
+    renderPhysioPage();
+  } catch (e) { showToast('Kaydedilemedi: ' + e.message, 'red'); }
+}
+function phyAskAbout(athleteId) { _phyView = 'questions'; renderPhysioPage(); const s = document.getElementById('phyQAthlete'); if (s) { s.value = athleteId; document.getElementById('phyQText').focus(); } }
+
+// ── 2) Sorular ──
+function phyViewQuestions() {
+  const opts = _phy.athletes.map(a => `<option value="${esc(a.ID)}">${esc(a.Ad)}${a.Mevki ? ' (' + esc(a.Mevki) + ')' : ''}</option>`).join('');
+  const form = `
+    <div class="card">
+      <div class="card-title"><i class="fas fa-paper-plane" style="color:var(--teal)"></i> Fizyoterapiste soru gönder</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+        <div class="form-group" style="margin:0"><label for="phyQAthlete">Sporcu</label><select id="phyQAthlete"><option value="">Genel (sporcu yok)</option>${opts}</select></div>
+        <div class="form-group" style="margin:0"><label for="phyQTopic">Konu</label><select id="phyQTopic">${Object.entries(PHY_TOPICS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-group" style="margin-top:10px"><label for="phyQText">Soru</label>
+        <textarea id="phyQText" rows="2" maxlength="1000" placeholder="Ör. “Dünkü buz banyosu sonrası nasıldı? Soğuktan çekindiğini söyledi mi?”"></textarea></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+        ${['Son soğuk uygulamaya yanıtı nasıldı?', 'Son günlerde ruh hali / motivasyonunda değişiklik gözlediniz mi?', 'Toparlanması beklenen sürede mi?', 'Yemek / kilo konusunda bir şey söyledi mi?'].map(t => `<button class="btn btn-sm" onclick="document.getElementById('phyQText').value=this.textContent">${t}</button>`).join('')}
+      </div>
+      <button class="btn btn-primary" onclick="phySendQuestion()"><i class="fas fa-paper-plane"></i> Gönder</button>
+    </div>`;
+  const item = q => `
+    <div style="border:1px solid var(--border);border-left:4px solid ${q.Durum === 'yanitlandi' ? 'var(--green)' : 'var(--yellow)'};border-radius:10px;padding:10px 12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="font-size:.85rem">${q.SporcuAdi ? esc(q.SporcuAdi) : 'Genel'} <span style="font-weight:400;color:var(--text2);font-size:.75rem">· ${esc(PHY_TOPICS[q.Konu] || q.Konu || '')}</span></b>
+        <span style="font-size:.72rem;color:var(--text2)">${esc(String(q.TarihSaat).slice(0, 16))}</span></div>
+      <div style="font-size:.85rem;margin-top:4px">${esc(q.Soru)}</div>
+      ${q.Durum === 'yanitlandi' ? `<div style="font-size:.85rem;margin-top:8px;padding:8px 10px;background:var(--bg3);border-radius:8px"><i class="fas fa-user-doctor" style="color:var(--teal)"></i> <b>${esc(q.YanitFizyo)}</b> <span style="font-size:.72rem;color:var(--text2)">${esc(String(q.YanitTarih).slice(0, 16))}</span><br>${esc(q.Yanit)}</div>` : '<div style="font-size:.75rem;color:var(--yellow);margin-top:6px">⏳ Yanıt bekleniyor</div>'}
+    </div>`;
+  const open = _phy.questions.filter(q => q.Durum !== 'yanitlandi'), done = _phy.questions.filter(q => q.Durum === 'yanitlandi');
+  return form + `<div class="grid2">
+    <div class="card"><div class="card-title">✅ Yanıtlananlar (${done.length})</div>${done.map(item).join('') || '<div class="empty-msg">Henüz yanıt yok.</div>'}</div>
+    <div class="card"><div class="card-title">⏳ Bekleyenler (${open.length})</div>${open.map(item).join('') || '<div class="empty-msg">Bekleyen soru yok.</div>'}</div>
+  </div>`;
+}
+async function phySendQuestion() {
+  const soru = document.getElementById('phyQText').value.trim();
+  if (!soru) { showToast('Soru yazın', 'red'); return; }
+  const athleteId = document.getElementById('phyQAthlete').value;
+  try {
+    await phyPost({ action:'addQuestion', athleteId, konu: document.getElementById('phyQTopic').value, soru });
+    showToast('Soru fizyoterapiste iletildi');
+    await physioRefresh(true);
+  } catch (e) { showToast('Gönderilemedi: ' + e.message, 'red'); }
+}
+
+// ── 3) Uygulamalar (soğuk/sıcak) ──
+function phyViewApps() {
+  const apps = _phy.reports.filter(r => r.Tip === 'uygulama');
+  const now = Date.now();
+  const recent = apps.filter(r => { const t = new Date(String(r.Tarih) + 'T12:00:00').getTime(); const risk = CRYO_TYPES[r.Uygulama]?.mpsRisk; return now - t < 36 * 3600000 && (risk === 'high' || risk === 'moderate'); });
+  const resCount = {}; apps.forEach(r => { if (r.Yanit) resCount[r.Yanit] = (resCount[r.Yanit] || 0) + 1; });
+  const td = 'padding:5px 8px;border:1px solid var(--border);white-space:nowrap';
+  return `
+    ${recent.length ? `<div class="alert alert-yellow" style="display:block"><b><i class="fas fa-clock"></i> Bugün/dün yüksek-orta riskli uygulama yapılan ${new Set(recent.map(r => r.SporcuID)).size} oyuncu — protein zamanlamasını kaydırın:</b>
+      <div style="margin-top:4px">${recent.map(r => `<span style="display:inline-block;margin:2px 8px 2px 0">• ${esc(r.SporcuAdi)} — ${CRYO_TYPES[r.Uygulama].icon} ${esc(CRYO_TYPES[r.Uygulama].label)}</span>`).join('')}</div></div>` : ''}
+    <div class="card">
+      <div class="card-title"><i class="fas fa-snowflake" style="color:var(--teal)"></i> Uygulama yanıt dağılımı (son 45 gün)</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">${Object.entries(PHY_RESPONSES).map(([k, [l, c]]) => `<div class="stat-tile" style="flex:1;min-width:120px"><div class="val" style="color:${c}">${resCount[k] || 0}</div><div class="lbl">${l}</div></div>`).join('')}</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="fas fa-list" style="color:var(--teal)"></i> Uygulama kayıtları</div>
+      ${apps.length ? `<div class="table-scroll"><table style="width:100%;border-collapse:collapse;font-size:.8rem">
+        <thead><tr style="background:var(--bg3)"><th style="${td};text-align:left">Tarih</th><th style="${td};text-align:left">Sporcu</th><th style="${td};text-align:left">Uygulama</th><th style="${td}">Süre / °C</th><th style="${td}">Yanıt</th><th style="${td}">MPS riski</th><th style="${td};text-align:left">Beslenme önerisi</th><th style="${td};text-align:left">Fizyoterapist</th></tr></thead>
+        <tbody>${apps.map(r => { const ct = CRYO_TYPES[r.Uygulama] || {}, rk = PHY_RISK[ct.mpsRisk] || ['—', 'var(--text2)'], rp = PHY_RESPONSES[r.Yanit]; return `<tr>
+          <td style="${td}">${esc(r.Tarih)}</td><td style="${td}">${esc(r.SporcuAdi)}</td><td style="${td}">${ct.icon || ''} ${esc(ct.label || r.Uygulama)}</td>
+          <td style="${td};text-align:center">${r.Sure ? esc(r.Sure) + ' dk' : '—'} / ${r.Sicaklik !== '' && r.Sicaklik != null ? esc(r.Sicaklik) + '°C' : '—'}</td>
+          <td style="${td};text-align:center;color:${rp ? rp[1] : 'var(--text2)'};font-weight:600">${rp ? rp[0] : '—'}</td>
+          <td style="${td};text-align:center;color:${rk[1]};font-weight:600">${rk[0]}</td>
+          <td style="padding:5px 8px;border:1px solid var(--border);font-size:.75rem;color:var(--text2);min-width:220px">${esc(ct.nutritionAdj || '')}</td>
+          <td style="${td};color:var(--text2)">${esc(r.FizyoAdi)}</td></tr>`; }).join('')}</tbody></table></div>` : '<div class="empty-msg">Henüz uygulama kaydı yok.</div>'}
+    </div>`;
+}
+
+// ── 4) Fizyoterapistler ──
+function phyViewPhysios() {
+  let link = 'fizyo.html';
+  try { link = new URL('fizyo.html', location.href).href; } catch (e) {}
+  const cnt = id => _phy.reports.filter(r => String(r.FizyoID) === String(id)).length;
+  return `
+    <div class="card">
+      <div class="card-title"><i class="fas fa-link" style="color:var(--teal)"></i> Fizyoterapist formu bağlantısı</div>
+      <div style="font-size:.82rem;color:var(--text2);margin-bottom:8px">Bu bağlantıyı fizyoterapistlerle paylaşın. Kendi adlarıyla giriş yapıp ilk girişte PIN belirlerler.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><input readonly value="${esc(link)}" style="flex:1;min-width:220px;font-size:.8rem" onclick="this.select()" aria-label="Form bağlantısı">
+        <button class="btn btn-sm" onclick="navigator.clipboard.writeText('${esc(link)}').then(()=>showToast('Bağlantı kopyalandı'))"><i class="fas fa-copy"></i> Kopyala</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="fas fa-user-plus" style="color:var(--teal)"></i> Fizyoterapistler</div>
+      ${_phy.physios.length ? _phy.physios.map(f => `<div style="display:flex;justify-content:space-between;padding:8px 10px;background:var(--bg3);border-radius:8px;margin-bottom:6px;font-size:.85rem"><span>🩺 ${esc(f.Ad)} <span style="color:var(--text2);font-size:.75rem">${esc(f.ID)}</span></span><span style="color:var(--text2);font-size:.78rem">${cnt(f.ID)} bildirim</span></div>`).join('') : '<div class="empty-msg">Henüz fizyoterapist eklenmedi.</div>'}
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><input id="phyNewName" placeholder="Ad Soyad" style="flex:1;min-width:200px" aria-label="Yeni fizyoterapist adı" onkeydown="if(event.key==='Enter')phyAddPhysio()">
+        <button class="btn btn-primary" onclick="phyAddPhysio()"><i class="fas fa-plus"></i> Ekle</button></div>
+    </div>`;
+}
+async function phyAddPhysio() {
+  const ad = document.getElementById('phyNewName').value.trim();
+  if (!ad) { showToast('Ad yazın', 'red'); return; }
+  try { await phyPost({ action:'addPhysio', ad }); showToast(`${ad} eklendi`); await physioRefresh(true); }
+  catch (e) { showToast('Eklenemedi: ' + e.message, 'red'); }
+}
 
 // ===================== PRINT / REPORTS =====================
 function openPrintWindow() {
@@ -3783,6 +5284,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('cloudKeyInput').value = _cloudKey;
   updateCloudUI();
   if (hasLocalData) showToast('💾 Yerel veriler yüklendi');
+  setTimeout(() => physioRefresh(true), 1500);   // yeni fizyoterapist sinyalleri için menü rozeti
 
   if (_cloudUrl) {
     setTimeout(async () => {
@@ -3800,6 +5302,7 @@ document.addEventListener('DOMContentLoaded', () => {
 (function(){
 'use strict';
 const ST_SECRET = 'YA2026';
+window.stApi = { url: () => ST_API_URL, secret: ST_SECRET };
 const ST_DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbzITFfpC8EZ67uesNrH4P3Y3xhrq1UO0TvGSXyhsdSe6UgALG4m7rjY70mGawuaBSv5MA/exec';
 let ST_API_URL = ST_DEFAULT_URL;
 try { ST_API_URL = localStorage.getItem('st_api_url') || ST_DEFAULT_URL; } catch(e) {}
