@@ -653,6 +653,11 @@ html:active-view-transition-type(backward)::view-transition-new(page) { animatio
       <div id="st-suuyku-empty" class="empty-msg" style="display:none"><i class="fas fa-moon" style="font-size:2rem;margin-bottom:8px;display:block"></i>Kayıt bulunamadı</div>
     </div>
   </div>
+  <div class="card" style="border-left:3px solid var(--green)">
+    <div class="card-title"><i class="fas fa-clipboard-check" style="color:var(--green)"></i> Günlük Kontrol — sporcuların girdiği Hooper, RPE, idrar rengi, döngü</div>
+    <div id="st-gunluk"><div style="text-align:center;padding:20px;color:var(--text2)">Yükle düğmesine basın</div></div>
+  </div>
+
   <div class="card" style="border-left:3px solid var(--orange)">
     <div class="card-title"><i class="fas fa-bolt" style="color:var(--orange)"></i> Günlük Enerji Takibi — Alınan vs Hedef <span id="st-enerji-hedef-badge" style="font-size:.72rem;color:var(--text2);margin-left:8px"></span></div>
     <div class="chart-wrap" style="height:260px">
@@ -5359,9 +5364,10 @@ window.stYukle = async function() {
   document.getElementById('st-ogun-tbody').innerHTML = '';
   document.getElementById('st-suuyku-tbody').innerHTML = '';
   try {
-    const [ogunRes, suUykuRes] = await Promise.all([
+    const [ogunRes, suUykuRes, gunlukRes] = await Promise.all([
       stGet({ action: 'getOgunler', tarih, athleteId: sporcuId }),
-      stGet({ action: 'getSuUykuTum', tarih })
+      stGet({ action: 'getSuUykuTum', tarih }),
+      stGet({ action: 'getDaily', tarih }).catch(() => ({ ok:false, data:[] }))   // eski Code.gs sürümünde yok
     ]);
     const ogunler = extractArr(ogunRes);
     let suUykuArr = extractArr(suUykuRes);
@@ -5379,6 +5385,9 @@ window.stYukle = async function() {
     stRenderOgunTablosu(filtre);
     stRenderSuUykuTablosu(suUykuArr);
     stRenderEnerjiGrafik(ogunler);
+    let gunluk = extractArr(gunlukRes);
+    if (sporcuId) gunluk = gunluk.filter(r => athleteId(r) === sporcuId);
+    stRenderGunluk(gunluk, tarih);
   } catch(e) {
     console.error('[ST] stYukle hatası:', e);
     document.getElementById('st-kpis').innerHTML = `<div class="card" style="color:var(--red);grid-column:1/-1">
@@ -5540,6 +5549,70 @@ function stRenderEnerjiGrafik(ogunler) {
     }
   });
 }
+
+// ── Günlük sporcu kontrolü (Hooper · RPE · idrar · döngü) ──
+let _stDaily = [], _stDailyDate = '';
+const stHClr = v => !v ? 'var(--text2)' : v <= 3 ? 'var(--green)' : v <= 5 ? 'var(--yellow)' : 'var(--red)';
+const ST_URINE = ['#FBFBE2', '#F7F2B4', '#F2E782', '#EDD95A', '#E7C53D', '#DBA72A', '#C8891E', '#A96B14'];
+function stRenderGunluk(rows, tarih) {
+  _stDaily = rows; _stDailyDate = tarih;
+  const box = document.getElementById('st-gunluk');
+  if (!box) return;
+  const td = 'padding:6px;border-bottom:1px solid var(--border);text-align:center;white-space:nowrap';
+  const hiH = rows.filter(r => n(r.Hooper) > 20), hiU = rows.filter(r => n(r.IdrarRengi) >= 6), hiL = rows.filter(r => n(r.sRPE) >= 800);
+  const missing = _stSporcular.length ? _stSporcular.filter(sp => !rows.some(r => String(r.SporcuID) === String(sp.ID || sp.id)) ).length : null;
+  const chip = (cnt, label, c) => `<span class="badge" style="background:var(--bg3);color:${c};border:1px solid ${c};margin:2px 6px 2px 0">${cnt} ${label}</span>`;
+  box.innerHTML = rows.length ? `
+    <div style="margin-bottom:10px">
+      ${chip(rows.length, 'sporcu girdi', 'var(--green)')}
+      ${missing !== null && missing > 0 ? chip(missing, 'sporcu girmedi', 'var(--text2)') : ''}
+      ${hiH.length ? chip(hiH.length, 'kritik Hooper (>20)', 'var(--red)') : ''}
+      ${hiU.length ? chip(hiU.length, 'dehidrasyon (idrar ≥6)', 'var(--orange)') : ''}
+      ${hiL.length ? chip(hiL.length, 'yüksek yük (sRPE ≥800)', 'var(--yellow)') : ''}
+    </div>
+    <div class="table-scroll"><table class="tbl" style="font-size:.8rem">
+      <thead><tr><th>Sporcu</th><th style="text-align:center">Uyku</th><th style="text-align:center">Yorgunluk</th><th style="text-align:center">Stres</th><th style="text-align:center">Kas ağrısı</th>
+        <th style="text-align:center">Hooper</th><th style="text-align:center">RPE</th><th style="text-align:center">Süre</th><th style="text-align:center">sRPE</th><th style="text-align:center">İdrar</th><th style="text-align:center">Döngü</th></tr></thead>
+      <tbody>${rows.slice().sort((a, b) => n(b.Hooper) - n(a.Hooper)).map(r => {
+        const h = n(r.Hooper), u = n(r.IdrarRengi);
+        let bel = []; try { bel = JSON.parse(r.DonguBelirti || '[]'); } catch (e) {}
+        const cyc = r.DonguDurum || n(r.DonguGunu) ? `🌸 ${esc({ normal:'Normal', regl:'Regl', gecikme:'Gecikti' }[r.DonguDurum] || '')}${n(r.DonguGunu) ? ' · ' + n(r.DonguGunu) + '. gün' : ''}` : '—';
+        return `<tr${h > 20 ? ' style="background:var(--alert-red-bg)"' : ''}>
+          <td style="padding:6px;border-bottom:1px solid var(--border);font-weight:600;white-space:nowrap">${esc(r.SporcuAdi)}</td>
+          ${['Uyku', 'Yorgunluk', 'Stres', 'KasAgrisi'].map(k => `<td style="${td};color:${stHClr(n(r[k]))};font-weight:700">${n(r[k]) || '—'}</td>`).join('')}
+          <td style="${td}"><b style="color:${!h ? 'var(--text2)' : h <= 14 ? 'var(--green)' : h <= 20 ? 'var(--yellow)' : 'var(--red)'}">${h ? h + '/28' : '—'}</b></td>
+          <td style="${td}">${r.RPE !== '' && r.RPE != null ? esc(r.RPE) : '—'}</td>
+          <td style="${td}">${n(r.AntrenmanDk) ? n(r.AntrenmanDk) + ' dk' : '—'}</td>
+          <td style="${td};color:${n(r.sRPE) >= 800 ? 'var(--yellow)' : 'inherit'};font-weight:${n(r.sRPE) >= 800 ? 700 : 400}">${n(r.sRPE) || '—'}</td>
+          <td style="${td}">${u ? `<span title="İdrar rengi ${u}/8" style="display:inline-block;width:26px;height:18px;border-radius:4px;background:${ST_URINE[u - 1]};color:#0009;font-size:.7rem;font-weight:700;line-height:18px">${u}</span>` : '—'}</td>
+          <td style="${td};font-size:.75rem" title="${esc(bel.join(', '))}">${cyc}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
+      <button class="btn btn-sm btn-primary" onclick="stImportHooper()"><i class="fas fa-file-import"></i> Hooper'ı panel oturumuna aktar</button>
+      <span style="font-size:.72rem;color:var(--text2)">Seçili tarihin Hooper puanları, paneldeki aktif oturuma (Takım / Müdahale / Oyuncu sayfaları) yazılır. Sporcular ad soyada göre eşleştirilir.</span>
+    </div>` : '<div style="text-align:center;padding:24px;color:var(--text2)"><i class="fas fa-clipboard-check" style="font-size:2rem;display:block;margin-bottom:8px;opacity:.5"></i>Bu tarih için günlük kontrol girilmemiş</div>';
+}
+window.stImportHooper = async function() {
+  const rows = _stDaily.filter(r => n(r.Hooper) > 0);
+  if (!rows.length) { showToast('Aktarılacak Hooper verisi yok', 'yellow'); return; }
+  const key = s => String(s || '').toLocaleLowerCase('tr-TR').replace(/\s+/g, ' ').trim();
+  const matches = rows.map(r => ({ r, i: players.findIndex(p => key(p.name) === key(r.SporcuAdi)) }));
+  const ok = matches.filter(m => m.i >= 0), miss = matches.filter(m => m.i < 0);
+  if (!ok.length) { showToast(`Hiçbir sporcu panelde eşleşmedi (${miss.length} kayıt). Panel oyuncu adları ile Sporcular sayfasındaki adlar aynı olmalı.`, 'red'); return; }
+  const confirmed = await confirmModal.show({ icon:'📥', title:`Hooper verisi Oturum ${sessionLabel(activeSession)}'e aktarılsın mı?`,
+    msg:`${_stDailyDate} tarihli ${ok.length} sporcunun uyku, yorgunluk, stres ve kas ağrısı puanları panelin aktif oturumuna yazılacak; mevcut Hooper değerlerinin üzerine yazılır.${miss.length ? ` ${miss.length} sporcu panelde bulunamadı.` : ''}`, ok:'Evet, Aktar' });
+  if (!confirmed) return;
+  ok.forEach(({ r, i }) => {
+    const w = players[i].sessions[activeSession];
+    w.sleep = n(r.Uyku); w.fatigue = n(r.Yorgunluk); w.stress = n(r.Stres); w.muscleSoreness = n(r.KasAgrisi);
+  });
+  if (!sessionDates[activeSession]) { sessionDates[activeSession] = _stDailyDate; players.forEach(p => p.sessions[activeSession].date = _stDailyDate); }
+  triggerAutoSave(); renderSessionSelector();
+  showToast(`✅ ${ok.length} sporcunun Hooper'ı Oturum ${sessionLabel(activeSession)}'e aktarıldı${miss.length ? ` · ${miss.length} eşleşmedi: ` + miss.slice(0, 3).map(m => m.r.SporcuAdi).join(', ') + (miss.length > 3 ? '…' : '') : ''}`);
+};
+
 window.stKaydetAyar = function() {
   const url = document.getElementById('st_api_url').value.trim();
   if (!/^https:\/\//.test(url)) { showToast('Geçerli bir https:// URL girin', 'red'); return; }

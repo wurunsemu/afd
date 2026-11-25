@@ -175,6 +175,30 @@ html:active-view-transition-type(backward)::view-transition-new(panel){animation
   .btn:active{scale:1}
   .prog-fill{transition:none}
 }
+
+/* ═══ Günlük kontrol ═══ */
+.hq{margin-bottom:12px}
+.hq-h{display:flex;justify-content:space-between;align-items:baseline;font-size:.85rem;margin-bottom:6px;gap:8px}
+.hq-h span{font-size:.72rem;color:var(--txt3);text-align:right}
+.scale7{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.scale7 button,.rpe button{border:1px solid var(--brd);background:var(--bg3);color:var(--txt1);border-radius:8px;padding:9px 0;font-size:.9rem;font-weight:700;cursor:pointer;transition:background-color .15s,border-color .15s,scale .12s}
+.scale7 button[aria-pressed="true"],.rpe button[aria-pressed="true"]{background:var(--c);border-color:var(--c);color:#fff;scale:1.06}
+.scale7-l{display:flex;justify-content:space-between;font-size:.65rem;color:var(--txt3);margin-top:3px}
+.rpe{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.rpe button{padding:11px 0;font-size:.9rem}
+.urine{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.urine button{height:38px;border-radius:8px;border:2px solid transparent;cursor:pointer;font-size:.7rem;font-weight:700;color:#0009;transition:border-color .15s,scale .12s}
+.urine button[aria-pressed="true"]{border-color:var(--txt1);scale:1.08}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--brd);background:var(--bg3);color:var(--txt1);border-radius:18px;padding:7px 12px;font-size:.8rem;cursor:pointer}
+.chip[aria-pressed="true"]{background:#8B5CF6;border-color:#8B5CF6;color:#fff}
+#cycleSeg button[aria-pressed="true"]{background:var(--bg1);color:var(--txt1);box-shadow:0 1px 4px #0006}
+.daily-prompt{background:linear-gradient(135deg,#10B98122,var(--bg2));border:1px solid var(--grn);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;color:var(--txt1);font:inherit;width:100%}
+.mini-bars{display:flex;align-items:flex-end;gap:4px;height:80px}
+.mini-bars>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;height:100%}
+.mini-bars i{display:block;width:100%;border-radius:4px 4px 0 0;min-height:3px}
+.mini-bars small{font-size:.6rem;color:var(--txt3)}
+@media (prefers-reduced-motion: reduce){.scale7 button[aria-pressed="true"],.rpe button[aria-pressed="true"],.urine button[aria-pressed="true"]{scale:1}}
 </style>
 </head>
 <body>
@@ -239,6 +263,7 @@ html:active-view-transition-type(backward)::view-transition-new(panel){animation
         <div class="prog-row"><div class="prog-label"><span style="color:var(--yel)">Karbonhidrat</span><span id="khLabel">— g</span></div><div class="prog-track" style="height:6px"><div class="prog-fill" id="khBar" style="background:var(--yel)"></div></div></div>
         <div class="prog-row"><div class="prog-label"><span style="color:var(--pur)">Yağ</span><span id="yagLabel">— g</span></div><div class="prog-track" style="height:6px"><div class="prog-fill" id="yagBar" style="background:var(--pur)"></div></div></div>
       </div>
+      <div id="dailyPrompt"></div>
       <div>
         <div class="sec-hdr">Bugünün Öğünleri <button class="badge grn" style="cursor:pointer;border:none" onclick="switchPanel('photo')">+ Öğün Ekle</button></div>
         <div id="todayMealList"><div class="empty">Yükleniyor...</div></div>
@@ -320,11 +345,40 @@ html:active-view-transition-type(backward)::view-transition-new(panel){animation
       </div>
     </div>
 
-    <!-- SU & UYKU -->
+    <!-- GÜNLÜK (Hooper · uyku · idrar · antrenman · su · döngü) -->
     <div class="panel" id="panel-water">
-      <div class="page-title">Su & Uyku Takibi</div>
+      <div class="page-title">Günlük Kontrol</div>
+      <div style="font-size:.78rem;color:var(--txt2);margin-top:-6px">Her sabah 1 dakikanı ayır. Dürüst cevaplar, diyetisyeninin sana doğru plan yapmasını sağlar.</div>
+
+      <div class="card" id="morningCard">
+        <div class="card-title">🌅 Sabah kontrolü <span id="morningDone" class="badge grn" style="display:none;text-transform:none;margin-left:6px">✓ bugün girildi</span></div>
+        <div id="hooperRows"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin:12px 0 4px">
+          <label for="sleepHours" style="font-size:.85rem;flex:1">😴 Dün gece kaç saat uyudun?</label>
+          <input type="number" class="field" id="sleepHours" min="0" max="16" step="0.5" style="width:84px;text-align:center" inputmode="decimal">
+        </div>
+        <div style="font-size:.85rem;margin:12px 0 6px">🚽 Sabah ilk idrarının rengi hangisine yakın?</div>
+        <div class="urine" id="urineRow" role="group" aria-label="İdrar rengi"></div>
+        <div id="urineHint" style="font-size:.72rem;color:var(--txt3);margin-top:4px;min-height:1em"></div>
+        <div id="hooperTotal" style="text-align:center;font-size:.85rem;margin:10px 0"></div>
+        <button class="btn full" id="saveMorningBtn" onclick="saveMorning()">💾 Sabah kontrolünü kaydet</button>
+      </div>
+
       <div class="card">
-        <div class="card-title">💧 Bugün Su — <span id="waterMlDisplay">0</span> ml</div>
+        <div class="card-title">🏃 Antrenman sonrası <span id="trainDone" class="badge grn" style="display:none;text-transform:none;margin-left:6px">✓ girildi</span></div>
+        <div style="font-size:.85rem;margin-bottom:6px">Bugünkü antrenman ne kadar zordu? <span style="color:var(--txt3);font-size:.75rem">(0 = dinlenme, 10 = maksimum)</span></div>
+        <div class="rpe" id="rpeRow" role="group" aria-label="Antrenman zorluğu (RPE)"></div>
+        <div id="rpeLabel" style="text-align:center;font-size:.8rem;color:var(--txt2);margin:6px 0;min-height:1em"></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <label for="trainMin" style="font-size:.85rem;flex:1">⏱️ Antrenman süresi (dk)</label>
+          <input type="number" class="field" id="trainMin" min="0" max="300" style="width:84px;text-align:center" inputmode="numeric" oninput="updateSrpe()">
+        </div>
+        <div id="srpeOut" style="font-size:.75rem;color:var(--txt3);margin-top:6px;text-align:center"></div>
+        <button class="btn full" style="margin-top:10px" id="saveTrainBtn" onclick="saveTraining()">💾 Antrenmanı kaydet</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">💧 Bugün su — <span id="waterMlDisplay">0</span> ml</div>
         <div class="water-track" id="waterGlasses"></div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
           <button class="btn outline" style="flex:1;padding:8px" onclick="adjustWater(-250)">−250</button>
@@ -334,24 +388,31 @@ html:active-view-transition-type(backward)::view-transition-new(panel){animation
         <button class="btn full outline" style="margin-top:8px" onclick="saveWater()" id="saveWaterBtn">💾 Kaydet</button>
         <div id="waterUnsaved" style="display:none;font-size:.72rem;color:var(--yel);text-align:center;margin-top:6px">Kaydedilmemiş değişiklik var</div>
       </div>
-      <div class="card">
-        <div class="card-title">😴 Dün Gece Uyku</div>
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-          <input type="number" class="field" id="sleepHours" value="7" min="0" max="16" step="0.5" style="width:90px;font-size:1.1rem;text-align:center" inputmode="decimal" aria-label="Uyku saati">
-          <span style="font-size:.9rem;color:var(--txt2)">saat</span>
+
+      <div class="card" id="cycleCard" style="display:none;border-color:#8B5CF6">
+        <div class="card-title">🌸 Döngü takibi <span id="cycleDone" class="badge grn" style="display:none;text-transform:none;margin-left:6px">✓ girildi</span></div>
+        <div style="font-size:.72rem;color:var(--txt3);margin-bottom:10px">🔒 Bu bilgileri yalnızca diyetisyenin görür. Enerji ve demir ihtiyacını döngüne göre planlamak için kullanılır.</div>
+        <div class="seg" role="group" aria-label="Döngü durumu" id="cycleSeg" style="margin-bottom:10px">
+          <button type="button" data-v="normal" aria-pressed="false" onclick="setCycle('normal')">Normal</button>
+          <button type="button" data-v="regl" aria-pressed="false" onclick="setCycle('regl')">Regl</button>
+          <button type="button" data-v="gecikme" aria-pressed="false" onclick="setCycle('gecikme')">Gecikti</button>
         </div>
-        <div style="display:flex;gap:8px">
-          <select id="sleepQuality" class="field" style="flex:1" aria-label="Uyku kalitesi">
-            <option value="iyi">😊 İyi</option>
-            <option value="orta">😐 Orta</option>
-            <option value="kötü">😫 Kötü</option>
-          </select>
-          <button class="btn" onclick="saveSleep()">💾 Kaydet</button>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <label for="cycleDay" style="font-size:.85rem;flex:1">Döngünün kaçıncı günü? <span style="color:var(--txt3);font-size:.72rem">(reglin ilk günü = 1)</span></label>
+          <input type="number" class="field" id="cycleDay" min="1" max="60" style="width:84px;text-align:center" inputmode="numeric">
         </div>
+        <div style="font-size:.85rem;margin-bottom:6px">Belirtiler</div>
+        <div class="chips" id="cycleSymptoms"></div>
+        <button class="btn full" style="margin-top:12px;background:#8B5CF6" onclick="saveCycle()">💾 Kaydet</button>
       </div>
+
       <div class="card">
         <div class="card-title">📅 Bu Hafta</div>
         <div class="stat-row">
+          <div class="stat-card"><div class="stat-num" id="weekAvgHooper" style="color:var(--grn)">—</div><div class="stat-lbl">Ort. Hooper (/28)</div></div>
+          <div class="stat-card"><div class="stat-num" id="weekLoad" style="color:var(--yel)">—</div><div class="stat-lbl">Antrenman yükü (sRPE)</div></div>
+        </div>
+        <div class="stat-row" style="margin-top:8px">
           <div class="stat-card"><div class="stat-num" id="weekAvgWater" style="color:var(--wat)">—</div><div class="stat-lbl">Ort. Su (ml)</div></div>
           <div class="stat-card"><div class="stat-num" id="weekAvgSleep" style="color:var(--pur)">—</div><div class="stat-lbl">Ort. Uyku (sa)</div></div>
         </div>
@@ -377,6 +438,11 @@ html:active-view-transition-type(backward)::view-transition-new(panel){animation
         </div>
       </div>
       <div class="card">
+        <div class="card-title">🧠 Bu Haftanın Hooper Skoru <span style="text-transform:none;font-weight:400">(düşük = iyi)</span></div>
+        <div class="mini-bars" id="weekHooperBars"></div>
+        <div id="weekLoadLine" style="font-size:.75rem;color:var(--txt2);text-align:center;margin-top:8px"></div>
+      </div>
+      <div class="card">
         <div class="card-title">Bu Hafta Özet</div>
         <div class="stat-row">
           <div class="stat-card"><div class="stat-num" id="weekMealCount" style="color:var(--grn)">0</div><div class="stat-lbl">Öğün Girildi</div></div>
@@ -394,7 +460,7 @@ html:active-view-transition-type(backward)::view-transition-new(panel){animation
   <nav class="nav">
     <button class="nav-btn active" id="nav-today" onclick="switchPanel('today')"><span class="ico">🏠</span>Bugün</button>
     <button class="nav-btn" id="nav-photo" onclick="switchPanel('photo')"><span class="ico">📷</span>Öğün Ekle</button>
-    <button class="nav-btn" id="nav-water" onclick="switchPanel('water')"><span class="ico">💧</span>Su & Uyku</button>
+    <button class="nav-btn" id="nav-water" onclick="switchPanel('water')"><span class="ico">📝</span>Günlük</button>
     <button class="nav-btn" id="nav-report" onclick="switchPanel('report')"><span class="ico">📊</span>Raporum</button>
   </nav>
 </div>
@@ -522,7 +588,7 @@ function updateStepper() {
 const INTRO = [
   { big:'👋', title:'Hoş geldin!', text:'Bu uygulamada yediklerini, suyunu ve uykunu kaydedersin. Diyetisyenin verilerini anlık görür.' },
   { big:'📷', title:'Öğün ekle', text:'<b>Öğün Ekle</b> sekmesinde tabağının fotoğrafını çek; yapay zekâ besinleri tahmin eder. İstersen elle de yazabilirsin.' },
-  { big:'💧', title:'Su & uyku', text:'Her bardak = 250 ml. Bardaklara dokun ve <b>Kaydet</b>\'e bas. Sabah dün gecenin uykusunu gir.' },
+  { big:'📝', title:'Günlük kontrol', text:'Her sabah <b>Günlük</b> sekmesinde uykunu, yorgunluğunu, stresini ve kas ağrını 1-7 arası puanla. Antrenmandan sonra ne kadar zorlandığını gir. Su bardakları da burada.' },
   { big:'🎯', title:'Hedefin', text:'<b>Bugün</b> ekranındaki çubuklar günlük hedefine ne kadar yaklaştığını gösterir. Yeşil = hedefte.' }
 ];
 let _introI = 0;
@@ -595,7 +661,7 @@ async function doLogin(ev) {
 }
 function athleteFromRow(row, token) {
   return {
-    id: String(row.ID), name: row.Ad || '', pos: row.Mevki || '', token,
+    id: String(row.ID), name: row.Ad || '', pos: row.Mevki || '', gender: row.Cinsiyet || '', token,
     targets: {
       kcal: n(row.Enerji_kcal), protein: n(row.Protein_g), kh: n(row.KH_g), yag: n(row.Yag_g), water: n(row.Su_ml)
     },
@@ -617,6 +683,8 @@ function launchApp() {
   applyPanel('today');
   staggerIn(document.getElementById('panel-today'));
   renderFoods();
+  buildDailyUI();
+  loadTodayDaily();
   refreshAthleteInfo();
   let seen = false;
   try { seen = localStorage.getItem('sp_intro_seen') === '1'; } catch (e) {}
@@ -907,16 +975,6 @@ async function saveWater() {
   } catch (e) { showToast('❌ Kaydedilemedi: ' + e.message, true); }
   finally { btn.disabled = false; }
 }
-async function saveSleep() {
-  if (!athlete) return;
-  const h = n(document.getElementById('sleepHours').value);
-  if (h <= 0 || h > 16) { showToast('⚠️ Uyku süresi 0-16 saat arası olmalı', true); return; }
-  try {
-    const r = await postAPI({ action: 'addSuUyku', athleteName: athlete.name, uyku_saat: h, uyku_kalite: document.getElementById('sleepQuality').value });
-    if (!r.ok) throw new Error(r.error);
-    showToast('😴 Uyku kaydedildi');
-  } catch (e) { showToast('❌ Kaydedilemedi: ' + e.message, true); }
-}
 async function fetchWeek() {
   const w = weekRange();
   const [m, s] = await Promise.all([
@@ -926,15 +984,180 @@ async function fetchWeek() {
   const inWeek = r => { const d = String(r.Tarih || r.TarihSaat || '').slice(0, 10); return d >= w.from && d <= w.to; };
   return { w, meals: ((m.ok && m.data) || []).filter(inWeek), su: ((s.ok && s.data) || []).filter(inWeek) };
 }
+function isFemale() { return /^(kad|k$|f)/i.test(String(athlete?.gender || '').trim()); }
 async function loadWaterPanel() {
   updateWaterDisplay();
+  document.getElementById('cycleCard').style.display = isFemale() ? '' : 'none';
+  loadTodayDaily();
   try {
-    const { su } = await fetchWeek();
+    const [{ su }, { rows }] = await Promise.all([fetchWeek(), fetchWeekDaily()]);
+    const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
     const waters = su.map(r => n(r.Su_ml)).filter(v => v > 0);
     const sleeps = su.map(r => n(r.Uyku_saat)).filter(v => v > 0);
-    document.getElementById('weekAvgWater').textContent = waters.length ? Math.round(waters.reduce((a, b) => a + b, 0) / waters.length) : '—';
-    document.getElementById('weekAvgSleep').textContent = sleeps.length ? (sleeps.reduce((a, b) => a + b, 0) / sleeps.length).toFixed(1) : '—';
+    const hoops = rows.map(r => n(r.Hooper)).filter(v => v > 0);
+    const load = rows.reduce((a, r) => a + n(r.sRPE), 0);
+    document.getElementById('weekAvgWater').textContent = waters.length ? Math.round(avg(waters)) : '—';
+    document.getElementById('weekAvgSleep').textContent = sleeps.length ? avg(sleeps).toFixed(1) : '—';
+    const ha = hoops.length ? avg(hoops) : null;
+    const hEl = document.getElementById('weekAvgHooper');
+    hEl.textContent = ha === null ? '—' : ha.toFixed(1);
+    hEl.style.color = ha === null ? '' : ha <= 14 ? 'var(--grn)' : ha <= 20 ? 'var(--yel)' : 'var(--red)';
+    document.getElementById('weekLoad').textContent = load ? Math.round(load) : '—';
   } catch (e) { console.warn(e); }
+}
+
+
+// ===== GÜNLÜK KONTROL (Hooper · uyku · idrar · RPE · döngü) =====
+// Hooper ölçeği: 1 = çok iyi … 7 = çok kötü (toplam 4-28; >20 kritik)
+const HOOPER_Q = [
+  { k:'uyku', label:'😴 Uyku kalitesi', lo:'Çok iyi', hi:'Çok kötü' },
+  { k:'yorgunluk', label:'🔋 Yorgunluk', lo:'Hiç yok', hi:'Çok yorgun' },
+  { k:'stres', label:'🧠 Stres', lo:'Hiç yok', hi:'Çok stresli' },
+  { k:'kasAgrisi', label:'💪 Kas ağrısı', lo:'Hiç yok', hi:'Çok ağrılı' }
+];
+const SCALE_COLORS = ['#10B981', '#34D399', '#A3E635', '#FACC15', '#FB923C', '#F87171', '#EF4444'];
+const RPE_LABELS = ['Dinlenme', 'Çok çok hafif', 'Hafif', 'Orta', 'Biraz zor', 'Zor', 'Zor+', 'Çok zor', 'Çok zor+', 'Çok çok zor', 'Maksimum'];
+const URINE = ['#FBFBE2', '#F7F2B4', '#F2E782', '#EDD95A', '#E7C53D', '#DBA72A', '#C8891E', '#A96B14'];
+const CYCLE_SYMPTOMS = ['Kramp', 'Şişkinlik', 'Yorgunluk', 'Baş ağrısı', 'Ruh hali değişimi', 'İştah artışı', 'Bulantı'];
+let daily = { uyku:0, yorgunluk:0, stres:0, kasAgrisi:0, idrar:0, rpe:null, cycle:'', symptoms:new Set() };
+let dailyToday = null;   // bugünün sunucudaki satırı
+
+function buildDailyUI() {
+  document.getElementById('hooperRows').innerHTML = HOOPER_Q.map(q => `
+    <div class="hq">
+      <div class="hq-h">${q.label}<span id="hqv_${q.k}"></span></div>
+      <div class="scale7" role="group" aria-label="${q.label}">
+        ${[1,2,3,4,5,6,7].map(v => `<button type="button" style="--c:${SCALE_COLORS[v-1]}" aria-pressed="false" aria-label="${v}" data-v="${v}" onclick="setHooper('${q.k}',${v})">${v}</button>`).join('')}
+      </div>
+      <div class="scale7-l"><span>${q.lo}</span><span>${q.hi}</span></div>
+    </div>`).join('');
+  document.getElementById('urineRow').innerHTML = URINE.map((c, i) => `<button type="button" style="background:${c}" aria-pressed="false" aria-label="Renk ${i+1}" data-v="${i+1}" onclick="setUrine(${i+1})">${i+1}</button>`).join('');
+  document.getElementById('rpeRow').innerHTML = RPE_LABELS.map((l, i) => `<button type="button" style="--c:${i <= 2 ? '#10B981' : i <= 4 ? '#FACC15' : i <= 6 ? '#FB923C' : '#EF4444'}" aria-pressed="false" aria-label="${i} — ${l}" data-v="${i}" onclick="setRpe(${i})">${i}</button>`).join('');
+  document.getElementById('cycleSymptoms').innerHTML = CYCLE_SYMPTOMS.map(s => `<button type="button" class="chip" aria-pressed="false" data-s="${esc(s)}" onclick="toggleSymptom(this)">${esc(s)}</button>`).join('');
+}
+function setHooper(k, v) {
+  daily[k] = v;
+  document.querySelectorAll(`.scale7 [onclick^="setHooper('${k}'"]`).forEach(b => b.setAttribute('aria-pressed', Number(b.dataset.v) === v));
+  updateHooperTotal();
+}
+function updateHooperTotal() {
+  const vals = HOOPER_Q.map(q => daily[q.k]);
+  const el = document.getElementById('hooperTotal');
+  if (vals.some(v => !v)) { el.innerHTML = `<span style="color:var(--txt3)">${vals.filter(Boolean).length}/4 soru cevaplandı</span>`; return; }
+  const t = vals.reduce((a, b) => a + b, 0);
+  const c = t <= 14 ? 'var(--grn)' : t <= 20 ? 'var(--yel)' : 'var(--red)';
+  el.innerHTML = `Hooper toplamın: <b style="color:${c};font-size:1.1rem">${t}/28</b> ${t > 20 ? '— diyetisyenin bilgilendirilecek' : t > 14 ? '— dikkat' : '— iyi durumdasın 💪'}`;
+}
+function setUrine(v) {
+  daily.idrar = v;
+  document.querySelectorAll('#urineRow button').forEach(b => b.setAttribute('aria-pressed', Number(b.dataset.v) === v));
+  document.getElementById('urineHint').textContent = v <= 3 ? '✓ İyi hidrasyon' : v <= 5 ? 'Biraz daha su iç' : '⚠️ Susuz kalmışsın — hemen 500 ml su iç';
+}
+function setRpe(v) {
+  daily.rpe = v;
+  document.querySelectorAll('#rpeRow button').forEach(b => b.setAttribute('aria-pressed', Number(b.dataset.v) === v));
+  document.getElementById('rpeLabel').textContent = `${v} — ${RPE_LABELS[v]}`;
+  updateSrpe();
+}
+function updateSrpe() {
+  const dk = n(document.getElementById('trainMin').value);
+  document.getElementById('srpeOut').textContent = daily.rpe !== null && dk ? `Antrenman yükü (sRPE): ${daily.rpe} × ${dk} dk = ${daily.rpe * dk}` : '';
+}
+function setCycle(v) {
+  daily.cycle = daily.cycle === v ? '' : v;
+  document.querySelectorAll('#cycleSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === daily.cycle));
+  if (daily.cycle === 'regl' && !document.getElementById('cycleDay').value) document.getElementById('cycleDay').value = 1;
+}
+function toggleSymptom(el) {
+  const s = el.dataset.s;
+  daily.symptoms.has(s) ? daily.symptoms.delete(s) : daily.symptoms.add(s);
+  el.setAttribute('aria-pressed', daily.symptoms.has(s));
+}
+// Sunucudaki bugünkü kaydı forma yerleştir
+function fillDaily(row) {
+  dailyToday = row || null;
+  daily = { uyku:0, yorgunluk:0, stres:0, kasAgrisi:0, idrar:0, rpe:null, cycle:'', symptoms:new Set() };
+  document.querySelectorAll('#hooperRows button, #urineRow button, #rpeRow button, #cycleSeg button, #cycleSymptoms .chip').forEach(b => b.setAttribute('aria-pressed', 'false'));
+  ['trainMin', 'cycleDay'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('rpeLabel').textContent = ''; document.getElementById('urineHint').textContent = '';
+  if (row) {
+    const map = { uyku:'Uyku', yorgunluk:'Yorgunluk', stres:'Stres', kasAgrisi:'KasAgrisi' };
+    Object.entries(map).forEach(([k, col]) => { if (n(row[col])) setHooper(k, n(row[col])); });
+    if (n(row.IdrarRengi)) setUrine(n(row.IdrarRengi));
+    if (row.RPE !== '' && row.RPE !== undefined) setRpe(n(row.RPE));
+    if (n(row.AntrenmanDk)) document.getElementById('trainMin').value = n(row.AntrenmanDk);
+    if (n(row.DonguGunu)) document.getElementById('cycleDay').value = n(row.DonguGunu);
+    if (row.DonguDurum) setCycle(row.DonguDurum);
+    try { JSON.parse(row.DonguBelirti || '[]').forEach(s => { daily.symptoms.add(s); const c = document.querySelector(`#cycleSymptoms [data-s="${CSS.escape(s)}"]`); if (c) c.setAttribute('aria-pressed', 'true'); }); } catch (e) {}
+  }
+  updateHooperTotal(); updateSrpe();
+  const hooperDone = row && n(row.Hooper) > 0;
+  document.getElementById('morningDone').style.display = hooperDone ? 'inline-block' : 'none';
+  document.getElementById('trainDone').style.display = row && row.RPE !== '' && row.RPE !== undefined ? 'inline-block' : 'none';
+  document.getElementById('cycleDone').style.display = row && (row.DonguDurum || n(row.DonguGunu)) ? 'inline-block' : 'none';
+  renderDailyPrompt();
+}
+function renderDailyPrompt() {
+  const el = document.getElementById('dailyPrompt');
+  if (!el) return;
+  const done = dailyToday && n(dailyToday.Hooper) > 0;
+  const hour = new Date().getHours();
+  el.innerHTML = done
+    ? `<button class="daily-prompt" style="border-color:var(--brd);background:var(--bg2)" onclick="switchPanel('water')"><span style="font-size:1.6rem">✅</span><span><b style="font-size:.88rem">Sabah kontrolü tamam</b><br><span style="font-size:.75rem;color:var(--txt2)">Hooper ${n(dailyToday.Hooper)}/28${dailyToday.RPE !== '' && dailyToday.RPE !== undefined ? ' · RPE ' + dailyToday.RPE : hour >= 12 ? ' · Antrenmandan sonra RPE girmeyi unutma' : ''}</span></span></button>`
+    : `<button class="daily-prompt" onclick="switchPanel('water')"><span style="font-size:1.6rem">🌅</span><span><b style="font-size:.88rem">Bugünkü kontrolünü yap</b><br><span style="font-size:.75rem;color:var(--txt2)">Uyku, yorgunluk, stres, kas ağrısı — 1 dakika</span></span><span style="margin-left:auto;color:var(--grn)">›</span></button>`;
+}
+async function loadTodayDaily() {
+  if (!athlete) return;
+  try {
+    const r = await getAPI({ action:'getDaily', athleteId: athlete.id, tarih: today() });
+    fillDaily(r.ok && r.data && r.data[0] ? r.data[0] : null);
+  } catch (e) { console.warn('Günlük kayıt alınamadı', e); renderDailyPrompt(); }
+}
+async function postDaily(fields, okMsg) {
+  const r = await postAPI(Object.assign({ action:'addDaily', athleteName: athlete.name, tarih: today() }, fields));
+  if (!r.ok) throw new Error(r.error || 'Kaydedilemedi');
+  showToast(okMsg); buzz();
+  await loadTodayDaily();
+  return r;
+}
+async function saveMorning() {
+  if (!athlete) return;
+  const missing = HOOPER_Q.filter(q => !daily[q.k]);
+  if (missing.length) { showToast('⚠️ ' + missing.map(q => q.label.replace(/^\S+\s/, '')).join(', ') + ' cevaplanmadı', true); return; }
+  const sh = n(document.getElementById('sleepHours').value);
+  if (sh && (sh < 0 || sh > 16)) { showToast('⚠️ Uyku 0-16 saat arası olmalı', true); return; }
+  const btn = document.getElementById('saveMorningBtn'); btn.disabled = true;
+  try {
+    await postDaily({ uyku: daily.uyku, yorgunluk: daily.yorgunluk, stres: daily.stres, kasAgrisi: daily.kasAgrisi, idrarRengi: daily.idrar || '' }, '🌅 Sabah kontrolü kaydedildi');
+    // Uyku süresi + kalite, mevcut su/uyku tablosuna da yazılır (Hooper uyku puanından)
+    if (sh) {
+      const kalite = daily.uyku <= 2 ? 'iyi' : daily.uyku <= 4 ? 'orta' : 'kötü';
+      await postAPI({ action:'addSuUyku', athleteName: athlete.name, uyku_saat: sh, uyku_kalite: kalite });
+    }
+  } catch (e) { showToast('❌ ' + e.message, true); }
+  finally { btn.disabled = false; }
+}
+async function saveTraining() {
+  if (!athlete) return;
+  if (daily.rpe === null) { showToast('⚠️ Antrenman zorluğunu (0-10) seç', true); return; }
+  const dk = n(document.getElementById('trainMin').value);
+  if (daily.rpe > 0 && !dk) { showToast('⚠️ Antrenman süresini dakika olarak gir', true); return; }
+  const btn = document.getElementById('saveTrainBtn'); btn.disabled = true;
+  try { await postDaily({ rpe: daily.rpe, antrenmanDk: dk }, '🏃 Antrenman kaydedildi'); }
+  catch (e) { showToast('❌ ' + e.message, true); }
+  finally { btn.disabled = false; }
+}
+async function saveCycle() {
+  if (!athlete) return;
+  const day = n(document.getElementById('cycleDay').value);
+  if (!daily.cycle && !day && !daily.symptoms.size) { showToast('⚠️ Durum, gün veya belirti gir', true); return; }
+  try { await postDaily({ donguDurum: daily.cycle, donguGunu: day || '', donguBelirti: [...daily.symptoms] }, '🌸 Döngü bilgisi kaydedildi'); }
+  catch (e) { showToast('❌ ' + e.message, true); }
+}
+async function fetchWeekDaily() {
+  const w = weekRange();
+  const r = await getAPI({ action:'getDaily', athleteId: athlete.id, from: w.from, to: w.to });
+  return { w, rows: (r.ok && r.data) || [] };
 }
 
 // ===== RAPOR =====
@@ -964,9 +1187,24 @@ async function loadReport() {
     document.getElementById('weekAvgKcal').textContent = loggedDays.length ? Math.round(loggedDays.reduce((a, b) => a + b, 0) / loggedDays.length) : '—';
     const protDays = prots.filter(p => p > 0);
     document.getElementById('weekProtPct').textContent = t.protein && protDays.length ? Math.round(protDays.reduce((a, b) => a + b, 0) / protDays.length / t.protein * 100) + '%' : '—';
+    renderWeekHooper();
     const waters = su.map(r => n(r.Su_ml)).filter(v => v > 0);
     document.getElementById('weekWaterPct').textContent = t.water && waters.length ? Math.round(waters.reduce((a, b) => a + b, 0) / waters.length / t.water * 100) + '%' : '—';
   } catch (e) { console.warn('Rapor:', e); showToast('Rapor alınamadı: ' + e.message, true); }
+}
+async function renderWeekHooper() {
+  const el = document.getElementById('weekHooperBars');
+  try {
+    const { w, rows } = await fetchWeekDaily();
+    const names = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+    el.innerHTML = w.days.map((d, i) => {
+      const r = rows.find(x => String(x.Tarih).slice(0, 10) === d), hv = r ? n(r.Hooper) : 0;
+      const c = !hv ? 'var(--bg3)' : hv <= 14 ? 'var(--grn)' : hv <= 20 ? 'var(--yel)' : 'var(--red)';
+      return `<div><small>${hv || ''}</small><i style="height:${hv ? Math.max(6, Math.round(hv / 28 * 100)) : 4}%;background:${c}"></i><small style="${i === w.todayIdx ? 'color:var(--grn);font-weight:700' : ''}">${names[i]}</small></div>`;
+    }).join('');
+    const load = rows.reduce((a, r) => a + n(r.sRPE), 0), sessions = rows.filter(r => n(r.sRPE) > 0).length;
+    document.getElementById('weekLoadLine').textContent = load ? `Haftalık antrenman yükü: ${Math.round(load)} (sRPE, ${sessions} antrenman)` : 'Antrenmandan sonra RPE girdikçe haftalık yükün burada görünür.';
+  } catch (e) { el.innerHTML = ''; }
 }
 function renderWeekBars(kcals, target, todayIdx) {
   const names = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
