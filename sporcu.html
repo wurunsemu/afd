@@ -100,6 +100,81 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--grn);outline-off
 .loading-overlay{position:fixed;inset:0;background:#0F172Acc;align-items:center;justify-content:center;z-index:200;flex-direction:column;gap:12px;display:none}
 .spinner{width:40px;height:40px;border:4px solid var(--bg3);border-top-color:var(--grn);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══ v2.1 — geçişler ve yönlendirme ═══ */
+:root{--ease-out:cubic-bezier(.22,1,.36,1)}
+/* Alt menü: etkin sekmenin arkasında yumuşak hap */
+.nav-btn{position:relative}
+.nav-btn .ico{position:relative;z-index:1;transition:scale .25s var(--ease-out)}
+.nav-btn::before{content:'';position:absolute;top:5px;left:50%;width:56px;height:30px;margin-left:-28px;border-radius:15px;background:#10B98122;opacity:0;scale:.6;transition:opacity .25s,scale .3s var(--ease-out)}
+.nav-btn.active::before{opacity:1;scale:1}
+.nav-btn.active .ico{scale:1.08}
+/* Adım göstergesi */
+.stepper{list-style:none;display:flex;gap:6px;margin:-4px 0 0}
+.stepper li{flex:1;display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--txt3);background:var(--bg2);border:1px solid var(--brd);border-radius:20px;padding:5px 8px;transition:color .25s,border-color .25s,background-color .25s}
+.stepper li span{width:18px;height:18px;border-radius:50%;background:var(--bg3);display:inline-flex;align-items:center;justify-content:center;font-size:.66rem;font-weight:700;flex-shrink:0;transition:background-color .25s}
+.stepper li.on{color:var(--txt1);border-color:var(--grn)}
+.stepper li.on span{background:var(--grn);color:#fff}
+.stepper li.done span{background:var(--grn);color:#fff}
+.stepper li.done span::after{content:'✓'}
+.stepper li.done span{font-size:0}
+.stepper li.done span::after{font-size:.66rem}
+.step-n{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--grn);color:#fff;font-size:.7rem;align-items:center;justify-content:center;margin-right:4px;letter-spacing:0}
+/* Fotoğraf / Elle sekmeleri */
+.seg{display:flex;background:var(--bg3);border-radius:10px;padding:3px;margin-bottom:10px}
+.seg button{flex:1;border:none;background:transparent;color:var(--txt2);padding:9px;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;transition:background-color .2s,color .2s}
+.seg button[aria-selected="true"]{background:var(--bg1);color:var(--txt1);box-shadow:0 1px 4px #0006}
+[role=tabpanel]:not([hidden]){animation:fade-up .3s var(--ease-out) both}
+/* Yapışkan kaydet çubuğu */
+.save-bar{position:sticky;bottom:0;margin:0 -16px calc(-16px - var(--safe-bot));padding:10px 16px calc(10px + var(--safe-bot));background:#1E293Bf2;border-top:1px solid var(--brd);display:flex;justify-content:space-between;align-items:center;gap:10px;backdrop-filter:blur(8px)}
+/* Kartlar sırayla belirir */
+@keyframes fade-up{from{opacity:0;transform:translateY(10px)}}
+.panel.animate-in > *{animation:fade-up .4s var(--ease-out) both;animation-delay:calc(min(var(--sibling-index,1),8) * .04s)}
+@supports (animation-delay: calc(sibling-index() * 0.1s)){
+  .panel.animate-in > *{animation-delay:calc(min(sibling-index(),8) * .04s)}
+}
+/* Yeni eklenen satırlar */
+.food-row.new,.meal-item.new{animation:fade-up .35s var(--ease-out) both}
+/* Panel geçişleri (View Transitions, yönlü) */
+@keyframes vt-out-l{to{opacity:0;transform:translateX(-24%)}}
+@keyframes vt-in-r{from{opacity:0;transform:translateX(24%)}}
+@keyframes vt-out-r{to{opacity:0;transform:translateX(24%)}}
+@keyframes vt-in-l{from{opacity:0;transform:translateX(-24%)}}
+.panel.active{view-transition-name:panel}
+.topbar{view-transition-name:topbar}
+.nav{view-transition-name:bottomnav}
+html:active-view-transition-type(forward)::view-transition-old(panel){animation:vt-out-l .22s ease-in both}
+html:active-view-transition-type(forward)::view-transition-new(panel){animation:vt-in-r .32s var(--ease-out) both}
+html:active-view-transition-type(backward)::view-transition-old(panel){animation:vt-out-r .22s ease-in both}
+html:active-view-transition-type(backward)::view-transition-new(panel){animation:vt-in-l .32s var(--ease-out) both}
+/* Giriş ekranı */
+.login-box > *{animation:fade-up .5s var(--ease-out) both}
+.login-box > *:nth-child(2){animation-delay:.05s}.login-box > *:nth-child(3){animation-delay:.1s}
+.login-box > *:nth-child(4){animation-delay:.15s}.login-box > *:nth-child(5){animation-delay:.2s}.login-box > *:nth-child(6){animation-delay:.25s}
+.login-logo{display:inline-block}
+.btn{transition:opacity .15s,scale .12s,background-color .2s,border-color .2s,color .2s}
+.btn:active{scale:.97}
+/* Tanıtım */
+.intro{border:none;padding:0;margin:auto;width:min(360px,calc(100vw - 32px));background:var(--bg2);color:var(--txt1);border-radius:18px;box-shadow:0 20px 60px #000a}
+.intro::backdrop{background:#000a}
+.intro[open]{animation:pop-in .35s var(--ease-out) both}
+@keyframes pop-in{from{opacity:0;transform:translateY(16px) scale(.97)}}
+.intro-slide{padding:28px 24px 8px;text-align:center}
+.intro-slide .big{font-size:3rem;margin-bottom:10px}
+.intro-slide h2{font-size:1.15rem;margin-bottom:8px}
+.intro-slide p{font-size:.88rem;color:var(--txt2);line-height:1.6}
+.intro-dots{display:flex;gap:6px;justify-content:center;margin:14px 0}
+.intro-dots i{width:7px;height:7px;border-radius:4px;background:var(--bg3);transition:width .3s var(--ease-out),background-color .3s}
+.intro-dots i.on{width:22px;background:var(--grn)}
+.intro-actions{display:flex;gap:8px;padding:0 20px 20px}
+/* Hareket azaltma tercihi: kayma/ölçek animasyonlarını kapat */
+@media (prefers-reduced-motion: reduce){
+  .panel.animate-in > *,.login-box > *,.food-row.new,.meal-item.new,[role=tabpanel]:not([hidden]),.intro[open]{animation:none}
+  ::view-transition-old(panel),::view-transition-new(panel){animation:none !important}
+  .nav-btn::before,.nav-btn .ico{transition:opacity .2s}
+  .btn:active{scale:1}
+  .prog-fill{transition:none}
+}
 </style>
 </head>
 <body>
@@ -181,8 +256,13 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--grn);outline-off
     <!-- ÖĞÜN EKLE -->
     <div class="panel" id="panel-photo">
       <div class="page-title">Öğün Ekle</div>
+      <ol class="stepper" aria-label="Öğün ekleme adımları">
+        <li id="st1" class="on"><span>1</span>Öğün seç</li>
+        <li id="st2"><span>2</span>Besin ekle</li>
+        <li id="st3"><span>3</span>Kaydet</li>
+      </ol>
       <div class="card">
-        <div class="card-title">Öğün Zamanı</div>
+        <div class="card-title"><span class="step-n">1</span> Hangi öğün?</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="ogunBtns">
           <button class="btn outline ogun-btn sel" data-v="Kahvaltı" onclick="selectOgun(this)">🌅 Kahvaltı</button>
           <button class="btn outline ogun-btn" data-v="Ara Öğün" onclick="selectOgun(this)">🍎 Ara Öğün</button>
@@ -193,7 +273,13 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--grn);outline-off
       </div>
 
       <div class="card">
-        <div class="card-title">📷 Fotoğrafla Ekle (isteğe bağlı)</div>
+        <div class="card-title"><span class="step-n">2</span> Ne yedin?</div>
+        <div class="seg" role="tablist" aria-label="Besin ekleme yöntemi">
+          <button role="tab" id="tabPhoto" aria-selected="true" aria-controls="addPhoto" onclick="setAddMode('photo')">📷 Fotoğrafla</button>
+          <button role="tab" id="tabManual" aria-selected="false" aria-controls="addManual" onclick="setAddMode('manual')">✍️ Elle yaz</button>
+        </div>
+        <div id="addPhoto" role="tabpanel" aria-labelledby="tabPhoto">
+        <div style="font-size:.75rem;color:var(--txt2);margin:2px 0 10px">Tabağının fotoğrafını çek, yapay zekâ besinleri ve gramajları tahmin etsin. Sonra miktarları düzeltebilirsin.</div>
         <label class="photo-drop" id="photoDropArea">
           <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhoto(event)" style="display:none">
           <div id="photoPlaceholder">
@@ -206,12 +292,9 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--grn);outline-off
           <button class="btn" style="flex:1" id="analyzeBtn" onclick="analyzePhoto()">🤖 AI ile Analiz Et</button>
           <button class="btn outline" onclick="clearPhoto()">Kaldır</button>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">🍽️ Besinler</div>
-        <div id="foodList"><div class="empty" style="padding:8px">Fotoğrafı analiz edin veya aşağıdan elle ekleyin.</div></div>
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--brd)">
+        </div>
+        <div id="addManual" role="tabpanel" aria-labelledby="tabManual" hidden>
+          <div style="font-size:.75rem;color:var(--txt2);margin:2px 0 10px">Besinin adını, miktarını ve bildiğin değerleri yaz. Sadece makroları girersen kalori otomatik hesaplanır.</div>
           <input type="text" id="manuelAd" class="field" placeholder="Besin adı (ör. haşlanmış yumurta)" autocomplete="off">
           <div class="manual-grid">
             <div><label for="manuelGram">Gram</label><input type="number" id="manuelGram" class="field" min="1" max="2000" value="100" inputmode="decimal"></div>
@@ -227,13 +310,13 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--grn);outline-off
       </div>
 
       <div class="card">
-        <div class="card-title">Not (opsiyonel)</div>
-        <textarea id="mealNote" class="field" placeholder="Diyetisyeninize not..." rows="2" maxlength="500" style="resize:none"></textarea>
+        <div class="card-title"><span class="step-n">3</span> Kontrol et ve kaydet</div>
+        <div id="foodList"><div class="empty" style="padding:8px">Henüz besin eklenmedi.</div></div>
+        <textarea id="mealNote" class="field" placeholder="Diyetisyenine not (isteğe bağlı)…" rows="2" maxlength="500" style="resize:none;margin-top:10px"></textarea>
       </div>
-
-      <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-        <div style="font-size:.85rem;color:var(--txt2)">Toplam<br><strong id="foodTotal" style="color:var(--yel);font-size:1rem">0 kcal</strong></div>
-        <button class="btn" onclick="submitMeal()" id="submitBtn">✅ Öğünü Kaydet</button>
+      <div class="save-bar" id="saveBar">
+        <div style="font-size:.78rem;color:var(--txt2);line-height:1.2"><span id="saveOgun">Kahvaltı</span><br><strong id="foodTotal" style="color:var(--yel);font-size:1.05rem">0 kcal</strong></div>
+        <button class="btn" onclick="submitMeal()" id="submitBtn" disabled>✅ Öğünü Kaydet</button>
       </div>
     </div>
 
@@ -316,6 +399,16 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--grn);outline-off
   </nav>
 </div>
 
+<!-- İLK GİRİŞ TANITIMI -->
+<dialog class="intro" id="introDlg" aria-labelledby="introTitle">
+  <div class="intro-slide" id="introSlide" aria-live="polite"></div>
+  <div class="intro-dots" id="introDots" aria-hidden="true"></div>
+  <div class="intro-actions">
+    <button class="btn outline" style="flex:1" id="introSkip" onclick="closeIntro()">Geç</button>
+    <button class="btn" style="flex:2" id="introNext" onclick="nextIntro()">İleri</button>
+  </div>
+</dialog>
+
 <script>
 // ===== CONFIG =====
 const API_URL = 'https://script.google.com/macros/s/AKfycbzITFfpC8EZ67uesNrH4P3Y3xhrq1UO0TvGSXyhsdSe6UgALG4m7rjY70mGawuaBSv5MA/exec';
@@ -359,12 +452,95 @@ function setLoading(show, msg = '') {
   document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
   if (msg) document.getElementById('loadingMsg').textContent = msg;
 }
-function switchPanel(id) {
+const PANEL_ORDER = ['today', 'photo', 'water', 'report'];
+const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const _hasSibIdx = window.CSS && CSS.supports('animation-delay: calc(sibling-index() * 0.1s)');
+function currentPanel() { return (document.querySelector('.panel.active')?.id || 'panel-today').replace('panel-', ''); }
+function applyPanel(id) {
   document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + id));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.id === 'nav-' + id));
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    const on = b.id === 'nav-' + id;
+    b.classList.toggle('active', on);
+    if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  });
+  document.getElementById('panel-' + id).scrollTop = 0;
   if (id === 'today') refreshToday();
   if (id === 'report') loadReport();
   if (id === 'water') loadWaterPanel();
+}
+function staggerIn(panel) {
+  if (reduceMotion()) return;
+  if (!_hasSibIdx) [...panel.children].forEach((el, k) => el.style.setProperty('--sibling-index', k + 1));
+  panel.classList.remove('animate-in'); void panel.offsetWidth; panel.classList.add('animate-in');
+  setTimeout(() => panel.classList.remove('animate-in'), 900);
+}
+// Sekmeler arası geçiş: sağdaki sekmeye giderken sola kayar, geri dönerken sağa
+function switchPanel(id) {
+  const from = currentPanel();
+  if (from === id || !document.startViewTransition || reduceMotion() || document.getElementById('mainApp').style.display === 'none') {
+    applyPanel(id);
+    if (from !== id) staggerIn(document.getElementById('panel-' + id));
+    return;
+  }
+  const dir = PANEL_ORDER.indexOf(id) > PANEL_ORDER.indexOf(from) ? 'forward' : 'backward';
+  try { document.startViewTransition({ update: () => applyPanel(id), types: [dir] }); }
+  catch (e) { document.startViewTransition(() => applyPanel(id)); }
+}
+// Sayının yumuşakça artması
+function countTo(el, to) {
+  const from = parseInt(el.textContent) || 0;
+  to = Math.round(to);
+  if (reduceMotion() || from === to) { el.textContent = to; return; }
+  const t0 = performance.now(), dur = 600;
+  const step = now => {
+    const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = Math.round(from + (to - from) * e);
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function buzz() { try { navigator.vibrate && navigator.vibrate(30); } catch (e) {} }
+// Fotoğraf / Elle sekmesi
+function setAddMode(mode) {
+  const photo = mode === 'photo';
+  document.getElementById('tabPhoto').setAttribute('aria-selected', photo);
+  document.getElementById('tabManual').setAttribute('aria-selected', !photo);
+  document.getElementById('addPhoto').hidden = !photo;
+  document.getElementById('addManual').hidden = photo;
+  if (!photo) document.getElementById('manuelAd').focus({ preventScroll: true });
+}
+function updateStepper() {
+  const has = foods.length > 0;
+  document.getElementById('st1').className = 'done';
+  document.getElementById('st2').className = has ? 'done' : 'on';
+  document.getElementById('st3').className = has ? 'on' : '';
+  document.getElementById('submitBtn').disabled = !has;
+  document.getElementById('saveOgun').textContent = (OGUN_EMOJI[selectedOgun] || '') + ' ' + selectedOgun;
+}
+
+// ===== İLK GİRİŞ TANITIMI =====
+const INTRO = [
+  { big:'👋', title:'Hoş geldin!', text:'Bu uygulamada yediklerini, suyunu ve uykunu kaydedersin. Diyetisyenin verilerini anlık görür.' },
+  { big:'📷', title:'Öğün ekle', text:'<b>Öğün Ekle</b> sekmesinde tabağının fotoğrafını çek; yapay zekâ besinleri tahmin eder. İstersen elle de yazabilirsin.' },
+  { big:'💧', title:'Su & uyku', text:'Her bardak = 250 ml. Bardaklara dokun ve <b>Kaydet</b>\'e bas. Sabah dün gecenin uykusunu gir.' },
+  { big:'🎯', title:'Hedefin', text:'<b>Bugün</b> ekranındaki çubuklar günlük hedefine ne kadar yaklaştığını gösterir. Yeşil = hedefte.' }
+];
+let _introI = 0;
+function renderIntro() {
+  const s = INTRO[_introI];
+  const box = document.getElementById('introSlide');
+  box.innerHTML = `<div class="big" aria-hidden="true">${s.big}</div><h2 id="introTitle">${s.title}</h2><p>${s.text}</p>`;
+  if (!reduceMotion()) { box.style.animation = 'none'; void box.offsetWidth; box.style.animation = 'fade-up .35s var(--ease-out) both'; }
+  document.getElementById('introDots').innerHTML = INTRO.map((_, k) => `<i class="${k === _introI ? 'on' : ''}"></i>`).join('');
+  const last = _introI === INTRO.length - 1;
+  document.getElementById('introNext').textContent = last ? 'Başlayalım 🚀' : 'İleri';
+  document.getElementById('introSkip').style.visibility = last ? 'hidden' : 'visible';
+}
+function showIntro() { _introI = 0; renderIntro(); document.getElementById('introDlg').showModal(); }
+function nextIntro() { if (_introI < INTRO.length - 1) { _introI++; renderIntro(); } else closeIntro(); }
+function closeIntro() {
+  document.getElementById('introDlg').close();
+  try { localStorage.setItem('sp_intro_seen', '1'); } catch (e) {}
 }
 
 // ===== API =====
@@ -438,9 +614,13 @@ function launchApp() {
   document.getElementById('loginWrap').style.display = 'none';
   document.getElementById('mainApp').style.display = 'flex';
   renderHeader();
-  switchPanel('today');
+  applyPanel('today');
+  staggerIn(document.getElementById('panel-today'));
   renderFoods();
   refreshAthleteInfo();
+  let seen = false;
+  try { seen = localStorage.getItem('sp_intro_seen') === '1'; } catch (e) {}
+  if (!seen) setTimeout(showIntro, 400);
 }
 function renderHeader() {
   document.getElementById('displayName').textContent = athlete.name;
@@ -508,10 +688,10 @@ function renderTodayMeals() {
   const sorted = [...todayMeals].sort((a, b) => a.saat.localeCompare(b.saat));
   const tot = sorted.reduce((s, m) => ({ kcal: s.kcal + m.kcal, p: s.p + m.protein, kh: s.kh + m.kh, y: s.y + m.yag }), { kcal:0, p:0, kh:0, y:0 });
   const t = athlete.targets;
-  document.getElementById('todayKcal').textContent = Math.round(tot.kcal);
-  document.getElementById('todayProt').textContent = Math.round(tot.p);
-  document.getElementById('todayKh').textContent = Math.round(tot.kh);
-  document.getElementById('todayYag').textContent = Math.round(tot.y);
+  countTo(document.getElementById('todayKcal'), tot.kcal);
+  countTo(document.getElementById('todayProt'), tot.p);
+  countTo(document.getElementById('todayKh'), tot.kh);
+  countTo(document.getElementById('todayYag'), tot.y);
   document.getElementById('targetKcal').textContent = t.kcal || '—';
   const pct = setBar('kcalBar', null, tot.kcal, t.kcal, 'kcal');
   const badge = document.getElementById('kcalBadge');
@@ -560,8 +740,9 @@ async function deleteMeal(id) {
 
 // ===== ÖĞÜN EKLE =====
 function selectOgun(el) {
-  document.querySelectorAll('.ogun-btn').forEach(b => b.classList.toggle('sel', b === el));
+  document.querySelectorAll('.ogun-btn').forEach(b => { b.classList.toggle('sel', b === el); b.setAttribute('aria-pressed', b === el); });
   selectedOgun = el.dataset.v;
+  updateStepper();
 }
 // Fotoğrafı 1024px JPEG'e küçült (yükleme hızı + AI sınırları)
 function handlePhoto(e) {
@@ -609,6 +790,7 @@ async function analyzePhoto() {
 }
 function addFood(name, grams, kcal, p, kh, y) {
   const g = Math.max(1, n(grams) || 100);
+  if (_newFoodFrom === Infinity) _newFoodFrom = foods.length;
   foods.push({ name: String(name || 'Besin'), grams: g, base: { grams: g, kcal: n(kcal), protein: n(p), kh: n(kh), yag: n(y) } });
   renderFoods();
 }
@@ -616,14 +798,15 @@ function scaled(f) {
   const k = f.grams / f.base.grams;
   return { kcal: f.base.kcal * k, protein: f.base.protein * k, kh: f.base.kh * k, yag: f.base.yag * k };
 }
+let _newFoodFrom = Infinity;   // bu indeksten sonraki satırlar yeni eklendi → animasyon
 function renderFoods() {
   const el = document.getElementById('foodList');
   if (!foods.length) {
-    el.innerHTML = '<div class="empty" style="padding:8px">Fotoğrafı analiz edin veya aşağıdan elle ekleyin.</div>';
+    el.innerHTML = '<div class="empty" style="padding:8px">Henüz besin eklenmedi.<br>Yukarıdan fotoğraf çek ya da elle yaz.</div>';
   } else {
     el.innerHTML = foods.map((f, i) => {
       const s = scaled(f);
-      return `<div class="food-row">
+      return `<div class="food-row${i >= _newFoodFrom ? ' new' : ''}">
         <button class="icon-btn" onclick="removeFood(${i})" title="Kaldır" aria-label="${esc(f.name)} kaldır">✕</button>
         <div style="flex:1;min-width:0">
           <div style="font-size:.85rem;font-weight:600">${esc(f.name)}</div>
@@ -635,7 +818,9 @@ function renderFoods() {
       </div>`;
     }).join('');
   }
+  _newFoodFrom = Infinity;
   updateFoodTotal();
+  updateStepper();
 }
 function updateFood(i, grams) {
   const f = foods[i]; if (!f) return;
@@ -677,6 +862,7 @@ async function submitMeal() {
     });
     if (!r.ok) throw new Error(r.error || 'Kayıt başarısız');
     showToast('✅ Öğün kaydedildi!');
+    buzz();
     foods = []; renderFoods(); clearPhoto();
     document.getElementById('mealNote').value = '';
     switchPanel('today');
@@ -717,6 +903,7 @@ async function saveWater() {
     if (!r.ok) throw new Error(r.error);
     waterSaved = waterMl; updateWaterDisplay();
     showToast('💧 Su kaydedildi');
+    buzz();
   } catch (e) { showToast('❌ Kaydedilemedi: ' + e.message, true); }
   finally { btn.disabled = false; }
 }

@@ -193,45 +193,185 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .chart-wrap { position: relative; width: 100%; height: 240px; }
 .chart-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text2); font-size: .82rem; text-align: center; }
 .select-player { width: 220px; max-width: 100%; }
+/* ═══════════════ v3.2 ARAYÜZ: menü, geçişler, açıklamalar ═══════════════ */
+:root { --sidebar-w: 248px; --ease-out: cubic-bezier(.22,1,.36,1); }
+/* Üst çubuk */
+#topbar { position: sticky; top: 0; z-index: 50; min-height: 56px; }
+.topbar-title { display: flex; flex-direction: column; min-width: 0; }
+.topbar-title .crumb { font-size: .7rem; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; }
+.topbar-title .page-name { font-size: 1.05rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.icon-btn { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); cursor: pointer; font-size: 1rem; transition: background-color .2s, border-color .2s; flex-shrink: 0; }
+.icon-btn:hover { border-color: var(--accent); }
+.menu-btn { display: none; }
+/* Kenar menü */
+#sidebar { background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+.side-brand { padding: 16px 18px 12px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+.side-brand .logo { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--green), var(--teal)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.1rem; flex-shrink: 0; }
+.side-brand b { display: block; font-size: .95rem; color: var(--text); }
+.side-brand span { font-size: .7rem; color: var(--text2); }
+.side-nav { padding: 10px 10px 20px; overflow-y: auto; flex: 1; }
+.nav-group { margin-top: 12px; }
+.nav-group-title { font-size: .66rem; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .08em; padding: 0 10px 6px; }
+.side-nav .nav-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border: none; border-radius: 9px; background: transparent; color: var(--text2); font-size: .86rem; text-align: left; cursor: pointer; position: relative; transition: background-color .18s, color .18s; border-bottom: none; }
+.side-nav .nav-btn i { width: 18px; text-align: center; font-size: .9rem; }
+.side-nav .nav-btn small { display: block; font-size: .68rem; color: var(--text2); opacity: .8; font-weight: 400; margin-top: 1px; }
+.side-nav .nav-btn:hover { background: var(--bg3); color: var(--text); }
+.side-nav .nav-btn.active { background: var(--bg-orange); color: var(--accent); font-weight: 600; }
+.side-nav .nav-btn.active::before { content: ''; position: absolute; left: -10px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--accent); }
+.side-nav .nav-btn.active small { color: var(--accent); }
+.side-foot { padding: 12px; border-top: 1px solid var(--border); display: flex; gap: 6px; flex-wrap: wrap; }
+@media (min-width: 1024px) {
+  body { padding-left: var(--sidebar-w); }
+  #sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: var(--sidebar-w); z-index: 60; }
+}
+@media (max-width: 1023px) {
+  #sidebar { display: none; }
+  .menu-btn { display: inline-flex; }
+  .hide-mobile { display: none !important; }
+}
+/* Telefon çekmecesi (scroll-snap ile kaydırarak kapanır) */
+.Drawer { --drawer-width: min(19em, 84dvw, 100dvw - 24px); --drawer-backdrop: 0; inset: 0; width: auto; height: auto; max-width: none; max-height: none; margin: 0; padding: 0; background: transparent; border: 0; overflow: visible; }
+.Drawer::backdrop { background: #000; opacity: calc(var(--drawer-backdrop) / 2); }
+.Drawer-scroller { position: relative; display: grid; grid-template-columns: var(--drawer-width) 100%; overflow-x: scroll; overscroll-behavior: none; scrollbar-width: none; scroll-snap-type: x mandatory; height: 100%; }
+@media (prefers-reduced-motion: no-preference) { .Drawer-scroller { scroll-behavior: smooth; } }
+.Drawer-scroller::after { content: ''; scroll-snap-align: end; scroll-initial-target: nearest; }
+.Drawer-sheet { display: flex; flex-direction: column; height: 100svh; background: var(--bg2); color: var(--text); overflow-y: auto; scroll-snap-align: start; scrollbar-width: none; box-shadow: 4px 0 30px rgba(0,0,0,.35); }
+@supports (animation-timeline: scroll()) {
+  .Drawer { timeline-scope: --drawer-fade; animation: fade-drawer-backdrop linear both; animation-timeline: --drawer-fade; }
+  .Drawer-scroller { scroll-timeline: --drawer-fade x; }
+  @property --drawer-backdrop { syntax: '<number>'; inherits: true; initial-value: 0; }
+  @keyframes fade-drawer-backdrop { 0% { --drawer-backdrop: 1 } 100% { --drawer-backdrop: 0 } }
+}
+/* Diğer işlemler menüsü */
+#moreMenu { position: fixed; inset: 62px 12px auto auto; margin: 0; width: 250px; padding: 6px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg2); color: var(--text); box-shadow: 0 12px 40px rgba(0,0,0,.35); }
+#moreMenu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: none; border-radius: 8px; background: transparent; color: var(--text); font-size: .85rem; cursor: pointer; text-align: left; }
+#moreMenu button:hover { background: var(--bg3); }
+#moreMenu hr { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+@media (prefers-reduced-motion: no-preference) {
+  #moreMenu { transition: opacity .18s, translate .18s var(--ease-out), display .18s, overlay .18s; transition-behavior: allow-discrete; }
+  #moreMenu:popover-open { opacity: 1; translate: 0 0; }
+  @starting-style { #moreMenu:popover-open { opacity: 0; translate: 0 -6px; } }
+}
+/* Sayfa açıklaması */
+.page-intro { display: flex; gap: 12px; align-items: flex-start; background: var(--bg2); border: 1px solid var(--border); border-left: 3px solid var(--blue); border-radius: 10px; padding: 10px 14px; margin: -4px 0 14px; font-size: .84rem; color: var(--text2); line-height: 1.5; }
+.page-intro i { color: var(--blue); margin-top: 3px; }
+.page-intro b { color: var(--text); }
+.page-intro .steps { display: flex; gap: 6px 14px; flex-wrap: wrap; margin-top: 4px; }
+.page-intro .steps span::before { content: attr(data-n); display: inline-flex; width: 18px; height: 18px; border-radius: 50%; background: var(--bg-blue); color: var(--blue); font-size: .68rem; font-weight: 700; align-items: center; justify-content: center; margin-right: 5px; }
+.page-intro .x { margin-left: auto; background: none; border: none; color: var(--text2); cursor: pointer; font-size: .9rem; padding: 2px 4px; }
+/* Hızlı başlangıç */
+.quick-start { background: linear-gradient(135deg, var(--bg-green), var(--bg2)); border: 1px solid var(--green); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+.quick-start h3 { font-size: 1rem; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.qs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 12px; }
+.qs-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; cursor: pointer; text-align: left; color: var(--text); font: inherit; transition: border-color .2s, translate .2s var(--ease-out); }
+.qs-item:hover { border-color: var(--green); }
+@media (prefers-reduced-motion: no-preference) { .qs-item:hover { translate: 0 -2px; } }
+.qs-item .n { width: 24px; height: 24px; border-radius: 50%; background: var(--green); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 700; margin-bottom: 6px; }
+.qs-item b { display: block; font-size: .88rem; margin-bottom: 2px; }
+.qs-item span { font-size: .75rem; color: var(--text2); }
+/* Oturum seçici: daha okunur */
+.week-btn { transition: background-color .2s, border-color .2s, color .2s; }
+.week-btn:hover { border-color: var(--accent); color: var(--text); }
+/* Kart ve buton etkileşimleri */
+.card { transition: border-color .2s; }
+.stat-tile { transition: border-color .2s, translate .25s var(--ease-out); }
+@media (prefers-reduced-motion: no-preference) {
+  .stat-tile:hover, .player-card:hover { translate: 0 -2px; }
+  .btn { transition: background-color .2s, border-color .2s, color .2s, scale .12s; }
+  .btn:active { scale: .97; }
+  .modal-overlay.open .modal { animation: modal-in .28s var(--ease-out) both; }
+  #toast { transition: opacity .3s, transform .35s var(--ease-out) !important; }
+}
+@keyframes modal-in { from { opacity: 0; transform: translateY(12px) scale(.98); } }
+/* Sayfa girişinde kartlar sırayla belirir */
+@keyframes rise-in { from { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: no-preference) {
+  .page.animate-in > * { --stagger-time: .045s; animation: rise-in .4s var(--ease-out) both; animation-delay: calc(min(var(--sibling-index, 1), 8) * var(--stagger-time)); }
+  @supports (animation-delay: calc(sibling-index() * 0.1s)) {
+    .page.animate-in > * { animation-delay: calc(min(sibling-index(), 8) * var(--stagger-time)); }
+  }
+}
+/* Sayfalar arası yönlü geçiş (View Transitions) */
+@keyframes vt-out-left  { to   { opacity: 0; transform: translateX(-28px); } }
+@keyframes vt-in-right  { from { opacity: 0; transform: translateX(28px); } }
+@keyframes vt-out-right { to   { opacity: 0; transform: translateX(28px); } }
+@keyframes vt-in-left   { from { opacity: 0; transform: translateX(-28px); } }
+#sidebar, #topbar { view-transition-name: none; }
+.page.active { view-transition-name: page; }
+::view-transition-group(page) { animation-duration: .32s; animation-timing-function: var(--ease-out); }
+html:active-view-transition-type(forward)::view-transition-old(page)  { animation: vt-out-left .22s ease-in both; }
+html:active-view-transition-type(forward)::view-transition-new(page)  { animation: vt-in-right .32s var(--ease-out) both; }
+html:active-view-transition-type(backward)::view-transition-old(page) { animation: vt-out-right .22s ease-in both; }
+html:active-view-transition-type(backward)::view-transition-new(page) { animation: vt-in-left .32s var(--ease-out) both; }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(page), ::view-transition-old(page), ::view-transition-new(page) { animation: none !important; }
+}
+/* Seçili oyuncu kutusu daha belirgin */
+.select-player { font-weight: 600; border-color: var(--accent); }
 </style>
 </head>
 <body>
-<!-- TOP BAR -->
-<div id="topbar">
-  <h1><i class="fas fa-futbol" style="color:var(--green)"></i> Futbol Spor Diyetisyeni Asistanı <span>v3.1</span></h1>
-  <div class="gender-toggle">
-    <button class="gender-btn active" data-gender="erkek" onclick="setGender('erkek')"><i class="fas fa-mars"></i> Erkek Takımı</button>
-    <button class="gender-btn" data-gender="kadin" onclick="setGender('kadin')"><i class="fas fa-venus"></i> Kadın Takımı</button>
-    <button class="btn" onclick="openPlayerModal()" style="margin-left:10px;padding:4px 12px;font-size:.8rem;border-radius:20px"><i class="fas fa-user-gear"></i> Oyuncu Yönetimi</button>
+<!-- KENAR MENÜ (masaüstü) — içerik JS ile NAV_GROUPS'tan oluşturulur -->
+<aside id="sidebar" aria-label="Ana menü">
+  <div class="side-brand">
+    <div class="logo"><i class="fas fa-futbol"></i></div>
+    <div><b>Diyetisyen Paneli</b><span>Futbol Spor Diyetisyeni Asistanı v3.2</span></div>
   </div>
-  <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-    <button class="btn btn-sm" id="themeToggleBtn" onclick="toggleTheme()" title="Koyu/Açık Mod geçiş"><i class="fas fa-moon"></i></button>
+  <nav class="side-nav" id="sideNav"></nav>
+  <div class="side-foot">
+    <button class="btn btn-sm" onclick="openPlayerModal()" style="flex:1;justify-content:center"><i class="fas fa-user-gear"></i> Oyuncu Yönetimi</button>
+  </div>
+</aside>
+
+<!-- TELEFON ÇEKMECESİ -->
+<dialog class="Drawer" id="drawer" aria-label="Ana menü">
+  <div class="Drawer-scroller">
+    <div class="Drawer-sheet">
+      <div class="side-brand">
+        <div class="logo"><i class="fas fa-futbol"></i></div>
+        <div style="flex:1"><b>Diyetisyen Paneli</b><span>v3.2</span></div>
+        <button class="icon-btn" id="drawer-close" aria-label="Menüyü kapat"><i class="fas fa-xmark"></i></button>
+      </div>
+      <nav class="side-nav" id="drawerNav"></nav>
+      <div class="side-foot">
+        <button class="btn btn-sm" onclick="closeDrawer();openPlayerModal()" style="flex:1;justify-content:center"><i class="fas fa-user-gear"></i> Oyuncu Yönetimi</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<!-- ÜST ÇUBUK -->
+<div id="topbar">
+  <button class="icon-btn menu-btn" id="drawer-open" aria-label="Menü" aria-expanded="false" aria-controls="drawer"><i class="fas fa-bars"></i></button>
+  <div class="topbar-title">
+    <span class="crumb" id="crumbGroup">Genel Bakış</span>
+    <span class="page-name" id="crumbPage">Takım Durumu</span>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end">
+    <div class="gender-toggle" role="group" aria-label="Takım seçimi">
+      <button class="gender-btn active" data-gender="erkek" onclick="setGender('erkek')"><i class="fas fa-mars"></i> Erkek<span class="hide-mobile">&nbsp;Takımı</span></button>
+      <button class="gender-btn" data-gender="kadin" onclick="setGender('kadin')"><i class="fas fa-venus"></i> Kadın<span class="hide-mobile">&nbsp;Takımı</span></button>
+    </div>
+    <span id="cloudSyncStatus" class="hide-mobile" style="font-size:.7rem;color:var(--text2);display:none"></span>
     <button class="btn btn-sm" id="cloudSyncBtn" onclick="manualCloudSync()" title="Bulutla senkronize et" style="display:none">
       <i class="fas fa-cloud-arrow-up" id="cloudSyncIcon"></i>
-      <span id="cloudSyncLabel" style="font-size:.75rem;margin-left:4px">Senkronize Et</span>
+      <span id="cloudSyncLabel" class="hide-mobile" style="font-size:.75rem">Senkronize Et</span>
     </button>
-    <span id="cloudSyncStatus" style="font-size:.7rem;color:var(--text2);display:none"></span>
-    <button class="btn btn-sm" id="pwaInstallBtn" onclick="pwaInstall()" title="Uygulamayı bilgisayara / telefona kur" style="display:none;background:#10B981;color:#fff;border-color:#10B981"><i class="fas fa-download"></i> Uygulamayı Kur</button>
-    <button class="btn btn-sm" onclick="exportData()"><i class="fas fa-download"></i> JSON Dışa Aktar</button>
-    <button class="btn btn-sm" onclick="document.getElementById('importFile').click()"><i class="fas fa-upload"></i> JSON İçe Aktar</button>
-    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
+    <button class="btn btn-sm" id="pwaInstallBtn" onclick="pwaInstall()" title="Uygulamayı bilgisayara / telefona kur" style="display:none;background:#10B981;color:#fff;border-color:#10B981"><i class="fas fa-download"></i><span class="hide-mobile">&nbsp;Uygulamayı Kur</span></button>
+    <button class="icon-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Koyu / Açık mod" aria-label="Koyu veya açık mod"><i class="fas fa-moon"></i></button>
+    <button class="icon-btn" popovertarget="moreMenu" title="Diğer işlemler" aria-label="Diğer işlemler"><i class="fas fa-ellipsis-vertical"></i></button>
   </div>
 </div>
-<!-- NAVIGATION -->
-<div id="nav">
-  <button class="nav-btn active" data-page="p-team" onclick="showPage('p-team')"><i class="fas fa-users"></i> Takım</button>
-  <button class="nav-btn" data-page="p-player" onclick="showPage('p-player')"><i class="fas fa-user"></i> Oyuncu</button>
-  <button class="nav-btn" data-page="p-gps" onclick="showPage('p-gps')"><i class="fas fa-satellite"></i> GPS & Yük</button>
-  <button class="nav-btn" data-page="p-body" onclick="showPage('p-body')"><i class="fas fa-weight-scale"></i> Vücut Kom.</button>
-  <button class="nav-btn" data-page="p-blood" onclick="showPage('p-blood')"><i class="fas fa-droplet"></i> Kan Testleri</button>
-  <button class="nav-btn" data-page="p-intervention" onclick="showPage('p-intervention')"><i class="fas fa-triangle-exclamation"></i> Müdahale</button>
-  <button class="nav-btn" data-page="p-report" onclick="showPage('p-report')"><i class="fas fa-chart-bar"></i> Oyuncu Raporu</button>
-  <button class="nav-btn" data-page="p-entry" onclick="showPage('p-entry')"><i class="fas fa-pen-to-square"></i> Veri Girişi</button>
-  <button class="nav-btn" data-page="p-nutrition" onclick="showPage('p-nutrition')"><i class="fas fa-utensils"></i> Beslenme Anketi</button>
-  <button class="nav-btn" data-page="p-print" onclick="showPage('p-print')"><i class="fas fa-file-pdf"></i> Raporlar</button>
-  <button class="nav-btn" data-page="p-td" onclick="showPage('p-td')"><i class="fas fa-arrows-left-right-to-line"></i> Futbolcu Hareketleri</button>
-  <button class="nav-btn" data-page="p-sporcu-takip" onclick="showPage('p-sporcu-takip')"><i class="fas fa-bowl-food"></i> Sporcu Beslenme</button>
+<div id="moreMenu" popover>
+  <button onclick="moreMenu.hidePopover();openPlayerModal()"><i class="fas fa-user-gear"></i> Oyuncu Yönetimi</button>
+  <hr>
+  <button onclick="moreMenu.hidePopover();exportData()"><i class="fas fa-download"></i> Yedek al (JSON dışa aktar)</button>
+  <button onclick="moreMenu.hidePopover();document.getElementById('importFile').click()"><i class="fas fa-upload"></i> Yedekten yükle (JSON içe aktar)</button>
+  <hr>
+  <button onclick="moreMenu.hidePopover();goToCloudSettings()"><i class="fas fa-cloud"></i> Bulut senkronizasyonu ayarları</button>
+  <button onclick="moreMenu.hidePopover();showQuickStart(true)"><i class="fas fa-circle-question"></i> Hızlı başlangıç rehberini göster</button>
 </div>
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
 
 <!-- ===== PAGE: TEAM OVERVIEW ===== -->
 <div class="page active" id="p-team">
@@ -896,14 +1036,198 @@ function seedSampleData(p, gender) {
 let players = initPlayers('erkek');
 
 // ===================== NAVIGATION =====================
+// Menü grupları — sıra, geçiş yönünü (ileri/geri) belirler
+const NAV_GROUPS = [
+  { title: 'Genel Bakış', items: [
+    { id:'p-team', icon:'fa-users', label:'Takım Durumu', sub:'Tüm takımın özeti' },
+    { id:'p-intervention', icon:'fa-triangle-exclamation', label:'Müdahale', sub:'Risk altındaki oyuncular' },
+    { id:'p-sporcu-takip', icon:'fa-bowl-food', label:'Sporcu Beslenme', sub:'Sporcuların girdiği öğünler' }
+  ]},
+  { title: 'Oyuncu', items: [
+    { id:'p-player', icon:'fa-user', label:'Oyuncu Profili', sub:'Tek oyuncunun tüm verisi' },
+    { id:'p-body', icon:'fa-weight-scale', label:'Vücut Kompozisyonu', sub:'Tanita / BIA ölçümleri' },
+    { id:'p-blood', icon:'fa-droplet', label:'Kan Testleri', sub:'Referans aralık kontrolü' },
+    { id:'p-gps', icon:'fa-satellite', label:'GPS & Yük', sub:'Antrenman yükü' },
+    { id:'p-report', icon:'fa-chart-bar', label:'Oyuncu Raporu', sub:'Oyuncuya gösterilecek özet' }
+  ]},
+  { title: 'Veri & Planlama', items: [
+    { id:'p-entry', icon:'fa-pen-to-square', label:'Veri Girişi', sub:'Ölçüm, Hooper, GPS, beslenme' },
+    { id:'p-nutrition', icon:'fa-utensils', label:'Beslenme Planı', sub:'Makro hesap & menü' }
+  ]},
+  { title: 'Çıktı & Kayıt', items: [
+    { id:'p-print', icon:'fa-file-pdf', label:'PDF Raporlar', sub:'Takım / bireysel / müdahale' },
+    { id:'p-td', icon:'fa-arrows-left-right-to-line', label:'Futbolcu Hareketleri', sub:'Transferler & TD notları' }
+  ]}
+];
+const NAV_ORDER = NAV_GROUPS.flatMap(g => g.items.map(i => i.id));
+const PAGE_INFO = {
+  'p-team': { text: 'Seçili oturumda <b>tüm takımın</b> yağ oranı, Hooper, GPS ve enerji durumu. Bir oyuncu kartına tıklayınca o oyuncunun profili açılır.' },
+  'p-intervention': { text: 'Yağ oranı hedef üstü, Hooper &gt;20, enerji açığı &gt;400 kcal veya kan değeri düşük olan oyuncular ve <b>yapılacak adımlar</b>. Notlar otomatik kaydedilir.' },
+  'p-sporcu-takip': { text: 'Sporcuların <b>telefon uygulamasından</b> girdiği öğünler, su ve uyku kayıtları. Tarih veya sporcu seçince liste yenilenir.' },
+  'p-player': { text: 'Seçili oyuncunun ölçümleri, trend grafikleri, elit referanslarla karşılaştırması ve <b>görüşme notları</b>.' },
+  'p-body': { text: 'Tanita PDF\'ini sürükleyin veya metnini yapıştırın; değerler <b>seçili oyuncu ve oturuma</b> otomatik yazılır.', steps: ['Oyuncu ve oturum seç', 'PDF bırak / metin yapıştır', 'Sonucu kontrol et'] },
+  'p-blood': { text: 'Kan değerlerini girin; referans dışı değerler <b>renkle</b> işaretlenir (kadın/erkek referansları ayrıdır).' },
+  'p-gps': { text: 'Seçili oyuncunun GPS metrikleri ve oturumlar arası değişimi.' },
+  'p-report': { text: 'Oyuncuyla paylaşabileceğiniz sade bir özet: takım ortalamasıyla karşılaştırma ve <b>kişisel öneriler</b>.' },
+  'p-entry': { text: 'Bir oyuncu için tek oturumluk verileri girin. BMI, BMH ve yağsız kütle <b>otomatik hesaplanır</b>.', steps: ['Oyuncu ve oturum seç', 'Değerleri gir', 'Kaydet'] },
+  'p-nutrition': { text: 'BIA verisinden günlük makro hedefini hesaplayın, değişim tablosuyla menü oluşturun ve <b>PDF</b> olarak verin.', steps: ['Makro hedefi', 'Örnek Dağıtım / tabloyu düzenle', 'Yazılı diyeti kontrol et', 'PDF indir'] },
+  'p-print': { text: 'Yazdırılabilir raporlar yeni sekmede açılır; tarayıcının yazdır penceresinden <b>PDF olarak kaydet</b>i seçin.' },
+  'p-td': { text: 'Gelen/giden transferler, kiralamalar ve teknik direktör notları.' }
+};
+function navItem(id) { for (const g of NAV_GROUPS) { const it = g.items.find(i => i.id === id); if (it) return { g, it }; } return null; }
+
+function buildNav() {
+  const html = NAV_GROUPS.map(g => `
+    <div class="nav-group">
+      <div class="nav-group-title">${g.title}</div>
+      ${g.items.map(i => `<button class="nav-btn" data-page="${i.id}" onclick="navTo('${i.id}')"><i class="fas ${i.icon}"></i><span>${i.label}<small>${i.sub}</small></span></button>`).join('')}
+    </div>`).join('');
+  document.getElementById('sideNav').innerHTML = html;
+  document.getElementById('drawerNav').innerHTML = html;
+}
+function addPageIntros() {
+  let hidden = {};
+  try { hidden = JSON.parse(localStorage.getItem('afd_hidden_intros') || '{}'); } catch (e) {}
+  Object.entries(PAGE_INFO).forEach(([id, info]) => {
+    const page = document.getElementById(id);
+    if (!page || hidden[id] || page.querySelector('.page-intro')) return;
+    const el = document.createElement('div');
+    el.className = 'page-intro';
+    el.innerHTML = `<i class="fas fa-circle-info"></i><div>${info.text}${info.steps ? `<div class="steps">${info.steps.map((s, k) => `<span data-n="${k+1}">${s}</span>`).join('')}</div>` : ''}</div>
+      <button class="x" title="Bu açıklamayı gizle" aria-label="Açıklamayı gizle"><i class="fas fa-xmark"></i></button>`;
+    el.querySelector('.x').onclick = () => {
+      el.remove();
+      try { hidden[id] = 1; localStorage.setItem('afd_hidden_intros', JSON.stringify(hidden)); } catch (e) {}
+    };
+    const header = page.querySelector('.sec-header');
+    header ? header.after(el) : page.prepend(el);
+  });
+}
+function showQuickStart(force) {
+  const old = document.getElementById('quickStart');
+  if (old) old.remove();
+  let seen = false;
+  try { seen = localStorage.getItem('afd_qs_hidden') === '1'; } catch (e) {}
+  if (seen && !force) return;
+  if (force) { try { localStorage.removeItem('afd_qs_hidden'); } catch (e) {} }
+  const el = document.createElement('div');
+  el.id = 'quickStart';
+  el.className = 'quick-start';
+  const steps = [
+    ['p-entry', 'Veri gir', 'Oyuncu seç, oturum tarihini ve ölçümleri gir'],
+    ['p-body', 'Tanita yükle', 'PDF\'i bırak, vücut kompozisyonu otomatik dolsun'],
+    ['p-team', 'Takımı izle', 'Alarmlar ve grafikler burada'],
+    ['p-nutrition', 'Plan yaz', 'Makro hesapla, menü oluştur, PDF ver']
+  ];
+  el.innerHTML = `<h3><span>👋 Hızlı Başlangıç</span><button class="btn btn-sm" id="qsClose">Gizle</button></h3>
+    <div style="font-size:.82rem;color:var(--text2)">Panel 4 adımda kullanılır. Üstteki <b>oturum düğmeleri</b> (S1, S2…) ölçüm günlerini, sağ üstteki <b>Erkek/Kadın</b> düğmesi takımı seçer. Bu rehbere ⋮ menüsünden tekrar ulaşabilirsiniz.</div>
+    <div class="qs-grid">${steps.map(([id, t, d], k) => `<button class="qs-item" onclick="navTo('${id}')"><span class="n">${k+1}</span><b>${t}</b><span>${d}</span></button>`).join('')}</div>`;
+  const page = document.getElementById('p-team');
+  const header = page.querySelector('.sec-header');
+  header.after(el);
+  el.querySelector('#qsClose').onclick = () => { el.remove(); try { localStorage.setItem('afd_qs_hidden', '1'); } catch (e) {} };
+  if (force && currentPageId() !== 'p-team') navTo('p-team');
+}
+function goToCloudSettings() {
+  navTo('p-team');
+  setTimeout(() => {
+    const c = document.getElementById('cloudSettingsCard');
+    c.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+    document.getElementById('cloudUrlInput').focus({ preventScroll: true });
+  }, 350);
+}
+function updateCrumb(id) {
+  const n = navItem(id);
+  if (!n) return;
+  document.getElementById('crumbGroup').textContent = n.g.title;
+  document.getElementById('crumbPage').textContent = n.it.label;
+  document.title = n.it.label + ' — afd';
+}
+// Kartların sırayla belirmesi için (sibling-index() desteklemeyen tarayıcılarda)
+const _hasSiblingIndex = window.CSS && CSS.supports('animation-delay: calc(sibling-index() * 0.1s)');
+function animatePageIn(page) {
+  if (!_hasSiblingIndex) [...page.children].forEach((el, k) => el.style.setProperty('--sibling-index', k + 1));
+  page.classList.remove('animate-in');
+  void page.offsetWidth;   // animasyonu yeniden başlat
+  page.classList.add('animate-in');
+  setTimeout(() => page.classList.remove('animate-in'), 900);
+}
+
 function currentPageId() { return document.querySelector('.page.active')?.id || 'p-team'; }
 function showPage(id) {
   if (!document.getElementById(id)) id = 'p-team';
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === id));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === id));
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    const on = b.dataset.page === id;
+    b.classList.toggle('active', on);
+    if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  });
+  updateCrumb(id);
   renderPage(id);
   window.scrollTo(0, 0);
 }
+// Menüden geçiş: yön (ileri/geri) menüdeki sıraya göre
+function navTo(id) {
+  const from = currentPageId();
+  if (document.getElementById('drawer')?.open) closeDrawer();
+  if (from === id) { renderPage(id); return; }
+  const dir = NAV_ORDER.indexOf(id) >= NAV_ORDER.indexOf(from) ? 'forward' : 'backward';
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!document.startViewTransition || reduce) {
+    showPage(id);
+    if (!reduce) animatePageIn(document.getElementById(id));
+    return;
+  }
+  try {
+    document.startViewTransition({ update: () => showPage(id), types: [dir] });
+  } catch (e) {
+    // Eski sürümler yalnızca callback kabul eder
+    document.startViewTransition(() => showPage(id));
+  }
+}
+
+// ── Telefon çekmecesi ──
+function initDrawer() {
+  const drawer = document.getElementById('drawer');
+  const openBtn = document.getElementById('drawer-open');
+  const scroller = drawer.querySelector('.Drawer-scroller');
+  const sheet = drawer.querySelector('.Drawer-sheet');
+  window.openDrawer = async function() {
+    drawer.showModal();
+    // autofocus yerine: odak kaydırma yapmasın, yoksa açılma kaydırması yarıda kesilir
+    document.getElementById('drawer-close').focus({ preventScroll: true });
+    if (!CSS.supports('scroll-initial-target', 'nearest')) {
+      scroller.scrollTo({ left: scroller.offsetWidth, behavior: 'instant' });
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    }
+    scroller.scrollTo({ left: 0, behavior: 'auto' });
+  };
+  window.closeDrawer = function() { scroller.scrollTo({ left: scroller.offsetWidth, behavior: 'auto' }); };
+  const visibleThreshold = 1 / Math.max(window.innerWidth || 0, 320);   // gizli sekmede innerWidth 0 olabilir
+  let fullyOpened = false;   // açılışın ilk anındaki "görünmüyor" sinyalini yok say
+  new IntersectionObserver(entries => {
+    const e = entries.at(-1);
+    if (e.intersectionRatio < visibleThreshold && drawer.open && fullyOpened) {
+      fullyOpened = false; drawer.close(); openBtn.setAttribute('aria-expanded', 'false');
+    }
+    if (e.intersectionRatio >= 0.99) { fullyOpened = true; openBtn.setAttribute('aria-expanded', 'true'); }
+  }, { root: drawer, threshold: [visibleThreshold, 1] }).observe(sheet);
+  if (!CSS.supports('animation-timeline: scroll()')) {
+    scroller.addEventListener('scroll', () => drawer.style.setProperty('--drawer-backdrop', Math.max(0, 1 - scroller.scrollLeft / sheet.offsetWidth)));
+  }
+  openBtn.addEventListener('click', openDrawer);
+  document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+  drawer.addEventListener('click', e => { if (!sheet.contains(e.target)) closeDrawer(); });
+  drawer.addEventListener('cancel', e => { if (e.cancelable) { e.preventDefault(); closeDrawer(); } });
+}
+function initNavigationUI() {
+  buildNav();
+  // Bunlardan biri hata verse bile panel açılmaya devam etsin
+  [addPageIntros, initDrawer, () => showQuickStart(false)].forEach(fn => { try { fn(); } catch (e) { console.error('Arayüz kurulumu:', e); } });
+  updateCrumb(currentPageId());
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === currentPageId()));
+}
+
 function renderPage(id) {
   id = id || currentPageId();
   try {
@@ -1182,7 +1506,7 @@ function goToPlayer(idx) {
   selectedPlayer = idx;
   ['selPlayer','selPlayerGPS','selPlayerBody','selPlayerBlood','selPlayerReport','selPlayerEntry','selPrintPlayer','selPlayerNutrition']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = idx; });
-  showPage('p-player');
+  navTo('p-player');
 }
 
 // ===================== PLAYER PAGE =====================
@@ -3443,6 +3767,7 @@ document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('cli
 
 // ===================== INIT =====================
 document.addEventListener('DOMContentLoaded', () => {
+  initNavigationUI();
   let savedTheme = 'dark';
   try { savedTheme = localStorage.getItem('sporcu_theme') || 'dark'; } catch(e) {}
   document.documentElement.setAttribute('data-theme', savedTheme);
