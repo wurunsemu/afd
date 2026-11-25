@@ -411,7 +411,7 @@ html:active-view-transition-type(backward)::view-transition-new(panel){animation
 
 <script>
 // ===== CONFIG =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbzITFfpC8EZ67uesNrH4P3Y3xhrq1UO0TvGSXyhsdSe6UgALG4m7rjY70mGawuaBSv5MA/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbx8OtD3dbsd8DI8ox5Hv7fEeLwLTGtWBPhLZA_EKKd_c_VOz3wDptaxKRWfVpdrW9UHxw/exec';
 const TEAM_SECRET = 'YA2026';
 const SESSION_KEY = 'sp_session_v2';
 const OGUN_EMOJI = { 'Kahvaltı':'🌅', 'Ara Öğün':'🍎', 'Öğle Yemeği':'☀️', 'Akşam Yemeği':'🌙', 'Gece Öğünü':'🌃' };
@@ -477,7 +477,7 @@ function staggerIn(panel) {
 // Sekmeler arası geçiş: sağdaki sekmeye giderken sola kayar, geri dönerken sağa
 function switchPanel(id) {
   const from = currentPanel();
-  if (from === id || !document.startViewTransition || reduceMotion() || document.getElementById('mainApp').style.display === 'none') {
+  if (from === id || !document.startViewTransition || reduceMotion() || document.visibilityState !== 'visible' || document.getElementById('mainApp').style.display === 'none') {
     applyPanel(id);
     if (from !== id) staggerIn(document.getElementById('panel-' + id));
     return;

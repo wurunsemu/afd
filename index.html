@@ -5303,9 +5303,13 @@ document.addEventListener('DOMContentLoaded', () => {
 'use strict';
 const ST_SECRET = 'YA2026';
 window.stApi = { url: () => ST_API_URL, secret: ST_SECRET };
-const ST_DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbzITFfpC8EZ67uesNrH4P3Y3xhrq1UO0TvGSXyhsdSe6UgALG4m7rjY70mGawuaBSv5MA/exec';
+const ST_DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbx8OtD3dbsd8DI8ox5Hv7fEeLwLTGtWBPhLZA_EKKd_c_VOz3wDptaxKRWfVpdrW9UHxw/exec';
 let ST_API_URL = ST_DEFAULT_URL;
-try { ST_API_URL = localStorage.getItem('st_api_url') || ST_DEFAULT_URL; } catch(e) {}
+try {
+  ST_API_URL = localStorage.getItem('st_api_url') || ST_DEFAULT_URL;
+  // Eski sporcu projesinin adresi kayıtlıysa yeni adrese geçir
+  if (ST_API_URL.indexOf('AKfycbzITFfpC8EZ67uesNrH4P3Y3xhrq1UO0TvGSXyhsdSe6UgALG4m7rjY70mGawuaBSv5MA') >= 0) { ST_API_URL = ST_DEFAULT_URL; localStorage.setItem('st_api_url', ST_API_URL); }
+} catch(e) {}
 
 const pickF = (o, ...keys) => { for (const k of keys) if (o && o[k] !== undefined && o[k] !== null && o[k] !== '') return o[k]; return ''; };
 const athleteId = o => String(pickF(o, 'SporucuID', 'SporcuID', 'athleteId', 'sporucuid', 'sporcuid', 'ID', 'id'));
