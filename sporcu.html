@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0F172A">
 <title>Sporcu Paneli</title>
@@ -11,1012 +12,804 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
   --bg1:#0F172A;--bg2:#1E293B;--bg3:#334155;
-  --txt1:#F1F5F9;--txt2:#94A3B8;--txt3:#64748B;
+  --txt1:#F1F5F9;--txt2:#94A3B8;--txt3:#7C8BA1;
   --brd:#334155;
-  --grn:#10B981;--yel:#F59E0B;--red:#EF4444;--blu:#3B82F6;--pur:#8B5CF6;
+  --grn:#10B981;--yel:#F59E0B;--red:#EF4444;--blu:#3B82F6;--pur:#8B5CF6;--wat:#0EA5E9;
   --safe-top:env(safe-area-inset-top,0px);
   --safe-bot:env(safe-area-inset-bottom,0px);
 }
 html,body{height:100%;background:var(--bg1);color:var(--txt1);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden}
-/* ── LAYOUT ── */
+button,input,select,textarea{font-family:inherit}
 .app{display:flex;flex-direction:column;height:100%;padding-top:var(--safe-top)}
-.topbar{background:var(--bg2);border-bottom:1px solid var(--brd);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.topbar-left{display:flex;align-items:center;gap:10px}
-.team-badge{width:32px;height:32px;background:var(--grn);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem}
-.athlete-name{font-weight:700;font-size:0.95rem}
-.athlete-sub{font-size:0.72rem;color:var(--txt2)}
-.topbar-date{font-size:0.75rem;color:var(--txt3)}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--brd);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px}
+.topbar-left{display:flex;align-items:center;gap:10px;min-width:0}
+.team-badge{width:32px;height:32px;background:var(--grn);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.athlete-name{font-weight:700;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.athlete-sub{font-size:.72rem;color:var(--txt2)}
+.topbar-date{font-size:.75rem;color:var(--txt3);text-align:right}
+.logout{font-size:.72rem;color:var(--txt2);background:none;border:none;cursor:pointer;padding:4px 0;float:right}
 .content{flex:1;overflow:hidden;position:relative}
 .panel{position:absolute;inset:0;overflow-y:auto;padding:16px 16px calc(16px + var(--safe-bot));display:none;flex-direction:column;gap:14px}
 .panel.active{display:flex}
-/* ── BOTTOM NAV ── */
 .nav{background:var(--bg2);border-top:1px solid var(--brd);display:flex;flex-shrink:0;padding-bottom:var(--safe-bot)}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;gap:3px;cursor:pointer;transition:color .15s;border:none;background:transparent;color:var(--txt3);font-size:0.65rem}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;gap:3px;cursor:pointer;transition:color .15s;border:none;background:transparent;color:var(--txt3);font-size:.68rem}
 .nav-btn.active{color:var(--grn)}
 .nav-btn .ico{font-size:1.3rem}
-/* ── CARDS ── */
 .card{background:var(--bg2);border:1px solid var(--brd);border-radius:14px;padding:14px}
-.card-title{font-size:0.8rem;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
-/* ── LOGIN ── */
-.login-wrap{position:fixed;inset:0;background:var(--bg1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;z-index:100}
-.login-logo{font-size:3rem}
+.card-title{font-size:.8rem;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+.page-title{color:var(--grn);font-size:.9rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.login-wrap{position:fixed;inset:0;background:var(--bg1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;z-index:100}
+.login-box{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px}
+.login-logo{font-size:3rem;text-align:center}
 .login-title{font-size:1.4rem;font-weight:800;text-align:center}
-.login-sub{font-size:0.85rem;color:var(--txt2);text-align:center}
-.login-wrap select,.login-wrap input{width:100%;background:var(--bg2);border:1px solid var(--brd);border-radius:10px;padding:12px 14px;color:var(--txt1);font-size:0.95rem;appearance:none;-webkit-appearance:none;text-align:center}
-.btn{background:var(--grn);color:#fff;border:none;border-radius:10px;padding:12px 20px;font-size:0.9rem;font-weight:600;cursor:pointer;transition:opacity .15s}
+.login-sub{font-size:.85rem;color:var(--txt2);text-align:center}
+.login-wrap input{width:100%;background:var(--bg2);border:1px solid var(--brd);border-radius:10px;padding:12px 14px;color:var(--txt1);font-size:1rem;text-align:center}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--grn);outline-offset:1px}
+.btn{background:var(--grn);color:#fff;border:none;border-radius:10px;padding:12px 20px;font-size:.9rem;font-weight:600;cursor:pointer;transition:opacity .15s}
 .btn:active{opacity:.8}
+.btn:disabled{opacity:.5;cursor:default}
 .btn.outline{background:transparent;border:1px solid var(--brd);color:var(--txt1)}
-.btn.red{background:var(--red)}
+.btn.outline.sel{border-color:var(--grn);color:var(--grn);background:#10B98115}
 .btn.full{width:100%}
-/* ── MACROS ── */
-.macro-row{display:flex;gap:8px;margin-bottom:4px}
+.btn.sm{padding:6px 10px;font-size:.8rem;border-radius:8px}
+.macro-row{display:flex;gap:8px}
 .macro-box{flex:1;background:var(--bg3);border-radius:10px;padding:10px 8px;text-align:center}
 .macro-val{font-size:1.2rem;font-weight:800}
-.macro-lbl{font-size:0.65rem;color:var(--txt2);margin-top:2px}
-.macro-unit{font-size:0.7rem;color:var(--txt3)}
-/* ── PROGRESS BAR ── */
+.macro-lbl{font-size:.68rem;color:var(--txt2);margin-top:2px}
+.macro-unit{font-size:.7rem;color:var(--txt3)}
 .prog-row{margin-bottom:10px}
-.prog-label{display:flex;justify-content:space-between;font-size:0.78rem;color:var(--txt2);margin-bottom:4px}
+.prog-label{display:flex;justify-content:space-between;font-size:.78rem;color:var(--txt2);margin-bottom:4px}
 .prog-track{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden}
-.prog-fill{height:100%;border-radius:4px;transition:width .4s ease}
-/* ── MEAL LIST ── */
+.prog-fill{height:100%;border-radius:4px;transition:width .4s ease;width:0}
 .meal-item{background:var(--bg3);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.meal-item-info{flex:1}
-.meal-item-name{font-size:0.85rem;font-weight:600}
-.meal-item-meta{font-size:0.72rem;color:var(--txt2);margin-top:2px}
-.meal-item-kcal{font-size:0.85rem;font-weight:700;color:var(--yel);white-space:nowrap}
-.meal-time-badge{font-size:0.7rem;background:var(--bg1);border-radius:6px;padding:3px 7px;color:var(--txt3)}
-/* ── PHOTO UPLOAD ── */
-.photo-drop{border:2px dashed var(--brd);border-radius:14px;padding:28px 16px;text-align:center;position:relative;cursor:pointer}
-.photo-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.photo-drop.has-image{border-style:solid;border-color:var(--grn)}
-.photo-drop img{max-width:100%;max-height:180px;border-radius:10px;object-fit:contain}
-/* ── WATER & SLEEP ── */
+.meal-item-info{flex:1;min-width:0}
+.meal-item-name{font-size:.85rem;font-weight:600}
+.meal-item-meta{font-size:.72rem;color:var(--txt2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meal-item-kcal{font-size:.85rem;font-weight:700;color:var(--yel);white-space:nowrap}
+.meal-time-badge{font-size:.7rem;background:var(--bg1);border-radius:6px;padding:3px 7px;color:var(--txt2);display:inline-block;margin-top:3px}
+.icon-btn{background:none;border:none;color:var(--txt3);cursor:pointer;font-size:1rem;padding:6px;line-height:1}
+.photo-drop{border:2px dashed var(--brd);border-radius:14px;padding:24px 16px;text-align:center;cursor:pointer;display:block}
+.photo-drop.has-image{border-style:solid;border-color:var(--grn);padding:10px}
+.photo-drop img{max-width:100%;max-height:200px;border-radius:10px;object-fit:contain}
+.field{background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:8px;color:var(--txt1);font-size:.85rem;width:100%}
+.food-row{display:flex;align-items:center;gap:6px;padding:8px 0;border-bottom:1px solid var(--brd)}
+.food-row:last-child{border-bottom:none}
+.manual-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
+.manual-grid label{font-size:.65rem;color:var(--txt3);display:block;margin-bottom:2px;text-align:center}
+.manual-grid input{text-align:center;padding:6px 4px}
 .water-track{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:8px 0}
 .water-glass{width:44px;height:44px;border-radius:10px;border:2px solid var(--brd);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.3rem;transition:all .15s}
-.water-glass.filled{background:#0EA5E9;border-color:#0EA5E9}
-.sleep-input{width:100%;background:var(--bg3);border:1px solid var(--brd);border-radius:10px;padding:10px;color:var(--txt1);font-size:1.1rem;text-align:center}
-/* ── STAT CARDS ── */
+.water-glass.filled{background:var(--wat);border-color:var(--wat)}
 .stat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .stat-card{background:var(--bg3);border-radius:12px;padding:14px;text-align:center}
 .stat-num{font-size:1.6rem;font-weight:800}
-.stat-lbl{font-size:0.72rem;color:var(--txt2);margin-top:3px}
-/* ── WEEKLY CHART ── */
-.week-bars{display:flex;align-items:flex-end;gap:4px;height:80px}
-.week-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.stat-lbl{font-size:.72rem;color:var(--txt2);margin-top:3px}
+.week-bars{display:flex;align-items:flex-end;gap:4px;height:110px}
+.week-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;height:100%}
 .week-bar{width:100%;border-radius:4px 4px 0 0;min-height:4px;transition:height .3s}
-.week-bar-lbl{font-size:0.6rem;color:var(--txt3)}
-/* ── BADGE / TAG ── */
-.badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:0.72rem;font-weight:600}
+.week-bar-lbl{font-size:.62rem;color:var(--txt3)}
+.week-bar-lbl.today{color:var(--grn);font-weight:700}
+.badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:.72rem;font-weight:600}
 .badge.grn{background:#10B98122;color:#10B981}
-.badge.yel{background:#F59E0B22;color:#F59E0B}
-.badge.red{background:#EF444422;color:#EF4444}
-/* ── SECTION HEADER ── */
-.sec-hdr{font-size:0.8rem;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
-/* ── NOTIFICATION TOAST ── */
-.toast{position:fixed;bottom:calc(70px + var(--safe-bot));left:50%;transform:translateX(-50%) translateY(20px);background:#1E293B;border:1px solid var(--grn);border-radius:10px;padding:10px 18px;font-size:0.85rem;color:var(--txt1);opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:999}
+.sec-hdr{font-size:.8rem;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.empty{text-align:center;color:var(--txt3);padding:20px;font-size:.85rem;line-height:1.6}
+.link{color:var(--grn);cursor:pointer;background:none;border:none;font-size:inherit}
+.toast{position:fixed;bottom:calc(76px + var(--safe-bot));left:50%;transform:translateX(-50%) translateY(20px);background:#1E293B;border:1px solid var(--grn);border-radius:10px;padding:10px 18px;font-size:.85rem;color:var(--txt1);opacity:0;transition:all .3s;pointer-events:none;width:max-content;max-width:calc(100vw - 32px);text-align:center;z-index:999}
+.toast.err{border-color:var(--red)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-/* ── LOADING ── */
-.loading-overlay{position:fixed;inset:0;background:#0F172Acc;display:flex;align-items:center;justify-content:center;z-index:200;flex-direction:column;gap:12px;display:none}
-.spinner{width:40px;height:40px;border:4px solid var(--bg3);border-top-color:var(--grn);border-radius:50%;animation:spin 0.8s linear infinite}
+.loading-overlay{position:fixed;inset:0;background:#0F172Acc;align-items:center;justify-content:center;z-index:200;flex-direction:column;gap:12px;display:none}
+.spinner{width:40px;height:40px;border:4px solid var(--bg3);border-top-color:var(--grn);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
+<!-- LOGIN -->
 <div class="login-wrap" id="loginWrap">
-  <div class="login-logo">⚽</div>
-  <div class="login-title">Sporcu Paneli</div>
-  <div class="login-sub">Takım beslenme takip sistemi</div>
-
-  <input type="text" id="loginName" placeholder="Ad Soyad (örn: Ahmet Yılmaz)"
-         autocomplete="off" autocorrect="off" spellcheck="false"
-         style="margin-top:8px" autocapitalize="words">
-
-  <input type="password" id="loginPin" placeholder="PIN (ilk girişte kendin belirle)"
-         maxlength="6" inputmode="numeric" style="margin-top:-8px">
-
-  <button class="btn full" onclick="doLogin()">Giriş Yap</button>
-  <div style="font-size:0.72rem;color:var(--txt3);text-align:center;line-height:1.5">
-    İlk girişte PIN'ini sen belirlersin.<br>Sonraki girişlerde aynı PIN'i kullanırsın.
-  </div>
-  <div id="loginError" style="font-size:0.8rem;color:var(--red);min-height:18px;text-align:center"></div>
+  <form class="login-box" onsubmit="doLogin(event)">
+    <div class="login-logo">⚽</div>
+    <div class="login-title">Sporcu Paneli</div>
+    <div class="login-sub">Takım beslenme takip sistemi</div>
+    <input type="text" id="loginName" placeholder="Ad Soyad (örn: Ahmet Yılmaz)" autocomplete="name" autocorrect="off" spellcheck="false" autocapitalize="words" aria-label="Ad Soyad">
+    <input type="password" id="loginPin" placeholder="PIN (4-6 rakam)" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password" aria-label="PIN">
+    <button class="btn full" type="submit">Giriş Yap</button>
+    <div style="font-size:.75rem;color:var(--txt3);text-align:center;line-height:1.5">
+      İlk girişte PIN'ini sen belirlersin.<br>Sonraki girişlerde aynı PIN'i kullanırsın.
+    </div>
+    <div id="loginError" role="alert" style="font-size:.82rem;color:var(--red);min-height:18px;text-align:center"></div>
+  </form>
 </div>
 
-<!-- LOADING OVERLAY -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
-  <div style="font-size:0.85rem;color:var(--txt2)" id="loadingMsg">Yükleniyor...</div>
+  <div style="font-size:.85rem;color:var(--txt2)" id="loadingMsg">Yükleniyor...</div>
 </div>
-
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status"></div>
 
 <!-- MAIN APP -->
 <div class="app" id="mainApp" style="display:none">
-
-  <!-- TOP BAR -->
   <div class="topbar">
     <div class="topbar-left">
       <div class="team-badge">⚽</div>
-      <div>
+      <div style="min-width:0">
         <div class="athlete-name" id="displayName">Sporcu</div>
         <div class="athlete-sub" id="displayPos">—</div>
       </div>
     </div>
     <div>
       <div class="topbar-date" id="displayDate"></div>
-      <div style="font-size:0.65rem;color:var(--txt3);text-align:right;cursor:pointer" onclick="doLogout()">Çıkış</div>
+      <button class="logout" onclick="doLogout()">Çıkış</button>
     </div>
   </div>
 
-  <!-- CONTENT -->
   <div class="content">
-
-    <!-- PANEL: BUGÜN -->
+    <!-- BUGÜN -->
     <div class="panel active" id="panel-today">
-      <div class="card-title" style="color:var(--grn);font-size:0.9rem">Bugünün Özeti</div>
-
-      <!-- Kalori Progress -->
+      <div class="page-title">Bugünün Özeti</div>
       <div class="card">
         <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:12px">
           <span style="font-size:2rem;font-weight:800" id="todayKcal">0</span>
-          <span style="color:var(--txt2);font-size:0.85rem">/ <span id="targetKcal">—</span> kcal</span>
+          <span style="color:var(--txt2);font-size:.85rem">/ <span id="targetKcal">—</span> kcal</span>
           <span class="badge grn" id="kcalBadge" style="margin-left:auto">%0</span>
         </div>
-        <div class="prog-track">
-          <div class="prog-fill" id="kcalBar" style="width:0%;background:var(--grn)"></div>
-        </div>
+        <div class="prog-track"><div class="prog-fill" id="kcalBar" style="background:var(--grn)"></div></div>
       </div>
-
-      <!-- Makrolar -->
       <div class="macro-row">
-        <div class="macro-box">
-          <div class="macro-val" id="todayProt" style="color:var(--blu)">0</div>
-          <div class="macro-unit">g</div>
-          <div class="macro-lbl">Protein</div>
-        </div>
-        <div class="macro-box">
-          <div class="macro-val" id="todayKh" style="color:var(--yel)">0</div>
-          <div class="macro-unit">g</div>
-          <div class="macro-lbl">Karbonhidrat</div>
-        </div>
-        <div class="macro-box">
-          <div class="macro-val" id="todayYag" style="color:var(--pur)">0</div>
-          <div class="macro-unit">g</div>
-          <div class="macro-lbl">Yağ</div>
-        </div>
+        <div class="macro-box"><div class="macro-val" id="todayProt" style="color:var(--blu)">0</div><div class="macro-unit">g</div><div class="macro-lbl">Protein</div></div>
+        <div class="macro-box"><div class="macro-val" id="todayKh" style="color:var(--yel)">0</div><div class="macro-unit">g</div><div class="macro-lbl">Karbonhidrat</div></div>
+        <div class="macro-box"><div class="macro-val" id="todayYag" style="color:var(--pur)">0</div><div class="macro-unit">g</div><div class="macro-lbl">Yağ</div></div>
       </div>
-
-      <!-- Makro Hedef Progress Barları -->
       <div>
-        <div class="prog-row" style="margin-bottom:6px">
-          <div class="prog-label">
-            <span style="color:var(--blu)">Protein</span>
-            <span id="protLabel" style="color:var(--txt3)">— g</span>
-          </div>
-          <div class="prog-track" style="height:6px"><div class="prog-fill" id="protBar" style="width:0%;background:var(--blu)"></div></div>
-        </div>
-        <div class="prog-row" style="margin-bottom:6px">
-          <div class="prog-label">
-            <span style="color:var(--yel)">Karbonhidrat</span>
-            <span id="khLabel" style="color:var(--txt3)">— g</span>
-          </div>
-          <div class="prog-track" style="height:6px"><div class="prog-fill" id="khBar" style="width:0%;background:var(--yel)"></div></div>
-        </div>
-        <div class="prog-row">
-          <div class="prog-label">
-            <span style="color:var(--pur)">Yağ</span>
-            <span id="yagLabel" style="color:var(--txt3)">— g</span>
-          </div>
-          <div class="prog-track" style="height:6px"><div class="prog-fill" id="yagBar" style="width:0%;background:var(--pur)"></div></div>
-        </div>
+        <div class="prog-row"><div class="prog-label"><span style="color:var(--blu)">Protein</span><span id="protLabel">— g</span></div><div class="prog-track" style="height:6px"><div class="prog-fill" id="protBar" style="background:var(--blu)"></div></div></div>
+        <div class="prog-row"><div class="prog-label"><span style="color:var(--yel)">Karbonhidrat</span><span id="khLabel">— g</span></div><div class="prog-track" style="height:6px"><div class="prog-fill" id="khBar" style="background:var(--yel)"></div></div></div>
+        <div class="prog-row"><div class="prog-label"><span style="color:var(--pur)">Yağ</span><span id="yagLabel">— g</span></div><div class="prog-track" style="height:6px"><div class="prog-fill" id="yagBar" style="background:var(--pur)"></div></div></div>
       </div>
-
-      <!-- Öğünler -->
       <div>
-        <div class="sec-hdr">
-          Bugünün Öğünleri
-          <button class="badge grn" style="cursor:pointer;border:none" onclick="switchPanel('photo')">+ Öğün Ekle</button>
-        </div>
-        <div id="todayMealList">
-          <div style="text-align:center;color:var(--txt3);padding:20px;font-size:0.85rem">
-            Henüz öğün eklenmedi.<br>
-            <span style="color:var(--grn);cursor:pointer" onclick="switchPanel('photo')">📷 Fotoğraf ile ekle →</span>
-          </div>
-        </div>
+        <div class="sec-hdr">Bugünün Öğünleri <button class="badge grn" style="cursor:pointer;border:none" onclick="switchPanel('photo')">+ Öğün Ekle</button></div>
+        <div id="todayMealList"><div class="empty">Yükleniyor...</div></div>
       </div>
-
-      <!-- Su -->
       <div class="card">
         <div class="card-title">💧 Su Tüketimi</div>
         <div style="text-align:center;margin-bottom:8px">
-          <span style="font-size:1.6rem;font-weight:800;color:#0EA5E9" id="todayWaterVal">0</span>
-          <span style="color:var(--txt2);font-size:0.85rem"> / <span id="waterTarget">2500</span> ml</span>
+          <span style="font-size:1.6rem;font-weight:800;color:var(--wat)" id="todayWaterVal">0</span>
+          <span style="color:var(--txt2);font-size:.85rem"> / <span id="waterTarget">2500</span> ml</span>
         </div>
-        <div class="prog-track">
-          <div class="prog-fill" id="waterBar" style="width:0%;background:#0EA5E9"></div>
-        </div>
+        <div class="prog-track"><div class="prog-fill" id="waterBar" style="background:var(--wat)"></div></div>
       </div>
     </div>
 
-    <!-- PANEL: FOTOĞRAF -->
+    <!-- ÖĞÜN EKLE -->
     <div class="panel" id="panel-photo">
-      <div class="card-title" style="color:var(--grn);font-size:0.9rem">Öğün Ekle</div>
-
-      <!-- Öğün Tipi -->
+      <div class="page-title">Öğün Ekle</div>
       <div class="card">
         <div class="card-title">Öğün Zamanı</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <button class="btn outline ogün-btn active-btn" data-v="Kahvaltı" onclick="selectOgun(this,'Kahvaltı')">🌅 Kahvaltı</button>
-          <button class="btn outline ogün-btn" data-v="Öğle Yemeği" onclick="selectOgun(this,'Öğle Yemeği')">☀️ Öğle</button>
-          <button class="btn outline ogün-btn" data-v="Akşam Yemeği" onclick="selectOgun(this,'Akşam Yemeği')">🌙 Akşam</button>
-          <button class="btn outline ogün-btn" data-v="Ara Öğün" onclick="selectOgun(this,'Ara Öğün')">🍎 Ara Öğün</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="ogunBtns">
+          <button class="btn outline ogun-btn sel" data-v="Kahvaltı" onclick="selectOgun(this)">🌅 Kahvaltı</button>
+          <button class="btn outline ogun-btn" data-v="Ara Öğün" onclick="selectOgun(this)">🍎 Ara Öğün</button>
+          <button class="btn outline ogun-btn" data-v="Öğle Yemeği" onclick="selectOgun(this)">☀️ Öğle</button>
+          <button class="btn outline ogun-btn" data-v="Akşam Yemeği" onclick="selectOgun(this)">🌙 Akşam</button>
+          <button class="btn outline ogun-btn" data-v="Gece Öğünü" onclick="selectOgun(this)" style="grid-column:1/-1">🌃 Gece Öğünü</button>
         </div>
       </div>
 
-      <!-- Fotoğraf -->
       <div class="card">
-        <div class="card-title">Fotoğraf</div>
-        <div class="photo-drop" id="photoDropArea" onclick="document.getElementById('photoInput').click()">
-          <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhoto(event)">
+        <div class="card-title">📷 Fotoğrafla Ekle (isteğe bağlı)</div>
+        <label class="photo-drop" id="photoDropArea">
+          <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhoto(event)" style="display:none">
           <div id="photoPlaceholder">
             <div style="font-size:2.5rem;margin-bottom:8px">📷</div>
-            <div style="font-size:0.85rem;color:var(--txt2)">Fotoğraf çek veya seç</div>
-            <div style="font-size:0.72rem;color:var(--txt3);margin-top:4px">Kamera veya galeri</div>
+            <div style="font-size:.85rem;color:var(--txt2)">Fotoğraf çek veya seç</div>
           </div>
-          <div id="photoPreview" style="display:none">
-            <img id="photoImg" alt="Yemek fotoğrafı">
+          <img id="photoImg" alt="Yemek fotoğrafı" style="display:none">
+        </label>
+        <div id="analyzeSection" style="display:none;margin-top:10px;display:none;gap:8px">
+          <button class="btn" style="flex:1" id="analyzeBtn" onclick="analyzePhoto()">🤖 AI ile Analiz Et</button>
+          <button class="btn outline" onclick="clearPhoto()">Kaldır</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🍽️ Besinler</div>
+        <div id="foodList"><div class="empty" style="padding:8px">Fotoğrafı analiz edin veya aşağıdan elle ekleyin.</div></div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--brd)">
+          <input type="text" id="manuelAd" class="field" placeholder="Besin adı (ör. haşlanmış yumurta)" autocomplete="off">
+          <div class="manual-grid">
+            <div><label for="manuelGram">Gram</label><input type="number" id="manuelGram" class="field" min="1" max="2000" value="100" inputmode="decimal"></div>
+            <div><label for="manuelKcal">Kcal</label><input type="number" id="manuelKcal" class="field" min="0" max="5000" inputmode="decimal"></div>
+            <div><label for="manuelP">Protein</label><input type="number" id="manuelP" class="field" min="0" max="500" inputmode="decimal"></div>
+            <div><label for="manuelKh">KH</label><input type="number" id="manuelKh" class="field" min="0" max="500" inputmode="decimal"></div>
+          </div>
+          <div class="manual-grid" style="grid-template-columns:1fr 3fr">
+            <div><label for="manuelY">Yağ</label><input type="number" id="manuelY" class="field" min="0" max="500" inputmode="decimal"></div>
+            <div style="display:flex;align-items:flex-end"><button class="btn sm" style="width:100%;padding:8px" onclick="manuelEkle()">+ Listeye Ekle</button></div>
           </div>
         </div>
       </div>
 
-      <!-- AI Analiz -->
-      <div id="analyzeSection" style="display:none">
-        <button class="btn full" id="analyzeBtn" onclick="analyzePhoto()">🤖 AI ile Analiz Et</button>
-      </div>
-
-      <!-- AI Sonuçları -->
-      <div id="aiResults" style="display:none" class="card">
-        <div class="card-title">Tespit Edilen Besinler</div>
-        <div id="aiResultsList"></div>
-
-        <!-- Manuel ekleme satırı -->
-        <div style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <input type="text" id="manuelAd" placeholder="Besin adı (ör. ekmek)" autocomplete="off"
-                 style="flex:2;min-width:100px;background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:5px 8px;color:var(--txt1);font-size:0.8rem">
-          <input type="number" id="manuelGram" placeholder="g" min="1" max="2000" value="100"
-                 style="width:56px;background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:5px;text-align:center;color:var(--txt1);font-size:0.8rem">
-          <input type="number" id="manuelKcal" placeholder="kcal" min="0" max="9999"
-                 style="width:62px;background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:5px;text-align:center;color:var(--txt1);font-size:0.8rem">
-          <button class="btn" style="padding:5px 10px;font-size:0.8rem" onclick="manuelEkle()">+ Ekle</button>
-        </div>
-
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--brd);display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:0.85rem;color:var(--txt2)">Toplam: <strong id="aiTotalKcal" style="color:var(--yel)">0 kcal</strong></span>
-          <button class="btn" onclick="submitMeal()" id="submitBtn">✅ Kaydet</button>
-        </div>
-      </div>
-
-      <!-- Notlar -->
-      <div class="card" id="notesSection" style="display:none">
+      <div class="card">
         <div class="card-title">Not (opsiyonel)</div>
-        <textarea id="mealNote" placeholder="Diyetisyeninize not..." rows="2"
-          style="width:100%;background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:8px;color:var(--txt1);font-size:0.85rem;resize:none"></textarea>
+        <textarea id="mealNote" class="field" placeholder="Diyetisyeninize not..." rows="2" maxlength="500" style="resize:none"></textarea>
       </div>
 
-      <!-- API Key (gizli - artık gömülü, UI gösterilmiyor) -->
-      <div style="display:none">
-        <input type="password" id="spApiKey" autocomplete="off">
-        <div id="spApiStatus"></div>
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div style="font-size:.85rem;color:var(--txt2)">Toplam<br><strong id="foodTotal" style="color:var(--yel);font-size:1rem">0 kcal</strong></div>
+        <button class="btn" onclick="submitMeal()" id="submitBtn">✅ Öğünü Kaydet</button>
       </div>
     </div>
 
-    <!-- PANEL: SU & UYKU -->
+    <!-- SU & UYKU -->
     <div class="panel" id="panel-water">
-      <div class="card-title" style="color:var(--grn);font-size:0.9rem">Su & Uyku Takibi</div>
-
+      <div class="page-title">Su & Uyku Takibi</div>
       <div class="card">
-        <div class="card-title">💧 Su — <span id="waterMlDisplay">0</span> ml</div>
+        <div class="card-title">💧 Bugün Su — <span id="waterMlDisplay">0</span> ml</div>
         <div class="water-track" id="waterGlasses"></div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
-          <button class="btn outline" style="flex:1;padding:8px" onclick="adjustWater(-250)">-250</button>
-          <span style="font-size:0.8rem;color:var(--txt2)">ml</span>
+          <button class="btn outline" style="flex:1;padding:8px" onclick="adjustWater(-250)">−250</button>
+          <span style="font-size:.8rem;color:var(--txt2)">ml</span>
           <button class="btn" style="flex:1;padding:8px" onclick="adjustWater(250)">+250</button>
         </div>
-        <button class="btn full outline" style="margin-top:8px" onclick="saveWater()">💾 Kaydet</button>
+        <button class="btn full outline" style="margin-top:8px" onclick="saveWater()" id="saveWaterBtn">💾 Kaydet</button>
+        <div id="waterUnsaved" style="display:none;font-size:.72rem;color:var(--yel);text-align:center;margin-top:6px">Kaydedilmemiş değişiklik var</div>
       </div>
-
       <div class="card">
         <div class="card-title">😴 Dün Gece Uyku</div>
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-          <input type="number" class="sleep-input" id="sleepHours" value="7" min="0" max="12" step="0.5"
-                 style="width:80px">
-          <span style="font-size:0.9rem;color:var(--txt2)">saat</span>
+          <input type="number" class="field" id="sleepHours" value="7" min="0" max="16" step="0.5" style="width:90px;font-size:1.1rem;text-align:center" inputmode="decimal" aria-label="Uyku saati">
+          <span style="font-size:.9rem;color:var(--txt2)">saat</span>
         </div>
         <div style="display:flex;gap:8px">
-          <select id="sleepQuality" style="flex:1;background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:8px;color:var(--txt1);font-size:0.85rem">
+          <select id="sleepQuality" class="field" style="flex:1" aria-label="Uyku kalitesi">
             <option value="iyi">😊 İyi</option>
             <option value="orta">😐 Orta</option>
-            <option value="kotu">😴 Kötü</option>
+            <option value="kötü">😫 Kötü</option>
           </select>
           <button class="btn" onclick="saveSleep()">💾 Kaydet</button>
         </div>
       </div>
-
-      <!-- Haftalık özet -->
       <div class="card">
         <div class="card-title">📅 Bu Hafta</div>
         <div class="stat-row">
-          <div class="stat-card">
-            <div class="stat-num" id="weekAvgWater" style="color:#0EA5E9">—</div>
-            <div class="stat-lbl">Ort. Su (ml)</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-num" id="weekAvgSleep" style="color:var(--pur)">—</div>
-            <div class="stat-lbl">Ort. Uyku (sa)</div>
-          </div>
+          <div class="stat-card"><div class="stat-num" id="weekAvgWater" style="color:var(--wat)">—</div><div class="stat-lbl">Ort. Su (ml)</div></div>
+          <div class="stat-card"><div class="stat-num" id="weekAvgSleep" style="color:var(--pur)">—</div><div class="stat-lbl">Ort. Uyku (sa)</div></div>
         </div>
       </div>
     </div>
 
-    <!-- PANEL: RAPOR -->
+    <!-- RAPOR -->
     <div class="panel" id="panel-report">
-      <div class="card-title" style="color:var(--grn);font-size:0.9rem">Raporlarim</div>
-
-      <!-- Hedefler -->
+      <div class="page-title">Raporum</div>
+      <div class="card" id="dietNoteCard" style="display:none;border-color:var(--grn)">
+        <div class="card-title">💬 Diyetisyen Notu</div>
+        <div id="dietNoteText" style="font-size:.88rem;line-height:1.6;white-space:pre-line"></div>
+      </div>
       <div class="card">
         <div class="card-title">🎯 Hedeflerim</div>
-        <div id="targetsList">
-          <div style="color:var(--txt3);font-size:0.85rem;text-align:center;padding:12px">Yükleniyor...</div>
-        </div>
+        <div id="targetsList"></div>
       </div>
-
-      <!-- Haftalık Kalori Grafiği -->
       <div class="card">
-        <div class="card-title">📊 Haftalık Kalori</div>
+        <div class="card-title">📊 Bu Haftanın Kalorisi</div>
         <div class="week-bars" id="weekCalBars"></div>
-        <div style="display:flex;justify-content:space-between;margin-top:4px">
-          <span style="font-size:0.65rem;color:var(--txt3)">Pzt</span>
-          <span style="font-size:0.65rem;color:var(--txt3)">Sal</span>
-          <span style="font-size:0.65rem;color:var(--txt3)">Çar</span>
-          <span style="font-size:0.65rem;color:var(--txt3)">Per</span>
-          <span style="font-size:0.65rem;color:var(--txt3)">Cum</span>
-          <span style="font-size:0.65rem;color:var(--txt3)">Cmt</span>
-          <span style="font-size:0.65rem;color:var(--txt3)">Paz</span>
+        <div style="display:flex;gap:10px;justify-content:center;font-size:.65rem;color:var(--txt3);margin-top:8px">
+          <span><span style="color:var(--yel)">■</span> Düşük</span><span><span style="color:var(--grn)">■</span> Hedefte</span><span><span style="color:var(--red)">■</span> Fazla</span>
         </div>
       </div>
-
-      <!-- Haftalık özet -->
       <div class="card">
         <div class="card-title">Bu Hafta Özet</div>
         <div class="stat-row">
-          <div class="stat-card">
-            <div class="stat-num" id="weekMealCount" style="color:var(--grn)">0</div>
-            <div class="stat-lbl">Öğün Girildi</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-num" id="weekAvgKcal" style="color:var(--yel)">0</div>
-            <div class="stat-lbl">Ort. Kalori</div>
-          </div>
+          <div class="stat-card"><div class="stat-num" id="weekMealCount" style="color:var(--grn)">0</div><div class="stat-lbl">Öğün Girildi</div></div>
+          <div class="stat-card"><div class="stat-num" id="weekAvgKcal" style="color:var(--yel)">—</div><div class="stat-lbl">Ort. Kalori / gün</div></div>
         </div>
         <div class="stat-row" style="margin-top:8px">
-          <div class="stat-card">
-            <div class="stat-num" id="weekProtPct" style="color:var(--blu)">0%</div>
-            <div class="stat-lbl">Protein Hedef</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-num" id="weekWaterPct" style="color:#0EA5E9">0%</div>
-            <div class="stat-lbl">Su Hedef</div>
-          </div>
+          <div class="stat-card"><div class="stat-num" id="weekProtPct" style="color:var(--blu)">—</div><div class="stat-lbl">Protein Hedefi</div></div>
+          <div class="stat-card"><div class="stat-num" id="weekWaterPct" style="color:var(--wat)">—</div><div class="stat-lbl">Su Hedefi</div></div>
         </div>
-      </div>
-
-      <!-- Diyetisyen notu -->
-      <div class="card" id="dietNoteCard" style="display:none">
-        <div class="card-title">💬 Diyetisyen Notu</div>
-        <div id="dietNoteText" style="font-size:0.85rem;color:var(--txt1);line-height:1.6"></div>
+        <div style="font-size:.7rem;color:var(--txt3);margin-top:8px;text-align:center">Ortalamalar yalnızca kayıt girilen günlerden hesaplanır.</div>
       </div>
     </div>
+  </div>
 
-  </div><!-- /content -->
-
-  <!-- BOTTOM NAV -->
   <nav class="nav">
-    <button class="nav-btn active" id="nav-today" onclick="switchPanel('today')">
-      <span class="ico">🏠</span>Bugün
-    </button>
-    <button class="nav-btn" id="nav-photo" onclick="switchPanel('photo')">
-      <span class="ico">📷</span>Öğün Ekle
-    </button>
-    <button class="nav-btn" id="nav-water" onclick="switchPanel('water')">
-      <span class="ico">💧</span>Su & Uyku
-    </button>
-    <button class="nav-btn" id="nav-report" onclick="switchPanel('report')">
-      <span class="ico">📊</span>Raporum
-    </button>
+    <button class="nav-btn active" id="nav-today" onclick="switchPanel('today')"><span class="ico">🏠</span>Bugün</button>
+    <button class="nav-btn" id="nav-photo" onclick="switchPanel('photo')"><span class="ico">📷</span>Öğün Ekle</button>
+    <button class="nav-btn" id="nav-water" onclick="switchPanel('water')"><span class="ico">💧</span>Su & Uyku</button>
+    <button class="nav-btn" id="nav-report" onclick="switchPanel('report')"><span class="ico">📊</span>Raporum</button>
   </nav>
-
-</div><!-- /app -->
+</div>
 
 <script>
 // ===== CONFIG =====
 const API_URL = 'https://script.google.com/macros/s/AKfycbzITFfpC8EZ67uesNrH4P3Y3xhrq1UO0TvGSXyhsdSe6UgALG4m7rjY70mGawuaBSv5MA/exec';
 const TEAM_SECRET = 'YA2026';
+const SESSION_KEY = 'sp_session_v2';
+const OGUN_EMOJI = { 'Kahvaltı':'🌅', 'Ara Öğün':'🍎', 'Öğle Yemeği':'☀️', 'Akşam Yemeği':'🌙', 'Gece Öğünü':'🌃' };
 
 // ===== STATE =====
-let athlete = null; // { id, name, pos, pin, targets: {...} }
+let athlete = null;        // { id, name, pos, token, targets, note }
 let todayMeals = [];
-let waterMl = 0;
+let waterMl = 0, waterSaved = 0;
 let selectedOgun = 'Kahvaltı';
-let photoData = null; // base64
-let photoMime = 'image/jpeg';
-let aiDetected = [];
+let photoData = null, photoMime = 'image/jpeg';
+let foods = [];            // [{name, grams, base:{grams,kcal,protein,kh,yag}}]
 
 // ===== UTILS =====
-function today() { return new Date().toISOString().slice(0,10); }
-function fmt(n, d=1) { return (n||0).toFixed(d); }
-function kcalFromNutr(n) { return n?.kJ ? Math.round(n.kJ / 4.184) : null; }
+const pad = n => String(n).padStart(2, '0');
+function isoDate(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }  // yerel saat (UTC değil)
+function today() { return isoDate(new Date()); }
+function weekRange() {
+  const d = new Date(); const day = (d.getDay() + 6) % 7;      // Pzt = 0
+  const mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() - day);
+  const days = [...Array(7)].map((_, i) => isoDate(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + i)));
+  return { from: days[0], to: days[6], days, todayIdx: day };
+}
+const n = v => { const x = parseFloat(v); return isFinite(x) ? x : 0; };
+const r1 = v => Math.round(v * 10) / 10;
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function normName(s) { return String(s || '').toLocaleLowerCase('tr-TR').normalize('NFC').replace(/\s+/g, ' ').trim(); }
 
-function showToast(msg, dur=2500) {
+let _toastT = null;
+function showToast(msg, err = false, dur = 2800) {
   const t = document.getElementById('toast');
   t.textContent = msg;
+  t.classList.toggle('err', !!err);
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), dur);
+  clearTimeout(_toastT);
+  _toastT = setTimeout(() => t.classList.remove('show'), err ? 4500 : dur);
 }
-
-function setLoading(show, msg='') {
-  const o = document.getElementById('loadingOverlay');
-  o.style.display = show ? 'flex' : 'none';
-  if(msg) document.getElementById('loadingMsg').textContent = msg;
+function setLoading(show, msg = '') {
+  document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+  if (msg) document.getElementById('loadingMsg').textContent = msg;
 }
-
 function switchPanel(id) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-' + id).classList.add('active');
-  document.getElementById('nav-' + id).classList.add('active');
-  if(id === 'today') refreshToday();
-  if(id === 'report') loadReport();
-  if(id === 'water') loadWaterPanel();
-}
-
-// ===== LOGIN =====
-async function initLogin() {
-  // Sporcu listesi çekilmiyor — gizlilik için ad giriş alanı kullanılıyor
-  setLoading(false);
-}
-
-async function doLogin() {
-  const name  = document.getElementById('loginName').value.trim();
-  const pin   = document.getElementById('loginPin').value.trim();
-  const errEl = document.getElementById('loginError');
-  errEl.textContent = '';
-
-  if (!name) { errEl.textContent = 'Adını gir'; return; }
-  if (!pin || pin.length < 4) { errEl.textContent = 'PIN en az 4 hane olmalı'; return; }
-
-  setLoading(true, 'Kontrol ediliyor...');
-  try {
-    // Adım 1: Sporcu listesini çek, ada göre eşleştir (dropdown gösterilmez)
-    const list = await callAPI({ action: 'getAthletes', secret: TEAM_SECRET });
-    if (!list.ok) { errEl.textContent = 'Sunucu hatası: ' + (list.error || JSON.stringify(list)); setLoading(false); return; }
-
-    const athletes = list.data || [];
-    const found = athletes.find(a =>
-      a.Ad && a.Ad.toLowerCase().trim() === name.toLowerCase().trim()
-    );
-    if (!found) {
-      errEl.textContent = 'Sporcu bulunamadı. Adını tam yaz (örn: Ahmet Yılmaz)';
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true, 'Giriş yapılıyor...');
-
-    // Adım 2: Bulunan ID ile PIN doğrula
-    const r = await postAPI({
-      action: 'athleteLogin',
-      secret: TEAM_SECRET,
-      athleteId: String(found.ID),
-      pin: pin
-    });
-
-    if (!r.ok) {
-      errEl.textContent = r.error || 'PIN hatalı';
-      setLoading(false);
-      return;
-    }
-
-    athlete = {
-      id:      r.data.athleteId,
-      name:    r.data.athleteName,
-      pos:     found.Mevki || '',
-      targets: r.data.targets || {}
-    };
-
-    try { localStorage.setItem('sp_session', JSON.stringify(athlete)); } catch(e){}
-    launchApp();
-  } catch(e) {
-    errEl.textContent = 'Hata: ' + (e.message || e);
-    console.error(e);
-  }
-  setLoading(false);
-}
-
-function doLogout() {
-  try { localStorage.removeItem('sp_session'); } catch(e){}
-  athlete = null;
-  todayMeals = [];
-  document.getElementById('mainApp').style.display = 'none';
-  document.getElementById('loginWrap').style.display = 'flex';
-  document.getElementById('loginPin').value = '';
-  document.getElementById('loginError').textContent = '';
-}
-
-function launchApp() {
-  document.getElementById('loginWrap').style.display = 'none';
-  document.getElementById('mainApp').style.display = 'flex';
-  document.getElementById('displayName').textContent = athlete.name;
-  document.getElementById('displayPos').textContent = athlete.pos || 'Futbolcu';
-  document.getElementById('displayDate').textContent = new Date().toLocaleDateString('tr', {day:'numeric',month:'long'});
-  document.getElementById('waterTarget').textContent = athlete.targets?.water || 2500;
-  loadApiKey();
-  refreshToday();
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + id));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.id === 'nav-' + id));
+  if (id === 'today') refreshToday();
+  if (id === 'report') loadReport();
+  if (id === 'water') loadWaterPanel();
 }
 
 // ===== API =====
-async function callAPI(params) {
+async function getAPI(params) {
   const url = new URL(API_URL);
-  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, typeof v === 'object' ? JSON.stringify(v) : v));
+  url.searchParams.set('secret', TEAM_SECRET);
+  Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v); });
   const r = await fetch(url.toString());
-  if(!r.ok) throw new Error('HTTP ' + r.status);
+  if (!r.ok) throw new Error('Sunucu hatası (HTTP ' + r.status + ')');
   return r.json();
 }
-
+// text/plain: application/json CORS ön-isteği tetikler, Apps Script bunu desteklemez
 async function postAPI(params) {
-  // text/plain kullanıyoruz — application/json CORS preflight tetikler,
-  // Google Apps Script OPTIONS isteğini desteklemez.
-  const r = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(params)
-  });
-  if(!r.ok) throw new Error('HTTP ' + r.status);
-  return r.json();
+  const body = Object.assign({ secret: TEAM_SECRET }, params);
+  if (athlete && !body.athleteId) { body.athleteId = athlete.id; }
+  if (athlete) body.token = athlete.token;
+  const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(body) });
+  if (!r.ok) throw new Error('Sunucu hatası (HTTP ' + r.status + ')');
+  const j = await r.json();
+  if (!j.ok && /Oturum geçersiz/.test(j.error || '')) { showToast(j.error, true); setTimeout(doLogout, 1500); }
+  return j;
+}
+
+// ===== LOGIN =====
+async function doLogin(ev) {
+  if (ev) ev.preventDefault();
+  const name = document.getElementById('loginName').value;
+  const pin = document.getElementById('loginPin').value.trim();
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  if (!name.trim()) { errEl.textContent = 'Adını gir'; return; }
+  if (!/^\d{4,6}$/.test(pin)) { errEl.textContent = 'PIN 4-6 haneli rakam olmalı'; return; }
+  setLoading(true, 'Kontrol ediliyor...');
+  try {
+    const list = await getAPI({ action: 'getAthletes' });
+    if (!list.ok) throw new Error(list.error || 'Sporcu listesi alınamadı');
+    const matches = (list.data || []).filter(a => normName(a.Ad) === normName(name));
+    if (!matches.length) { errEl.textContent = 'Sporcu bulunamadı. Adını listede kayıtlı olduğu gibi yaz (örn: Ahmet Yılmaz).'; return; }
+    if (matches.length > 1) { errEl.textContent = 'Bu isimde birden fazla sporcu var. Diyetisyeninize başvurun.'; return; }
+    setLoading(true, 'Giriş yapılıyor...');
+    const r = await postAPI({ action: 'athleteLogin', athleteId: String(matches[0].ID), pin });
+    if (!r.ok) { errEl.textContent = r.error || 'Giriş başarısız'; return; }
+    athlete = athleteFromRow(r.data, r.data.token);
+    saveSession();
+    document.getElementById('loginPin').value = '';
+    launchApp();
+    if (r.data.firstLogin) showToast('🔐 PIN\'in kaydedildi. Sonraki girişlerde bu PIN\'i kullan.', false, 5000);
+  } catch (e) {
+    errEl.textContent = 'Bağlantı hatası: ' + (e.message || e);
+    console.error(e);
+  } finally { setLoading(false); }
+}
+function athleteFromRow(row, token) {
+  return {
+    id: String(row.ID), name: row.Ad || '', pos: row.Mevki || '', token,
+    targets: {
+      kcal: n(row.Enerji_kcal), protein: n(row.Protein_g), kh: n(row.KH_g), yag: n(row.Yag_g), water: n(row.Su_ml)
+    },
+    note: row.DiyetisyenNotu || row.Diyetisyen_Notu || row.Not || ''
+  };
+}
+function saveSession() { try { localStorage.setItem(SESSION_KEY, JSON.stringify(athlete)); } catch (e) {} }
+function doLogout() {
+  try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+  athlete = null; todayMeals = []; foods = []; clearPhoto();
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('loginWrap').style.display = 'flex';
+  document.getElementById('loginError').textContent = '';
+}
+function launchApp() {
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'flex';
+  renderHeader();
+  switchPanel('today');
+  renderFoods();
+  refreshAthleteInfo();
+}
+function renderHeader() {
+  document.getElementById('displayName').textContent = athlete.name;
+  document.getElementById('displayPos').textContent = athlete.pos || 'Futbolcu';
+  document.getElementById('displayDate').textContent = new Date().toLocaleDateString('tr-TR', { day:'numeric', month:'long', weekday:'short' });
+  document.getElementById('waterTarget').textContent = athlete.targets.water || 2500;
+}
+// Diyetisyen hedefleri veya notu değiştirdiyse güncelle
+async function refreshAthleteInfo() {
+  try {
+    const list = await getAPI({ action: 'getAthletes' });
+    const row = (list.data || []).find(a => String(a.ID) === athlete.id);
+    if (!row) return;
+    athlete = athleteFromRow(row, athlete.token);
+    saveSession();
+    renderHeader();
+    renderTodayMeals();
+  } catch (e) { console.warn('Sporcu bilgisi güncellenemedi', e); }
 }
 
 // ===== TODAY =====
+function mapMeal(o) {
+  let besin = o.Besinler || o.besinler || [];
+  if (typeof besin === 'string') { try { besin = JSON.parse(besin); } catch (e) { besin = besin ? [besin] : []; } }
+  if (!Array.isArray(besin)) besin = [];
+  const ts = String(o.TarihSaat || '');
+  const tm = ts.match(/(\d{1,2}):(\d{2})/);
+  return {
+    id: o.ID, ogunTipi: o.OgunTipi || 'Öğün',
+    saat: tm ? pad(tm[1]) + ':' + tm[2] : '',
+    besinler: besin.map(b => typeof b === 'string' ? b : `${b.name || b.isim || ''}${b.grams ? ' (' + b.grams + 'g)' : ''}`).filter(Boolean),
+    kcal: n(o.Kcal), protein: n(o.Protein), kh: n(o.KH), yag: n(o.Yag), not: o.Not || ''
+  };
+}
 async function refreshToday() {
-  if(!athlete) return;
+  if (!athlete) return;
   try {
-    const r = await callAPI({ action: 'getOgunler', secret: TEAM_SECRET, athleteId: athlete.id, date: today() });
-    todayMeals = r.meals || [];
-    renderTodayMeals();
-    // Water
-    const w = await callAPI({ action: 'getSuUyku', secret: TEAM_SECRET, athleteId: athlete.id, date: today() });
-    waterMl = w.water || 0;
-    updateWaterDisplay();
-  } catch(e) {
-    console.warn('refreshToday error:', e);
-    renderTodayMeals();
+    const [m, w] = await Promise.all([
+      getAPI({ action: 'getOgunler', athleteId: athlete.id, tarih: today() }),
+      getAPI({ action: 'getSuUykuTum', athleteId: athlete.id, tarih: today() })
+    ]);
+    if (!m.ok) throw new Error(m.error);
+    todayMeals = (m.data || []).map(mapMeal);
+    const rows = (w.ok && w.data) || [];
+    waterSaved = rows.length ? n(rows[rows.length - 1].Su_ml) : 0;
+    waterMl = waterSaved;
+  } catch (e) {
+    console.warn('refreshToday:', e);
+    showToast('Veriler alınamadı: ' + e.message, true);
   }
-}
-
-function renderTodayMeals() {
-  const list = document.getElementById('todayMealList');
-  let totalKcal = 0, totalProt = 0, totalKh = 0, totalYag = 0;
-
-  // Öğünleri saate göre sırala
-  const sorted = [...todayMeals].sort((a, b) => (a.saat||'').localeCompare(b.saat||''));
-
-  sorted.forEach(m => {
-    totalKcal += m.kcal || 0;
-    totalProt += m.protein || 0;
-    totalKh += m.kh || 0;
-    totalYag += m.yag || 0;
-  });
-
-  // Kcal güncelle
-  document.getElementById('todayKcal').textContent = Math.round(totalKcal);
-  document.getElementById('todayProt').textContent = fmt(totalProt, 0);
-  document.getElementById('todayKh').textContent = fmt(totalKh, 0);
-  document.getElementById('todayYag').textContent = fmt(totalYag, 0);
-
-  // Kcal progress
-  const targetK = parseInt(athlete?.targets?.kcal) || 0;
-  if(targetK > 0) {
-    document.getElementById('targetKcal').textContent = targetK;
-    const pct = Math.min(100, Math.round(totalKcal / targetK * 100));
-    document.getElementById('kcalBar').style.width = pct + '%';
-    document.getElementById('kcalBadge').textContent = '%' + pct;
-    const col = pct < 70 ? 'var(--yel)' : pct <= 110 ? 'var(--grn)' : 'var(--red)';
-    document.getElementById('kcalBar').style.background = col;
-    document.getElementById('kcalBadge').style.color = col;
-  }
-
-  // Makro hedef progress barları
-  const tP = parseInt(athlete?.targets?.protein) || 0;
-  const tK = parseInt(athlete?.targets?.kh) || 0;
-  const tY = parseInt(athlete?.targets?.yag) || 0;
-  if(tP > 0) {
-    const pct = Math.min(100, Math.round(totalProt / tP * 100));
-    document.getElementById('protBar').style.width = pct + '%';
-    document.getElementById('protLabel').textContent = `${Math.round(totalProt)} / ${tP} g`;
-  }
-  if(tK > 0) {
-    const pct = Math.min(100, Math.round(totalKh / tK * 100));
-    document.getElementById('khBar').style.width = pct + '%';
-    document.getElementById('khLabel').textContent = `${Math.round(totalKh)} / ${tK} g`;
-  }
-  if(tY > 0) {
-    const pct = Math.min(100, Math.round(totalYag / tY * 100));
-    document.getElementById('yagBar').style.width = pct + '%';
-    document.getElementById('yagLabel').textContent = `${Math.round(totalYag)} / ${tY} g`;
-  }
-
-  if(!sorted.length) {
-    list.innerHTML = `<div style="text-align:center;color:var(--txt3);padding:20px;font-size:0.85rem">
-      Henüz öğün eklenmedi.<br>
-      <span style="color:var(--grn);cursor:pointer" onclick="switchPanel('photo')">📷 Fotoğraf ile ekle →</span>
-    </div>`;
-    return;
-  }
-
-  // Öğün tipi emoji haritası
-  const ogunEmoji = {
-    'Kahvaltı': '🌅', 'Öğle Yemeği': '☀️',
-    'Akşam Yemeği': '🌙', 'Ara Öğün': '🍎'
-  };
-
-  list.innerHTML = sorted.map(m => {
-    const emoji = ogunEmoji[m.ogunTipi] || '🍽️';
-    // saat "HH:MM:SS" formatında — slice(0,5) = "HH:MM"
-    const saatStr = (m.saat||'').slice(0,5);
-    const besinler = (m.besinler||[]).slice(0,3).join(', ') + ((m.besinler||[]).length > 3 ? '…' : '');
-    return `
-      <div class="meal-item">
-        <div style="font-size:1.5rem;width:34px;text-align:center;flex-shrink:0">${emoji}</div>
-        <div class="meal-item-info">
-          <div class="meal-item-name">${m.ogunTipi || 'Öğün'}</div>
-          ${besinler ? `<div class="meal-item-meta">${besinler}</div>` : ''}
-        </div>
-        <div style="text-align:right;flex-shrink:0">
-          <div class="meal-item-kcal">${Math.round(m.kcal||0)} kcal</div>
-          ${saatStr ? `<div class="meal-time-badge">${saatStr}</div>` : ''}
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function updateWaterDisplay() {
-  const target = parseInt(athlete?.targets?.water) || 2500;
-  document.getElementById('todayWaterVal').textContent = waterMl;
-  document.getElementById('waterMlDisplay').textContent = waterMl;
-  const pct = Math.min(100, Math.round(waterMl / target * 100));
-  document.getElementById('waterBar').style.width = pct + '%';
-  renderWaterGlasses();
-}
-
-// ===== PHOTO & AI =====
-function handlePhoto(e) {
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    photoData = ev.target.result.split(',')[1];
-    photoMime = file.type || 'image/jpeg';
-    document.getElementById('photoImg').src = ev.target.result;
-    document.getElementById('photoPreview').style.display = 'block';
-    document.getElementById('photoPlaceholder').style.display = 'none';
-    document.getElementById('photoDropArea').classList.add('has-image');
-    document.getElementById('analyzeSection').style.display = 'block';
-    document.getElementById('aiResults').style.display = 'none';
-    document.getElementById('notesSection').style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-}
-
-function selectOgun(el, val) {
-  document.querySelectorAll('.ogün-btn').forEach(b => b.style.borderColor = '');
-  el.style.borderColor = 'var(--grn)';
-  el.style.color = 'var(--grn)';
-  document.querySelectorAll('.ogün-btn').forEach(b => { if(b !== el) { b.style.borderColor=''; b.style.color=''; } });
-  selectedOgun = val;
-}
-
-function loadApiKey() {
-  try {
-    const k = localStorage.getItem('sp_api_key');
-    if(k) { document.getElementById('spApiKey').value = k; document.getElementById('spApiStatus').textContent = '✅ API anahtarı kayıtlı'; }
-  } catch(e){}
-}
-function saveSpApiKey() {
-  const k = document.getElementById('spApiKey').value.trim();
-  try { localStorage.setItem('sp_api_key', k); document.getElementById('spApiStatus').textContent = '✅ Kaydedildi'; } catch(e){}
-}
-
-async function analyzePhoto() {
-  if(!photoData) return;
-  // Groq — ücretsiz vision API (llama-3.2-11b-vision)
-  const _k1='gsk_ky8dtGkbrAxMuA81WjMB', _k2='WGdyb3FYeMcFgKposp8S7uBOvNZGS9Cp';
-  const apiKey = _k1 + _k2;
-
-  document.getElementById('analyzeBtn').disabled = true;
-  document.getElementById('analyzeBtn').textContent = '⏳ Analiz ediliyor...';
-
-  try {
-    const body = {
-      model: 'qwen/qwen3.8-27b',
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image_url', image_url: { url: `data:${photoMime};base64,${photoData}` } },
-          { type: 'text', text: 'Bu yemek fotoğrafındaki besinleri analiz et. Türkçe gıda isimlerini kullan. Sadece JSON döndür:\n{"foods": [{"name": "tavuk göğsü", "grams": 150, "kcal_est": 165, "protein": 31, "kh": 0, "yag": 4}, ...]}\nSadece görünen yiyecekleri listele. Porsiyonları görsel boyuta göre tahmin et.' }
-        ]
-      }],
-      max_tokens: 1024
-    };
-
-    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-      body: JSON.stringify(body)
-    });
-
-    if(!resp.ok) {
-      const err = await resp.json().catch(()=>({}));
-      throw new Error((err.error?.message) || 'API hatası: ' + resp.status);
-    }
-
-    const data = await resp.json();
-    let text = (data.choices?.[0]?.message?.content || '').trim();
-    const m = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if(m) text = m[1].trim();
-    const result = JSON.parse(text);
-    aiDetected = result.foods || [];
-    renderAiResults();
-
-  } catch(err) {
-    showToast('❌ ' + (err.message || 'Analiz başarısız'), 3500);
-  }
-
-  document.getElementById('analyzeBtn').disabled = false;
-  document.getElementById('analyzeBtn').textContent = '🤖 AI ile Analiz Et';
-}
-
-function renderAiResults() {
-  if(!aiDetected.length && document.getElementById('aiResults').style.display === 'none') {
-    showToast('Besin tespit edilemedi'); return;
-  }
-  let totalKcal = 0;
-
-  document.getElementById('aiResultsList').innerHTML = aiDetected.map((f,i) => {
-    const kc = f._kcal !== undefined ? f._kcal : (f.kcal_est || Math.round((f.grams||100) * 1.5));
-    totalKcal += kc;
-    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <button onclick="silBesin(${i})" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:1rem;padding:0 2px;line-height:1" title="Sil">✕</button>
-      <div style="flex:1">
-        <div style="font-size:0.85rem;font-weight:600">${f.name}</div>
-        <div style="font-size:0.72rem;color:var(--txt2)">${f.protein||0}g protein · ${f.kh||0}g kh · ${f.yag||0}g yağ</div>
-      </div>
-      <input type="number" value="${f._grams||f.grams||100}" min="1" max="2000"
-             style="width:60px;background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:4px;text-align:center;color:var(--txt1);font-size:0.82rem"
-             onchange="updateAiItem(${i}, this.value)">
-      <span style="font-size:0.75rem;color:var(--txt3)">g</span>
-      <div style="font-size:0.82rem;font-weight:700;color:var(--yel);min-width:50px;text-align:right" id="ai_kc_${i}">${kc} kcal</div>
-    </div>`;
-  }).join('');
-
-  document.getElementById('aiTotalKcal').textContent = Math.round(totalKcal) + ' kcal';
-  document.getElementById('aiResults').style.display = 'block';
-}
-
-function silBesin(i) {
-  aiDetected.splice(i, 1);
-  renderAiResults();
-}
-
-function manuelEkle() {
-  const ad = document.getElementById('manuelAd').value.trim();
-  const gram = parseFloat(document.getElementById('manuelGram').value) || 100;
-  const kcal = parseFloat(document.getElementById('manuelKcal').value) || 0;
-  if(!ad) { showToast('⚠️ Besin adı girin'); return; }
-  aiDetected.push({ name: ad, grams: gram, kcal_est: kcal, protein: 0, kh: 0, yag: 0 });
-  document.getElementById('manuelAd').value = '';
-  document.getElementById('manuelGram').value = '100';
-  document.getElementById('manuelKcal').value = '';
-  renderAiResults();
-}
-
-function updateAiItem(i, grams) {
-  const f = aiDetected[i];
-  const baseG = f.grams || 100;
-  const baseKc = f.kcal_est || Math.round(baseG * 1.5);
-  const newKc = Math.round(baseKc / baseG * grams);
-  aiDetected[i]._grams = parseFloat(grams);
-  aiDetected[i]._kcal = newKc;
-  document.getElementById('ai_kc_' + i).textContent = newKc + ' kcal';
-  const total = aiDetected.reduce((s, f2, j) => s + (f2._kcal !== undefined ? f2._kcal : (f2.kcal_est || Math.round((f2.grams||100)*1.5))), 0);
-  document.getElementById('aiTotalKcal').textContent = Math.round(total) + ' kcal';
-}
-
-async function submitMeal() {
-  if(!aiDetected.length || !athlete) return;
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳';
-
-  const totalKcal = aiDetected.reduce((s,f,i) => s + (f._kcal !== undefined ? f._kcal : (f.kcal_est||0)), 0);
-  const totalProt = aiDetected.reduce((s,f) => s + (f.protein||0) * ((f._grams||f.grams||100) / (f.grams||100)), 0);
-  const totalKh = aiDetected.reduce((s,f) => s + (f.kh||0) * ((f._grams||f.grams||100) / (f.grams||100)), 0);
-  const totalYag = aiDetected.reduce((s,f) => s + (f.yag||0) * ((f._grams||f.grams||100) / (f.grams||100)), 0);
-
-  const payload = {
-    action: 'submitOgun',
-    secret: TEAM_SECRET,
-    athleteId: athlete.id,
-    athleteName: athlete.name,
-    ogunTipi: selectedOgun,
-    besinler: JSON.stringify(aiDetected.map((f,i) => ({
-      name: f.name,
-      grams: f._grams || f.grams || 100
-    }))),
-    kcal: Math.round(totalKcal),
-    protein: fmt(totalProt),
-    kh: fmt(totalKh),
-    yag: fmt(totalYag),
-    not: document.getElementById('mealNote').value,
-    saat: new Date().toTimeString().substring(0, 8),
-    tarih: today()
-  };
-
-  try {
-    await postAPI(payload);
-    showToast('✅ Öğün kaydedildi!');
-    // Reset
-    photoData = null;
-    document.getElementById('photoInput').value = '';
-    document.getElementById('photoImg').src = '';
-    document.getElementById('photoPreview').style.display = 'none';
-    document.getElementById('photoPlaceholder').style.display = 'block';
-    document.getElementById('photoDropArea').classList.remove('has-image');
-    document.getElementById('analyzeSection').style.display = 'none';
-    document.getElementById('aiResults').style.display = 'none';
-    document.getElementById('notesSection').style.display = 'none';
-    document.getElementById('mealNote').value = '';
-    aiDetected = [];
-    switchPanel('today');
-  } catch(e) {
-    showToast('❌ Kayıt hatası: ' + (e.message||''), 3500);
-    btn.disabled = false;
-    btn.textContent = '✅ Kaydet';
-  }
-}
-
-// ===== WATER & SLEEP =====
-function renderWaterGlasses() {
-  const target = parseInt(athlete?.targets?.water) || 2500;
-  const glasses = Math.round(target / 250);
-  const filled = Math.round(waterMl / 250);
-  const container = document.getElementById('waterGlasses');
-  container.innerHTML = '';
-  for(let i = 0; i < glasses; i++) {
-    const g = document.createElement('div');
-    g.className = 'water-glass' + (i < filled ? ' filled' : '');
-    g.textContent = '💧';
-    g.onclick = () => { waterMl = (i+1) * 250; updateWaterDisplay(); };
-    container.appendChild(g);
-  }
-}
-
-function adjustWater(delta) {
-  waterMl = Math.max(0, waterMl + delta);
+  renderTodayMeals();
   updateWaterDisplay();
 }
-
-async function saveWater() {
-  if(!athlete) return;
-  try {
-    await postAPI({ action: 'submitSuUyku', secret: TEAM_SECRET, athleteId: athlete.id, athleteName: athlete.name,
-      tarih: today(), su: waterMl, uyku: null, uyku_kalite: null });
-    showToast('💧 Su kaydedildi');
-  } catch(e) { showToast('❌ Hata: ' + e.message); }
+function setBar(barId, labelId, val, target, unit) {
+  const bar = document.getElementById(barId);
+  if (!target) { bar.style.width = '0%'; if (labelId) document.getElementById(labelId).textContent = `${Math.round(val)} ${unit}`; return null; }
+  const pct = Math.round(val / target * 100);
+  bar.style.width = Math.min(100, pct) + '%';
+  if (labelId) document.getElementById(labelId).textContent = `${Math.round(val)} / ${Math.round(target)} ${unit}`;
+  return pct;
 }
-
-async function saveSleep() {
-  if(!athlete) return;
-  const h = parseFloat(document.getElementById('sleepHours').value) || 0;
-  const q = document.getElementById('sleepQuality').value;
-  try {
-    await postAPI({ action: 'submitSuUyku', secret: TEAM_SECRET, athleteId: athlete.id, athleteName: athlete.name,
-      tarih: today(), su: null, uyku: h, uyku_kalite: q });
-    showToast('😴 Uyku kaydedildi');
-  } catch(e) { showToast('❌ Hata: ' + e.message); }
-}
-
-async function loadWaterPanel() {
-  renderWaterGlasses();
-  // Load weekly averages
-  try {
-    const r = await callAPI({ action: 'getSuUykuWeek', secret: TEAM_SECRET, athleteId: athlete.id });
-    if(r.avgWater) document.getElementById('weekAvgWater').textContent = Math.round(r.avgWater);
-    if(r.avgSleep) document.getElementById('weekAvgSleep').textContent = r.avgSleep.toFixed(1);
-  } catch(e){}
-}
-
-// ===== REPORT =====
-async function loadReport() {
-  if(!athlete) return;
-  // Render targets
-  const targets = athlete.targets || {};
-  const targetsList = document.getElementById('targetsList');
-  const tRows = [
-    { lbl: '⚡ Kalori', val: targets.kcal, unit: 'kcal', color: 'var(--yel)' },
-    { lbl: '💪 Protein', val: targets.protein, unit: 'g', color: 'var(--blu)' },
-    { lbl: '🍞 Karbonhidrat', val: targets.kh, unit: 'g', color: 'var(--grn)' },
-    { lbl: '🫒 Yağ', val: targets.yag, unit: 'g', color: 'var(--pur)' },
-    { lbl: '💧 Su', val: targets.water, unit: 'ml', color: '#0EA5E9' },
-  ].filter(r => r.val);
-
-  if(tRows.length) {
-    targetsList.innerHTML = tRows.map(r => `
-      <div class="prog-row">
-        <div class="prog-label"><span>${r.lbl}</span><span style="color:${r.color};font-weight:600">${r.val} ${r.unit}</span></div>
+function renderTodayMeals() {
+  if (!athlete) return;
+  const list = document.getElementById('todayMealList');
+  const sorted = [...todayMeals].sort((a, b) => a.saat.localeCompare(b.saat));
+  const tot = sorted.reduce((s, m) => ({ kcal: s.kcal + m.kcal, p: s.p + m.protein, kh: s.kh + m.kh, y: s.y + m.yag }), { kcal:0, p:0, kh:0, y:0 });
+  const t = athlete.targets;
+  document.getElementById('todayKcal').textContent = Math.round(tot.kcal);
+  document.getElementById('todayProt').textContent = Math.round(tot.p);
+  document.getElementById('todayKh').textContent = Math.round(tot.kh);
+  document.getElementById('todayYag').textContent = Math.round(tot.y);
+  document.getElementById('targetKcal').textContent = t.kcal || '—';
+  const pct = setBar('kcalBar', null, tot.kcal, t.kcal, 'kcal');
+  const badge = document.getElementById('kcalBadge');
+  if (pct !== null) {
+    const col = pct < 70 ? 'var(--yel)' : pct <= 110 ? 'var(--grn)' : 'var(--red)';
+    document.getElementById('kcalBar').style.background = col;
+    badge.textContent = '%' + pct; badge.style.color = col;
+  } else badge.textContent = '';
+  setBar('protBar', 'protLabel', tot.p, t.protein, 'g');
+  setBar('khBar', 'khLabel', tot.kh, t.kh, 'g');
+  setBar('yagBar', 'yagLabel', tot.y, t.yag, 'g');
+  if (!sorted.length) {
+    list.innerHTML = `<div class="empty">Henüz öğün eklenmedi.<br><button class="link" onclick="switchPanel('photo')">+ Öğün ekle →</button></div>`;
+    return;
+  }
+  list.innerHTML = sorted.map(m => {
+    const bes = m.besinler.slice(0, 3).join(', ') + (m.besinler.length > 3 ? '…' : '');
+    return `<div class="meal-item">
+      <div style="font-size:1.5rem;width:34px;text-align:center;flex-shrink:0">${OGUN_EMOJI[m.ogunTipi] || '🍽️'}</div>
+      <div class="meal-item-info">
+        <div class="meal-item-name">${esc(m.ogunTipi)}</div>
+        ${bes ? `<div class="meal-item-meta">${esc(bes)}</div>` : ''}
+        <div class="meal-item-meta">P ${Math.round(m.protein)}g · KH ${Math.round(m.kh)}g · Y ${Math.round(m.yag)}g</div>
       </div>
-    `).join('');
-  } else {
-    targetsList.innerHTML = '<div style="color:var(--txt3);font-size:0.85rem">Hedefler diyetisyeniniz tarafından belirlenir.</div>';
-  }
-
-  // Load weekly data
+      <div style="text-align:right;flex-shrink:0">
+        <div class="meal-item-kcal">${Math.round(m.kcal)} kcal</div>
+        ${m.saat ? `<span class="meal-time-badge">${m.saat}</span>` : ''}
+      </div>
+      ${m.id ? `<button class="icon-btn" title="Öğünü sil" aria-label="Öğünü sil" onclick="deleteMeal('${esc(m.id)}')">🗑️</button>` : ''}
+    </div>`;
+  }).join('');
+}
+async function deleteMeal(id) {
+  const m = todayMeals.find(x => String(x.id) === String(id));
+  if (!confirm(`${m ? m.ogunTipi + ' (' + Math.round(m.kcal) + ' kcal)' : 'Bu öğün'} silinsin mi?`)) return;
+  setLoading(true, 'Siliniyor...');
   try {
-    const r = await callAPI({ action: 'getWeekReport', secret: TEAM_SECRET, athleteId: athlete.id });
-    if(r.days) renderWeekBars(r.days, targets.kcal || 2500);
-    if(r.mealCount !== undefined) document.getElementById('weekMealCount').textContent = r.mealCount;
-    if(r.avgKcal) document.getElementById('weekAvgKcal').textContent = Math.round(r.avgKcal);
-    if(r.protPct) document.getElementById('weekProtPct').textContent = Math.round(r.protPct) + '%';
-    if(r.waterPct) document.getElementById('weekWaterPct').textContent = Math.round(r.waterPct) + '%';
-    if(r.dietNote) {
-      document.getElementById('dietNoteText').textContent = r.dietNote;
-      document.getElementById('dietNoteCard').style.display = 'block';
-    }
-  } catch(e) {
-    console.warn('Report load error:', e);
-    renderWeekBars([], targets.kcal || 2500);
-  }
+    const r = await postAPI({ action: 'deleteMeal', mealId: id });
+    if (!r.ok) throw new Error(r.error);
+    todayMeals = todayMeals.filter(x => String(x.id) !== String(id));
+    renderTodayMeals();
+    showToast('🗑️ Öğün silindi');
+  } catch (e) { showToast('❌ Silinemedi: ' + e.message, true); }
+  finally { setLoading(false); }
 }
 
-function renderWeekBars(days, targetKcal) {
-  const container = document.getElementById('weekCalBars');
-  const maxKcal = Math.max(targetKcal, ...days.map(d => d.kcal||0), 100);
-  const dayNames = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
-  container.innerHTML = dayNames.map((_, i) => {
-    const d = days[i] || {};
-    const kcal = d.kcal || 0;
-    const pct = Math.round(kcal / maxKcal * 100);
-    const color = !kcal ? 'var(--bg3)' : (kcal < targetKcal * 0.8 ? 'var(--yel)' : kcal <= targetKcal * 1.1 ? 'var(--grn)' : 'var(--red)');
+// ===== ÖĞÜN EKLE =====
+function selectOgun(el) {
+  document.querySelectorAll('.ogun-btn').forEach(b => b.classList.toggle('sel', b === el));
+  selectedOgun = el.dataset.v;
+}
+// Fotoğrafı 1024px JPEG'e küçült (yükleme hızı + AI sınırları)
+function handlePhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+  img.onload = () => {
+    const sc = Math.min(1, 1024 / Math.max(img.width, img.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    const dataUrl = c.toDataURL('image/jpeg', 0.82);
+    URL.revokeObjectURL(url);
+    photoData = dataUrl.split(',')[1]; photoMime = 'image/jpeg';
+    const im = document.getElementById('photoImg');
+    im.src = dataUrl; im.style.display = 'block';
+    document.getElementById('photoPlaceholder').style.display = 'none';
+    document.getElementById('photoDropArea').classList.add('has-image');
+    document.getElementById('analyzeSection').style.display = 'flex';
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); showToast('Fotoğraf açılamadı', true); };
+  img.src = url;
+}
+function clearPhoto() {
+  photoData = null;
+  const inp = document.getElementById('photoInput'); if (inp) inp.value = '';
+  const im = document.getElementById('photoImg'); if (im) { im.src = ''; im.style.display = 'none'; }
+  document.getElementById('photoPlaceholder').style.display = 'block';
+  document.getElementById('photoDropArea').classList.remove('has-image');
+  document.getElementById('analyzeSection').style.display = 'none';
+}
+async function analyzePhoto() {
+  if (!photoData) return;
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true; btn.textContent = '⏳ Analiz ediliyor...';
+  try {
+    const r = await postAPI({ action: 'analyzePhoto', image: photoData, mime: photoMime });
+    if (!r.ok) throw new Error(r.error || 'Analiz başarısız');
+    if (!r.foods || !r.foods.length) { showToast('Fotoğrafta besin tespit edilemedi. Elle ekleyebilirsiniz.', true); return; }
+    r.foods.forEach(f => addFood(f.name, f.grams, f.kcal, f.protein, f.kh, f.yag));
+    showToast(`🤖 ${r.foods.length} besin bulundu — miktarları kontrol edin`);
+  } catch (e) { showToast('❌ ' + e.message, true); }
+  finally { btn.disabled = false; btn.textContent = '🤖 AI ile Analiz Et'; }
+}
+function addFood(name, grams, kcal, p, kh, y) {
+  const g = Math.max(1, n(grams) || 100);
+  foods.push({ name: String(name || 'Besin'), grams: g, base: { grams: g, kcal: n(kcal), protein: n(p), kh: n(kh), yag: n(y) } });
+  renderFoods();
+}
+function scaled(f) {
+  const k = f.grams / f.base.grams;
+  return { kcal: f.base.kcal * k, protein: f.base.protein * k, kh: f.base.kh * k, yag: f.base.yag * k };
+}
+function renderFoods() {
+  const el = document.getElementById('foodList');
+  if (!foods.length) {
+    el.innerHTML = '<div class="empty" style="padding:8px">Fotoğrafı analiz edin veya aşağıdan elle ekleyin.</div>';
+  } else {
+    el.innerHTML = foods.map((f, i) => {
+      const s = scaled(f);
+      return `<div class="food-row">
+        <button class="icon-btn" onclick="removeFood(${i})" title="Kaldır" aria-label="${esc(f.name)} kaldır">✕</button>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.85rem;font-weight:600">${esc(f.name)}</div>
+          <div style="font-size:.7rem;color:var(--txt2)" id="fm_${i}">P ${r1(s.protein)}g · KH ${r1(s.kh)}g · Y ${r1(s.yag)}g</div>
+        </div>
+        <input type="number" class="field" value="${f.grams}" min="1" max="2000" inputmode="decimal" style="width:64px;text-align:center;padding:5px" aria-label="${esc(f.name)} gram" oninput="updateFood(${i}, this.value)">
+        <span style="font-size:.72rem;color:var(--txt3)">g</span>
+        <div style="font-size:.82rem;font-weight:700;color:var(--yel);min-width:58px;text-align:right" id="fk_${i}">${Math.round(s.kcal)} kcal</div>
+      </div>`;
+    }).join('');
+  }
+  updateFoodTotal();
+}
+function updateFood(i, grams) {
+  const f = foods[i]; if (!f) return;
+  const g = n(grams); if (g <= 0) return;
+  f.grams = g;
+  const s = scaled(f);
+  document.getElementById('fk_' + i).textContent = Math.round(s.kcal) + ' kcal';
+  document.getElementById('fm_' + i).textContent = `P ${r1(s.protein)}g · KH ${r1(s.kh)}g · Y ${r1(s.yag)}g`;
+  updateFoodTotal();
+}
+function updateFoodTotal() {
+  const t = foods.reduce((a, f) => a + scaled(f).kcal, 0);
+  document.getElementById('foodTotal').textContent = Math.round(t) + ' kcal';
+}
+function removeFood(i) { foods.splice(i, 1); renderFoods(); }
+function manuelEkle() {
+  const ad = document.getElementById('manuelAd').value.trim();
+  if (!ad) { showToast('⚠️ Besin adı girin', true); return; }
+  const kcal = n(document.getElementById('manuelKcal').value);
+  const p = n(document.getElementById('manuelP').value), kh = n(document.getElementById('manuelKh').value), y = n(document.getElementById('manuelY').value);
+  const est = Math.round(p * 4 + kh * 4 + y * 9);
+  if (!kcal && !est) { showToast('⚠️ Kalori ya da makro değeri girin', true); return; }
+  addFood(ad, document.getElementById('manuelGram').value, kcal || est, p, kh, y);
+  ['manuelAd','manuelKcal','manuelP','manuelKh','manuelY'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('manuelGram').value = '100';
+}
+async function submitMeal() {
+  if (!athlete) return;
+  if (!foods.length) { showToast('⚠️ Önce en az bir besin ekleyin', true); return; }
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = '⏳ Kaydediliyor...';
+  const tot = foods.reduce((a, f) => { const s = scaled(f); return { kcal: a.kcal + s.kcal, p: a.p + s.protein, kh: a.kh + s.kh, y: a.y + s.yag }; }, { kcal:0, p:0, kh:0, y:0 });
+  try {
+    const r = await postAPI({
+      action: 'addMeal', athleteName: athlete.name, ogunTipi: selectedOgun,
+      besinler: foods.map(f => ({ name: f.name, grams: Math.round(f.grams) })),
+      kcal: Math.round(tot.kcal), protein: r1(tot.p), kh: r1(tot.kh), yag: r1(tot.y),
+      not: document.getElementById('mealNote').value.trim()
+    });
+    if (!r.ok) throw new Error(r.error || 'Kayıt başarısız');
+    showToast('✅ Öğün kaydedildi!');
+    foods = []; renderFoods(); clearPhoto();
+    document.getElementById('mealNote').value = '';
+    switchPanel('today');
+  } catch (e) { showToast('❌ Kaydedilemedi: ' + e.message, true); }
+  finally { btn.disabled = false; btn.textContent = '✅ Öğünü Kaydet'; }
+}
+
+// ===== SU & UYKU =====
+function updateWaterDisplay() {
+  const target = athlete?.targets?.water || 2500;
+  document.getElementById('todayWaterVal').textContent = waterSaved;
+  document.getElementById('waterMlDisplay').textContent = waterMl;
+  document.getElementById('waterBar').style.width = Math.min(100, Math.round(waterSaved / target * 100)) + '%';
+  document.getElementById('waterUnsaved').style.display = waterMl !== waterSaved ? 'block' : 'none';
+  renderWaterGlasses();
+}
+function renderWaterGlasses() {
+  const target = athlete?.targets?.water || 2500;
+  const glasses = Math.max(Math.ceil(target / 250), Math.ceil(waterMl / 250));
+  const filled = Math.round(waterMl / 250);
+  const c = document.getElementById('waterGlasses');
+  c.innerHTML = '';
+  for (let i = 0; i < glasses; i++) {
+    const g = document.createElement('button');
+    g.className = 'water-glass' + (i < filled ? ' filled' : '');
+    g.textContent = '💧';
+    g.setAttribute('aria-label', `${(i + 1) * 250} ml`);
+    g.onclick = () => { waterMl = (i + 1 === filled) ? i * 250 : (i + 1) * 250; updateWaterDisplay(); };
+    c.appendChild(g);
+  }
+}
+function adjustWater(delta) { waterMl = Math.max(0, Math.min(10000, waterMl + delta)); updateWaterDisplay(); }
+async function saveWater() {
+  if (!athlete) return;
+  const btn = document.getElementById('saveWaterBtn'); btn.disabled = true;
+  try {
+    const r = await postAPI({ action: 'addSuUyku', athleteName: athlete.name, su_ml: waterMl });
+    if (!r.ok) throw new Error(r.error);
+    waterSaved = waterMl; updateWaterDisplay();
+    showToast('💧 Su kaydedildi');
+  } catch (e) { showToast('❌ Kaydedilemedi: ' + e.message, true); }
+  finally { btn.disabled = false; }
+}
+async function saveSleep() {
+  if (!athlete) return;
+  const h = n(document.getElementById('sleepHours').value);
+  if (h <= 0 || h > 16) { showToast('⚠️ Uyku süresi 0-16 saat arası olmalı', true); return; }
+  try {
+    const r = await postAPI({ action: 'addSuUyku', athleteName: athlete.name, uyku_saat: h, uyku_kalite: document.getElementById('sleepQuality').value });
+    if (!r.ok) throw new Error(r.error);
+    showToast('😴 Uyku kaydedildi');
+  } catch (e) { showToast('❌ Kaydedilemedi: ' + e.message, true); }
+}
+async function fetchWeek() {
+  const w = weekRange();
+  const [m, s] = await Promise.all([
+    getAPI({ action: 'getOgunler', athleteId: athlete.id, from: w.from, to: w.to }),
+    getAPI({ action: 'getSuUykuTum', athleteId: athlete.id, from: w.from, to: w.to })
+  ]);
+  const inWeek = r => { const d = String(r.Tarih || r.TarihSaat || '').slice(0, 10); return d >= w.from && d <= w.to; };
+  return { w, meals: ((m.ok && m.data) || []).filter(inWeek), su: ((s.ok && s.data) || []).filter(inWeek) };
+}
+async function loadWaterPanel() {
+  updateWaterDisplay();
+  try {
+    const { su } = await fetchWeek();
+    const waters = su.map(r => n(r.Su_ml)).filter(v => v > 0);
+    const sleeps = su.map(r => n(r.Uyku_saat)).filter(v => v > 0);
+    document.getElementById('weekAvgWater').textContent = waters.length ? Math.round(waters.reduce((a, b) => a + b, 0) / waters.length) : '—';
+    document.getElementById('weekAvgSleep').textContent = sleeps.length ? (sleeps.reduce((a, b) => a + b, 0) / sleeps.length).toFixed(1) : '—';
+  } catch (e) { console.warn(e); }
+}
+
+// ===== RAPOR =====
+async function loadReport() {
+  if (!athlete) return;
+  const t = athlete.targets;
+  const noteCard = document.getElementById('dietNoteCard');
+  noteCard.style.display = athlete.note ? 'block' : 'none';
+  document.getElementById('dietNoteText').textContent = athlete.note;
+  const rows = [
+    { lbl:'⚡ Kalori', val:t.kcal, unit:'kcal', color:'var(--yel)' }, { lbl:'💪 Protein', val:t.protein, unit:'g', color:'var(--blu)' },
+    { lbl:'🍞 Karbonhidrat', val:t.kh, unit:'g', color:'var(--grn)' }, { lbl:'🫒 Yağ', val:t.yag, unit:'g', color:'var(--pur)' },
+    { lbl:'💧 Su', val:t.water, unit:'ml', color:'var(--wat)' }
+  ].filter(r => r.val);
+  document.getElementById('targetsList').innerHTML = rows.length
+    ? rows.map(r => `<div class="prog-row prog-label"><span>${r.lbl}</span><span style="color:${r.color};font-weight:600">${r.val} ${r.unit}</span></div>`).join('')
+    : '<div style="color:var(--txt3);font-size:.85rem">Hedefler diyetisyeniniz tarafından belirlenir.</div>';
+  renderWeekBars(Array(7).fill(0), t.kcal || 2500, weekRange().todayIdx);
+  try {
+    const { w, meals, su } = await fetchWeek();
+    const byDay = w.days.map(d => meals.filter(m => String(m.Tarih || m.TarihSaat).slice(0, 10) === d));
+    const kcals = byDay.map(ms => ms.reduce((a, m) => a + n(m.Kcal), 0));
+    const prots = byDay.map(ms => ms.reduce((a, m) => a + n(m.Protein), 0));
+    const loggedDays = kcals.filter(k => k > 0);
+    renderWeekBars(kcals, t.kcal || 2500, w.todayIdx);
+    document.getElementById('weekMealCount').textContent = meals.length;
+    document.getElementById('weekAvgKcal').textContent = loggedDays.length ? Math.round(loggedDays.reduce((a, b) => a + b, 0) / loggedDays.length) : '—';
+    const protDays = prots.filter(p => p > 0);
+    document.getElementById('weekProtPct').textContent = t.protein && protDays.length ? Math.round(protDays.reduce((a, b) => a + b, 0) / protDays.length / t.protein * 100) + '%' : '—';
+    const waters = su.map(r => n(r.Su_ml)).filter(v => v > 0);
+    document.getElementById('weekWaterPct').textContent = t.water && waters.length ? Math.round(waters.reduce((a, b) => a + b, 0) / waters.length / t.water * 100) + '%' : '—';
+  } catch (e) { console.warn('Rapor:', e); showToast('Rapor alınamadı: ' + e.message, true); }
+}
+function renderWeekBars(kcals, target, todayIdx) {
+  const names = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+  const max = Math.max(target * 1.2, ...kcals, 100);
+  document.getElementById('weekCalBars').innerHTML = names.map((nm, i) => {
+    const k = kcals[i] || 0;
+    const color = !k ? 'var(--bg3)' : k < target * 0.8 ? 'var(--yel)' : k <= target * 1.1 ? 'var(--grn)' : 'var(--red)';
     return `<div class="week-bar-wrap">
-      <div style="font-size:0.65rem;color:var(--txt3)">${kcal ? Math.round(kcal) : ''}</div>
-      <div class="week-bar" style="height:${Math.max(4,pct)}%;background:${color};width:100%"></div>
+      <div style="font-size:.6rem;color:var(--txt3)">${k ? Math.round(k) : ''}</div>
+      <div class="week-bar" style="height:${Math.max(4, Math.round(k / max * 100))}%;background:${color}"></div>
+      <div class="week-bar-lbl ${i === todayIdx ? 'today' : ''}">${nm}</div>
     </div>`;
   }).join('');
 }
 
 // ===== INIT =====
 window.addEventListener('DOMContentLoaded', () => {
-  // Try session restore
+  try { localStorage.removeItem('sp_session'); localStorage.removeItem('sp_api_key'); } catch (e) {}  // eski sürüm kalıntıları
   try {
-    const saved = localStorage.getItem('sp_session');
-    if(saved) {
-      athlete = JSON.parse(saved);
-      launchApp();
-      return;
-    }
-  } catch(e){}
-  initLogin();
+    const saved = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+    if (saved && saved.id && saved.token) { athlete = saved; launchApp(); return; }
+  } catch (e) {}
+  document.getElementById('loginName').focus();
+});
+// Gün değiştiyse (uygulama arka planda açık kaldıysa) yenile
+let _lastDay = today();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && athlete && today() !== _lastDay) {
+    _lastDay = today(); renderHeader(); switchPanel('today');
+  }
 });
 </script>
 </body>
