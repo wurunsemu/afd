@@ -379,6 +379,7 @@ html:active-view-transition-type(backward)::view-transition-new(page) { animatio
     <div class="sec-title"><i class="fas fa-users" style="color:var(--blue)"></i> Takım Durumu</div>
     <div class="week-selector"><span style="font-size:.8rem;color:var(--text2)">Oturum:</span><div class="session-selector-container" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
   </div>
+  <div id="complianceWidget"></div>
   <div class="grid4" id="team-kpis" style="margin-bottom:14px"></div>
   <div id="team-alerts"></div>
   <div class="grid2">
@@ -577,6 +578,14 @@ html:active-view-transition-type(backward)::view-transition-new(page) { animatio
     <div class="sec-title"><i class="fas fa-person-running" style="color:var(--green)"></i> Maç Protokolleri</div>
   </div>
   <div id="matchProtoContent"></div>
+</div>
+
+<!-- ===== PAGE: MAÇ HAZIRLIĞI (Hf.6) ===== -->
+<div class="page" id="p-hazirlik">
+  <div class="sec-header">
+    <div class="sec-title"><i class="fas fa-list-check" style="color:var(--green)"></i> Maç Hazırlığı (Hf.6)</div>
+  </div>
+  <div id="hazirlikContent"></div>
 </div>
 
 <!-- ===== PAGE: FİZYOTERAPİST ===== -->
@@ -1093,6 +1102,7 @@ const NAV_GROUPS = [
     { id:'p-sim', icon:'fa-kitchen-set', label:'Yemek Simülasyonu', sub:'Takım ortak menü planı' },
     { id:'p-ergogen', icon:'fa-flask-vial', label:'Ergojenik Stratejiler', sub:'Kafein · Kreatin · Protokoller' },
     { id:'p-match-proto', icon:'fa-person-running', label:'Maç Protokolleri', sub:'Maç önü/arası/sonrası + kabul takibi' },
+    { id:'p-hazirlik', icon:'fa-list-check', label:'Maç Hazırlığı (Hf.6)', sub:'Kontrol listesi · protokol onayı' },
     { id:'p-physio', icon:'fa-kit-medical', label:'Fizyoterapist', sub:'Sinyal takibi · sorular · uygulamalar' }
   ]},
   { title: 'Çıktı & Kayıt', items: [
@@ -1116,6 +1126,7 @@ const PAGE_INFO = {
   'p-ergogen': { text: 'Kafein, kreatin, beta-alanin, sodyum bikarbonat ve KH ağız çalkalama protokolleri. Dozlar her oyuncunun <b>kendi kilosuna</b> göre hesaplanır; protokolü oyuncu bazında aktif edin.', steps: ['Protokol seç', 'Oyuncuları aktif et', 'PDF al'] },
   'p-match-proto': { text: 'Maç önü, devre arası ve maç sonrası beslenme protokolleri. Her faz için servis menüsünü belirleyin ve oyuncuların her besini <b>ne kadar kabul ettiğini</b> 1-5 yıldızla puanlayın.', steps: ['Faz seç', 'Menüyü düzenle', 'Oyuncu puanlarını gir', 'Düşük kabulleri değiştir'] },
   'p-physio': { text: 'Fizyoterapistler kendi telefon formlarından (<b>fizyo.html</b>) uygulama yanıtlarını ve gözledikleri <b>psikolojik, beslenme ve fiziksel sinyalleri</b> bildirir. Siz burada her bildirimin takip sürecini yürütür, fizyoterapiste soru sorarsınız.', steps: ['Yeni bildirimi oku', 'Önerilen süreci uygula', 'Takip durumunu güncelle', 'Gerekirse soru sor'] },
+  'p-hazirlik': { text: 'Her sporcu için Hf.6 hazırlık kriterleri: maç öncesi öğün bilgisi, organoleptik ürün tercihi, <b>ergojenik protokol onayı</b> ve kafein bilgilendirmesi. Protokol onayını sporcu kendi uygulamasından verir; direnç bildirenler ve nedenleri burada görünür.', steps: ['Onay iste', 'Direnenlere yaklaşım uygula', 'Bilgilendirmeleri işaretle'] },
   'p-print': { text: 'Yazdırılabilir raporlar yeni sekmede açılır; tarayıcının yazdır penceresinden <b>PDF olarak kaydet</b>i seçin.' },
   'p-td': { text: 'Gelen/giden transferler, kiralamalar ve teknik direktör notları.' }
 };
@@ -1290,6 +1301,7 @@ function renderPage(id) {
     else if (id === 'p-sim') renderSimPage();
     else if (id === 'p-ergogen') renderErgoPage();
     else if (id === 'p-match-proto') renderMatchProtoPage();
+    else if (id === 'p-hazirlik') renderHazirlikPage();
     else if (id === 'p-physio') renderPhysioPage();
     else if (id === 'p-sporcu-takip' && window.stOnShow) window.stOnShow();
   } catch (e) {
@@ -1456,6 +1468,7 @@ function renderTeamPage() {
     </div>`;
   }).join('');
   renderTeamCharts(wk);
+  loadComplianceWidget();
 }
 
 function renderTeamCharts(wk) {
@@ -4745,6 +4758,167 @@ async function phyAddPhysio() {
   if (!ad) { showToast('Ad yazın', 'red'); return; }
   try { await phyPost({ action:'addPhysio', ad }); showToast(`${ad} eklendi`); await physioRefresh(true); }
   catch (e) { showToast('Eklenemedi: ' + e.message, 'red'); }
+}
+
+
+// ===================== G5: HAFTALIK UYUM (sporcu uygulaması) =====================
+const _comp = { data:null, at:0, loading:false, error:'' };
+async function loadComplianceWidget(force) {
+  const box = document.getElementById('complianceWidget');
+  if (!box) return;
+  if (!force && _comp.data && Date.now() - _comp.at < 5 * 60000) { renderCompliance(); return; }
+  if (_comp.loading) return;
+  _comp.loading = true; renderCompliance();
+  try { _comp.data = await phyGet({ action:'getComplianceStats' }); _comp.at = Date.now(); _comp.error = ''; }
+  catch (e) { _comp.error = e.message; }
+  finally { _comp.loading = false; renderCompliance(); }
+}
+function renderCompliance() {
+  const box = document.getElementById('complianceWidget');
+  if (!box) return;
+  const d = _comp.data;
+  const tile = (val, label, sub, color, warn) => `<div class="stat-tile" style="${warn ? 'border-color:var(--red);background:var(--alert-red-bg)' : ''}"><div class="val" style="color:${color};font-size:1.6rem">${val}</div><div class="lbl">${label}</div><div class="sub">${sub}</div></div>`;
+  const pc = v => v === null || v === undefined ? 'var(--text2)' : v >= 75 ? 'var(--green)' : v >= 50 ? 'var(--yellow)' : 'var(--red)';
+  let body;
+  if (_comp.error) body = `<div style="font-size:.8rem;color:var(--text2)"><i class="fas fa-circle-info"></i> Uyum verisi alınamadı (${esc(_comp.error)}). Code.gs'in son sürümünün yayınlandığından emin olun.</div>`;
+  else if (!d) body = `<div style="font-size:.8rem;color:var(--text2)"><i class="fas fa-spinner fa-spin"></i> Yükleniyor…</div>`;
+  else body = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+      ${tile('%' + d.ogun_uyumu_pct, 'Öğün uyumu', `${d.ogun_toplam} / ${d.sporcu_sayisi} sporcu öğün girdi`, pc(d.ogun_uyumu_pct))}
+      ${tile('%' + d.su_takip_pct, 'Su takip', `${d.su_toplam} / ${d.sporcu_sayisi} sporcu`, pc(d.su_takip_pct))}
+      ${tile('%' + d.gunluk_kontrol_pct, 'Günlük kontrol (Hooper)', `${d.gunluk_toplam} / ${d.sporcu_sayisi} sporcu`, pc(d.gunluk_kontrol_pct))}
+      ${tile(d.gi_sikayet_sayi, 'GI şikâyeti', `${d.gi_sporcu} sporcu · bu hafta`, d.gi_sikayet_sayi ? 'var(--red)' : 'var(--green)', d.gi_sikayet_sayi > 0)}
+      ${tile(d.beta_alanin_tolerans_pct === null ? '—' : '%' + d.beta_alanin_tolerans_pct, 'Beta-alanin tolerans', d.beta_alanin_kayit ? `parestezi kabul · ${d.beta_alanin_kayit} kayıt` : 'henüz kayıt yok', pc(d.beta_alanin_tolerans_pct))}
+    </div>`;
+  box.innerHTML = `
+    <div class="card" style="border-left:3px solid var(--teal)">
+      <div class="card-title" style="justify-content:space-between"><span><i class="fas fa-mobile-screen" style="color:var(--teal)"></i> Haftalık Uyum — sporcu uygulaması (son 7 gün)</span>
+        <button class="btn btn-sm" onclick="loadComplianceWidget(true)" ${_comp.loading ? 'disabled' : ''} aria-label="Yenile"><i class="fas fa-rotate${_comp.loading ? ' fa-spin' : ''}"></i></button></div>
+      ${body}
+    </div>`;
+}
+
+// ===================== G6 + G3: MAÇ HAZIRLIĞI (Hf.6) =====================
+const PROT_ST = { benimsedi:['✅ Benimsedi', 'var(--green)'], direniyor:['⚠️ Direniyor', 'var(--red)'], bekliyor:['⏳ Onay bekliyor', 'var(--blue)'], '':['— Atanmadı', 'var(--text2)'] };
+const DIRENC_INFO = {
+  GI_rahatsizlik:['🤢 Mideyi rahatsız ediyor', 'Dozu bölün, yemekle birlikte verin, alternatif form/ürün deneyin; maç günü ilk kez kullanmayın.'],
+  neden:['🤔 Neden yiyeyim ki?', 'Protokolün amacını sporcunun hedefiyle (sprint, toparlanma) ilişkilendiren kısa bir bilgilendirme görüşmesi yapın.'],
+  zaman_yok:['⏱️ Zamanım yok', 'Hazır, taşınabilir seçenekler (shake, bar, meyve) ve antrenman sahasında servis planlayın.'],
+  tat_kotu:['😖 Tadı güzel değil', 'Organoleptik testle alternatif aroma/ürün belirleyin (Maç Protokolleri → kabul takibi).']
+};
+const _hz = { loaded:false, loading:false, error:'', athletes:[], filter:'' };
+function hzOrgano(name) {
+  const key = s => String(s || '').toLocaleLowerCase('tr-TR').trim();
+  const p = players.find(pl => key(pl.name) === key(name));
+  const meals = (p?.matchProto?.mac_oncu?.meals || []).filter(m => m.rating > 0);
+  return { n: meals.length, avg: meals.length ? meals.reduce((a, m) => a + m.rating, 0) / meals.length : null };
+}
+function hzChecks(a) {
+  const o = hzOrgano(a.Ad);
+  return [
+    { k:'mac_oncesi_bilgi', label:'Maç öncesi öğünü biliyor', ok: String(a.mac_oncesi_bilgi) === '1', manual:true },
+    { k:'organo', label:'Ürün tercihi organoleptik ile belirlendi', ok: o.n > 0, info: o.n ? `${o.n} puan · ort. ${o.avg.toFixed(1)}★` : 'Maç Protokolleri → Maç Önü\'nde puan yok' },
+    { k:'protokol', label:'Ergojenik protokol onaylandı', ok: a.protokol_onay === 'benimsedi' },
+    { k:'kafein_bilgi', label:'Kafein yan etki bilgilendirmesi yapıldı', ok: String(a.kafein_bilgi) === '1', manual:true }
+  ];
+}
+async function hzLoad() {
+  _hz.loading = true; _hz.error = ''; renderHazirlikPage();
+  try { _hz.athletes = (await phyGet({ action:'getAthletes' })).data || []; _hz.loaded = true; }
+  catch (e) { _hz.error = e.message; }
+  finally { _hz.loading = false; renderHazirlikPage(); }
+}
+function renderHazirlikPage() {
+  const box = document.getElementById('hazirlikContent');
+  if (!box) return;
+  if (!_hz.loaded) {
+    box.innerHTML = _hz.error ? `<div class="alert alert-red"><i class="fas fa-triangle-exclamation"></i> Sporcu listesi alınamadı: ${esc(_hz.error)}</div>` : '<div class="card empty-msg"><i class="fas fa-spinner fa-spin"></i> Sporcular yükleniyor…</div>';
+    if (!_hz.loading && !_hz.error) hzLoad();
+    return;
+  }
+  const rows = _hz.athletes.map(a => ({ a, c: hzChecks(a) }));
+  const score = r => r.c.filter(x => x.ok).length;
+  const ready = rows.filter(r => score(r) === 4).length;
+  const cnt = k => _hz.athletes.filter(a => (a.protokol_onay || '') === k).length;
+  const dir = {}; _hz.athletes.filter(a => a.protokol_onay === 'direniyor').forEach(a => { dir[a.direnc_tipi] = (dir[a.direnc_tipi] || 0) + 1; });
+  let list = rows;
+  if (_hz.filter === 'eksik') list = rows.filter(r => score(r) < 4);
+  else if (_hz.filter) list = rows.filter(r => (r.a.protokol_onay || '') === _hz.filter);
+  list = [...list].sort((x, y) => (x.a.protokol_onay === 'direniyor' ? -1 : 0) - (y.a.protokol_onay === 'direniyor' ? -1 : 0) || score(x) - score(y));
+  const kpi = (v, l, c, sub) => `<div class="stat-tile"><div class="val" style="color:${c}">${v}</div><div class="lbl">${l}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;
+  const td = 'padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle';
+  box.innerHTML = `
+    <div class="grid4" style="margin-bottom:14px">
+      ${kpi(`${ready}/${rows.length}`, 'Tam hazır (4/4)', 'var(--green)', 'Hf.6 kriterlerinin hepsi')}
+      ${kpi(cnt('benimsedi'), 'Protokolü benimsedi', 'var(--green)')}
+      ${kpi(cnt('direniyor'), 'Direniyor', 'var(--red)', Object.entries(dir).map(([k, v]) => `${(DIRENC_INFO[k] || [k])[0].split(' ')[0]} ${v}`).join(' · '))}
+      ${kpi(cnt('bekliyor'), 'Onay bekliyor', 'var(--blue)', `${cnt('')} sporcuya atanmadı`)}
+    </div>
+    ${Object.keys(dir).length ? `<div class="card" style="border-left:3px solid var(--red)">
+      <div class="card-title"><i class="fas fa-brain" style="color:var(--red)"></i> Direnç nedenleri ve önerilen yaklaşım</div>
+      ${Object.entries(dir).map(([k, v]) => `<div style="font-size:.83rem;margin-bottom:6px"><b>${(DIRENC_INFO[k] || [k])[0]}</b> — ${v} sporcu<br><span style="color:var(--text2)">${(DIRENC_INFO[k] || ['', ''])[1]}</span></div>`).join('')}
+    </div>` : ''}
+    <div class="card">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+        <select style="width:auto" aria-label="Filtre" onchange="_hz.filter=this.value;renderHazirlikPage()">
+          ${[['', 'Tüm sporcular'], ['eksik', 'Eksiği olanlar'], ['direniyor', 'Direnenler'], ['bekliyor', 'Onay bekleyenler'], ['benimsedi', 'Benimseyenler']].map(([k, l]) => `<option value="${k}" ${_hz.filter === k ? 'selected' : ''}>${l}</option>`).join('')}
+        </select>
+        <button class="btn btn-sm" onclick="hzRequestAll()"><i class="fas fa-paper-plane"></i> Atanmamışlardan protokol onayı iste</button>
+        <button class="btn btn-sm" onclick="hzLoad()" ${_hz.loading ? 'disabled' : ''}><i class="fas fa-rotate${_hz.loading ? ' fa-spin' : ''}"></i> Yenile</button>
+        <span style="font-size:.75rem;color:var(--text2);margin-left:auto">${list.length} sporcu</span>
+      </div>
+      <div class="table-scroll"><table class="tbl" style="font-size:.8rem">
+        <thead><tr><th>Sporcu</th><th style="text-align:center">Maç öncesi<br>öğün bilgisi</th><th style="text-align:center">Organoleptik</th><th>Protokol</th><th style="text-align:center">Kafein<br>bilgilendirme</th><th style="text-align:center">Hazırlık</th></tr></thead>
+        <tbody>${list.map(({ a, c }) => {
+          const st = PROT_ST[a.protokol_onay || ''] || PROT_ST[''];
+          const s = c.filter(x => x.ok).length;
+          const id = esc(a.ID);
+          return `<tr${a.protokol_onay === 'direniyor' ? ' style="background:var(--alert-red-bg)"' : ''}>
+            <td style="${td};white-space:nowrap"><b>${esc(a.Ad)}</b><div style="font-size:.7rem;color:var(--text2)">${esc(a.Mevki || '')}</div></td>
+            <td style="${td};text-align:center"><input type="checkbox" ${c[0].ok ? 'checked' : ''} aria-label="${esc(a.Ad)} maç öncesi öğün bilgisi" onchange="hzSetFlag('${id}','mac_oncesi_bilgi',this.checked)" style="width:18px;height:18px"></td>
+            <td style="${td};text-align:center" title="${esc(c[1].info)}">${c[1].ok ? '✅' : '⬜'}<div style="font-size:.68rem;color:var(--text2)">${c[1].ok ? esc(c[1].info) : 'puan yok'}</div></td>
+            <td style="${td};white-space:nowrap">
+              <span style="color:${st[1]};font-weight:600">${st[0]}</span>
+              ${a.protokol_onay === 'direniyor' && DIRENC_INFO[a.direnc_tipi] ? `<div style="font-size:.72rem;color:var(--text2)">${DIRENC_INFO[a.direnc_tipi][0]}</div>` : ''}
+              <div><select style="width:auto;font-size:.72rem;padding:2px 4px;margin-top:3px" aria-label="${esc(a.Ad)} protokol durumu" onchange="hzSetProtocol('${id}',this.value)">
+                <option value="">Durumu değiştir…</option><option value="bekliyor">Onay iste</option><option value="benimsedi">Benimsedi</option><option value="none">Atamayı kaldır</option>
+              </select></div>
+            </td>
+            <td style="${td};text-align:center"><input type="checkbox" ${c[3].ok ? 'checked' : ''} aria-label="${esc(a.Ad)} kafein bilgilendirmesi" onchange="hzSetFlag('${id}','kafein_bilgi',this.checked)" style="width:18px;height:18px"></td>
+            <td style="${td};text-align:center"><b style="color:${s === 4 ? 'var(--green)' : s >= 2 ? 'var(--yellow)' : 'var(--red)'}">${s}/4</b></td>
+          </tr>`;
+        }).join('') || '<tr><td colspan="6" class="empty-msg">Bu filtrede sporcu yok.</td></tr>'}</tbody>
+      </table></div>
+      <div style="font-size:.72rem;color:var(--text2);margin-top:8px">Organoleptik kriter, Maç Protokolleri → Maç Önü sayfasındaki puanlardan gelir (sporcu adı panel oyuncusuyla eşleşmeli). Protokol onayını sporcu kendi uygulamasından verir; "Onay iste" seçince uygulamada onay ekranı açılır.</div>
+    </div>`;
+}
+async function hzSetFlag(id, key, on) {
+  try {
+    await phyPost({ action:'updateAthleteFlags', athleteId:id, [key]: on ? '1' : '0' });
+    const a = _hz.athletes.find(x => String(x.ID) === String(id)); if (a) a[key] = on ? '1' : '0';
+    renderHazirlikPage();
+  } catch (e) { showToast('Kaydedilemedi: ' + e.message, 'red'); renderHazirlikPage(); }
+}
+async function hzSetProtocol(id, v) {
+  if (!v) return;
+  const durum = v === 'none' ? '' : v;
+  try {
+    await phyPost({ action:'updateProtocolStatus', athleteId:id, protokol_onay:durum, direnc_tipi:'' });
+    const a = _hz.athletes.find(x => String(x.ID) === String(id)); if (a) { a.protokol_onay = durum; a.direnc_tipi = ''; }
+    showToast(durum === 'bekliyor' ? 'Onay isteği gönderildi — sporcu uygulamayı açınca görecek' : 'Protokol durumu güncellendi');
+  } catch (e) { showToast('Kaydedilemedi: ' + e.message, 'red'); }
+  renderHazirlikPage();
+}
+async function hzRequestAll() {
+  const targets = _hz.athletes.filter(a => !a.protokol_onay);
+  if (!targets.length) { showToast('Protokol atanmamış sporcu yok', 'yellow'); return; }
+  const ok = await confirmModal.show({ icon:'📋', title:`${targets.length} sporcudan protokol onayı istensin mi?`, msg:'Sporcular uygulamayı açtığında "Beslenme protokolü onayı" ekranını görecek.', ok:'Evet, İste' });
+  if (!ok) return;
+  let done = 0;
+  for (const a of targets) {
+    try { await phyPost({ action:'updateProtocolStatus', athleteId:a.ID, protokol_onay:'bekliyor', direnc_tipi:'' }); a.protokol_onay = 'bekliyor'; done++; } catch (e) {}
+  }
+  showToast(`${done}/${targets.length} sporcuya onay isteği gönderildi`);
+  renderHazirlikPage();
 }
 
 // ===================== PRINT / REPORTS =====================

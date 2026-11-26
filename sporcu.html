@@ -192,7 +192,7 @@ html:active-view-transition-type(backward)::view-transition-new(panel){animation
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{border:1px solid var(--brd);background:var(--bg3);color:var(--txt1);border-radius:18px;padding:7px 12px;font-size:.8rem;cursor:pointer}
 .chip[aria-pressed="true"]{background:#8B5CF6;border-color:#8B5CF6;color:#fff}
-#cycleSeg button[aria-pressed="true"]{background:var(--bg1);color:var(--txt1);box-shadow:0 1px 4px #0006}
+#cycleSeg button[aria-pressed="true"],#giSeg button[aria-pressed="true"],#parSeg button[aria-pressed="true"]{background:var(--bg1);color:var(--txt1);box-shadow:0 1px 4px #0006}
 .daily-prompt{background:linear-gradient(135deg,#10B98122,var(--bg2));border:1px solid var(--grn);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;color:var(--txt1);font:inherit;width:100%}
 .mini-bars{display:flex;align-items:flex-end;gap:4px;height:80px}
 .mini-bars>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;height:100%}
@@ -264,6 +264,7 @@ html:active-view-transition-type(backward)::view-transition-new(panel){animation
         <div class="prog-row"><div class="prog-label"><span style="color:var(--pur)">Yağ</span><span id="yagLabel">— g</span></div><div class="prog-track" style="height:6px"><div class="prog-fill" id="yagBar" style="background:var(--pur)"></div></div></div>
       </div>
       <div id="dailyPrompt"></div>
+      <div id="phaseWidget"></div>
       <div>
         <div class="sec-hdr">Bugünün Öğünleri <button class="badge grn" style="cursor:pointer;border:none" onclick="switchPanel('photo')">+ Öğün Ekle</button></div>
         <div id="todayMealList"><div class="empty">Yükleniyor...</div></div>
@@ -378,6 +379,28 @@ html:active-view-transition-type(backward)::view-transition-new(panel){animation
       </div>
 
       <div class="card">
+        <div class="card-title">💊 Sindirim & takviye <span id="suppDone" class="badge grn" style="display:none;text-transform:none;margin-left:6px">✓ girildi</span></div>
+        <div style="font-size:.85rem;margin-bottom:6px">Bugün mide / sindirim şikâyetin oldu mu?</div>
+        <div class="seg" role="group" aria-label="Sindirim şikâyeti" id="giSeg" style="margin-bottom:12px">
+          <button type="button" data-v="yok" aria-pressed="false" onclick="setGI('yok')">Yok</button>
+          <button type="button" data-v="hafif" aria-pressed="false" onclick="setGI('hafif')">Hafif</button>
+          <button type="button" data-v="belirgin" aria-pressed="false" onclick="setGI('belirgin')">Belirgin</button>
+        </div>
+        <div style="font-size:.85rem;margin-bottom:6px">Bugün aldığın takviyeler <span style="color:var(--txt3);font-size:.72rem">(varsa)</span></div>
+        <div class="chips" id="suppChips"></div>
+        <div id="parBox" style="display:none;margin-top:12px">
+          <div style="font-size:.85rem;margin-bottom:6px">Beta-alanin sonrası karıncalanma oldu mu?</div>
+          <div class="seg" role="group" aria-label="Parestezi" id="parSeg">
+            <button type="button" data-v="yok" aria-pressed="false" onclick="setPar('yok')">Olmadı</button>
+            <button type="button" data-v="normal" aria-pressed="false" onclick="setPar('normal')">Oldu, sorun değil</button>
+            <button type="button" data-v="rahatsiz" aria-pressed="false" onclick="setPar('rahatsiz')">Rahatsız etti</button>
+          </div>
+          <div style="font-size:.7rem;color:var(--txt3);margin-top:4px">Karıncalanma zararsızdır; dozu bölmek azaltır. Rahatsız ediyorsa diyetisyenin dozu ayarlar.</div>
+        </div>
+        <button class="btn full" style="margin-top:12px" onclick="saveSupp()">💾 Kaydet</button>
+      </div>
+
+      <div class="card">
         <div class="card-title">💧 Bugün su — <span id="waterMlDisplay">0</span> ml</div>
         <div class="water-track" id="waterGlasses"></div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
@@ -426,6 +449,10 @@ html:active-view-transition-type(backward)::view-transition-new(panel){animation
         <div class="card-title">💬 Diyetisyen Notu</div>
         <div id="dietNoteText" style="font-size:.88rem;line-height:1.6;white-space:pre-line"></div>
       </div>
+      <div class="card" id="protocolCard" style="display:none;border-color:var(--blu)">
+        <div class="card-title">📋 Beslenme protokolüm</div>
+        <div id="protocolBody"></div>
+      </div>
       <div class="card">
         <div class="card-title">🎯 Hedeflerim</div>
         <div id="targetsList"></div>
@@ -464,6 +491,29 @@ html:active-view-transition-type(backward)::view-transition-new(panel){animation
     <button class="nav-btn" id="nav-report" onclick="switchPanel('report')"><span class="ico">📊</span>Raporum</button>
   </nav>
 </div>
+
+<!-- G3: PROTOKOL KABUL -->
+<dialog class="intro" id="protokolDlg" aria-labelledby="protTitle">
+  <div id="protAsk" style="padding:26px 22px 20px;text-align:center">
+    <div style="font-size:2.6rem;margin-bottom:8px">📋</div>
+    <h2 id="protTitle" style="font-size:1.15rem;margin-bottom:8px">Beslenme protokolü onayı</h2>
+    <p style="font-size:.88rem;color:var(--txt2);line-height:1.6;margin-bottom:16px">Diyetisyenin maç öncesi için sana özel bir beslenme ve takviye protokolü hazırladı. Uygulayabilecek misin?</p>
+    <button class="btn full" onclick="sendProtocol('benimsedi')">✅ Protokolü onaylıyorum</button>
+    <button class="btn full outline" style="margin-top:8px" onclick="showProtocolStep('why')">❌ Sorunum var</button>
+    <button style="background:none;border:none;color:var(--txt3);font-size:.75rem;margin-top:10px;cursor:pointer" onclick="document.getElementById('protokolDlg').close()">Sonra karar vereceğim</button>
+  </div>
+  <div id="protWhy" style="display:none;padding:24px 20px 18px">
+    <h2 style="font-size:1.05rem;margin-bottom:6px;text-align:center">Sorununu belirt</h2>
+    <p style="font-size:.8rem;color:var(--txt2);text-align:center;margin-bottom:12px">Dürüst cevabın, protokolü sana uygun hale getirmemizi sağlar.</p>
+    <div style="display:grid;gap:8px">
+      <button class="btn outline full" onclick="sendProtocol('direniyor','GI_rahatsizlik')">🤢 Mideyi rahatsız ediyor</button>
+      <button class="btn outline full" onclick="sendProtocol('direniyor','neden')">🤔 Neden yiyeyim ki?</button>
+      <button class="btn outline full" onclick="sendProtocol('direniyor','zaman_yok')">⏱️ Zamanım yok</button>
+      <button class="btn outline full" onclick="sendProtocol('direniyor','tat_kotu')">😖 Tadı güzel değil</button>
+    </div>
+    <button style="background:none;border:none;color:var(--txt3);font-size:.75rem;margin-top:12px;cursor:pointer;width:100%" onclick="showProtocolStep('ask')">‹ Geri</button>
+  </div>
+</dialog>
 
 <!-- İLK GİRİŞ TANITIMI -->
 <dialog class="intro" id="introDlg" aria-labelledby="introTitle">
@@ -606,6 +656,7 @@ function showIntro() { _introI = 0; renderIntro(); document.getElementById('intr
 function nextIntro() { if (_introI < INTRO.length - 1) { _introI++; renderIntro(); } else closeIntro(); }
 function closeIntro() {
   document.getElementById('introDlg').close();
+  setTimeout(checkProtocolPrompt, 300);
   try { localStorage.setItem('sp_intro_seen', '1'); } catch (e) {}
 }
 
@@ -661,7 +712,7 @@ async function doLogin(ev) {
 }
 function athleteFromRow(row, token) {
   return {
-    id: String(row.ID), name: row.Ad || '', pos: row.Mevki || '', gender: row.Cinsiyet || '', token,
+    id: String(row.ID), name: row.Ad || '', pos: row.Mevki || '', gender: row.Cinsiyet || '', kilo: n(row.Kilo), protokol: row.protokol_onay || '', direnc: row.direnc_tipi || '', token,
     targets: {
       kcal: n(row.Enerji_kcal), protein: n(row.Protein_g), kh: n(row.KH_g), yag: n(row.Yag_g), water: n(row.Su_ml)
     },
@@ -684,7 +735,9 @@ function launchApp() {
   staggerIn(document.getElementById('panel-today'));
   renderFoods();
   buildDailyUI();
+  buildSuppUI();
   loadTodayDaily();
+  loadPhase();
   refreshAthleteInfo();
   let seen = false;
   try { seen = localStorage.getItem('sp_intro_seen') === '1'; } catch (e) {}
@@ -706,6 +759,8 @@ async function refreshAthleteInfo() {
     saveSession();
     renderHeader();
     renderTodayMeals();
+    loadPhase();
+    checkProtocolPrompt();
   } catch (e) { console.warn('Sporcu bilgisi güncellenemedi', e); }
 }
 
@@ -769,7 +824,7 @@ function renderTodayMeals() {
     badge.textContent = '%' + pct; badge.style.color = col;
   } else badge.textContent = '';
   setBar('protBar', 'protLabel', tot.p, t.protein, 'g');
-  setBar('khBar', 'khLabel', tot.kh, t.kh, 'g');
+  setBar('khBar', 'khLabel', tot.kh, t.kh ? t.kh + (window._khBonus || 0) : 0, 'g');   // luteal fazda KH bonusu
   setBar('yagBar', 'yagLabel', tot.y, t.yag, 'g');
   if (!sorted.length) {
     list.innerHTML = `<div class="empty">Henüz öğün eklenmedi.<br><button class="link" onclick="switchPanel('photo')">+ Öğün ekle →</button></div>`;
@@ -1091,6 +1146,7 @@ function fillDaily(row) {
     try { JSON.parse(row.DonguBelirti || '[]').forEach(s => { daily.symptoms.add(s); const c = document.querySelector(`#cycleSymptoms [data-s="${CSS.escape(s)}"]`); if (c) c.setAttribute('aria-pressed', 'true'); }); } catch (e) {}
   }
   updateHooperTotal(); updateSrpe();
+  fillSupp(row);
   const hooperDone = row && n(row.Hooper) > 0;
   document.getElementById('morningDone').style.display = hooperDone ? 'inline-block' : 'none';
   document.getElementById('trainDone').style.display = row && row.RPE !== '' && row.RPE !== undefined ? 'inline-block' : 'none';
@@ -1160,6 +1216,123 @@ async function fetchWeekDaily() {
   return { w, rows: (r.ok && r.data) || [] };
 }
 
+
+// ===== G3: BESLENME PROTOKOLÜ KABULÜ =====
+const DIRENC = { GI_rahatsizlik:'🤢 Mideyi rahatsız ediyor', neden:'🤔 Neden yiyeyim ki?', zaman_yok:'⏱️ Zamanım yok', tat_kotu:'😖 Tadı güzel değil' };
+function checkProtocolPrompt() {
+  if (!athlete || athlete.protokol !== 'bekliyor') return;
+  const dlg = document.getElementById('protokolDlg');
+  if (dlg.open || document.getElementById('introDlg').open) return;
+  showProtocolStep('ask');
+  dlg.showModal();
+}
+function showProtocolStep(step) {
+  document.getElementById('protAsk').style.display = step === 'ask' ? '' : 'none';
+  document.getElementById('protWhy').style.display = step === 'why' ? '' : 'none';
+}
+async function sendProtocol(durum, tip) {
+  try {
+    const r = await postAPI({ action:'updateProtocolStatus', protokol_onay: durum, direnc_tipi: tip || '' });
+    if (!r.ok) throw new Error(r.error);
+    athlete.protokol = durum; athlete.direnc = tip || ''; saveSession();
+    document.getElementById('protokolDlg').close();
+    showToast(durum === 'benimsedi' ? '✅ Teşekkürler, protokolün onaylandı' : '📨 Sorunun diyetisyene iletildi, yakında geri dönecek', false, 4000);
+    buzz();
+    if (currentPanel() === 'report') renderProtocolCard();
+  } catch (e) { showToast('❌ Gönderilemedi: ' + e.message, true); }
+}
+function renderProtocolCard() {
+  const el = document.getElementById('protocolCard');
+  if (!el || !athlete) return;
+  const p = athlete.protokol;
+  if (!p) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  const st = { benimsedi:['✅ Onayladın', 'var(--grn)'], direniyor:['⚠️ Sorun bildirdin', 'var(--yel)'], bekliyor:['⏳ Onayını bekliyor', 'var(--blu)'] }[p] || ['—', 'var(--txt2)'];
+  document.getElementById('protocolBody').innerHTML = `
+    <div style="font-size:.95rem;font-weight:700;color:${st[1]}">${st[0]}</div>
+    ${p === 'direniyor' && DIRENC[athlete.direnc] ? `<div style="font-size:.8rem;color:var(--txt2);margin-top:4px">Neden: ${DIRENC[athlete.direnc]}</div>` : ''}
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      ${p !== 'benimsedi' ? '<button class="btn sm" onclick="sendProtocol(\'benimsedi\')">✅ Onaylıyorum</button>' : ''}
+      <button class="btn sm outline" onclick="showProtocolStep(\'why\');document.getElementById(\'protokolDlg\').showModal()">${p === 'direniyor' ? 'Nedeni değiştir' : '❌ Sorunum var'}</button>
+    </div>`;
+}
+
+// ===== G1: MENSTRÜEL FAZ BAZLI KH HEDEFİ (yalnız kadın sporcular) =====
+// Faz, sporcunun Günlük sekmesinde girdiği son döngü gününden ileriye sayılarak hesaplanır.
+const LUTEAL_CHO_BONUS = 0.5;   // g/kg — sunum G1 kararı
+window._khBonus = 0;
+function cyclePhase(day) {
+  if (day <= 5) return { key:'menstruel', label:'Menstrüel faz', bonus:0, tip:'Demir kaybı olabilir: kırmızı et, baklagil + C vitamini kaynağını ihmal etme.' };
+  if (day <= 14) return { key:'folikuler', label:'Foliküler faz', bonus:0, tip:'Enerji ve toparlanma genellikle iyi; standart planına devam.' };
+  if (day <= 35) return { key:'luteal', label:'Luteal faz', bonus:LUTEAL_CHO_BONUS, tip:'İştah ve vücut ısısı artabilir; karbonhidratı öğünlere yay, sıvıyı artır.' };
+  return { key:'gecikme', label:'Döngü gecikmiş olabilir', bonus:0, tip:'Döngün 35 günü geçtiyse diyetisyenine haber ver (enerji yeterliliği kontrolü).' };
+}
+async function loadPhase() {
+  const el = document.getElementById('phaseWidget');
+  window._khBonus = 0;
+  if (!el || !athlete || !isFemale()) { if (el) el.innerHTML = ''; return; }
+  try {
+    const from = isoDate(new Date(Date.now() - 45 * 86400000));
+    const r = await getAPI({ action:'getDaily', athleteId: athlete.id, from, to: today() });
+    const rows = ((r.ok && r.data) || []).filter(x => n(x.DonguGunu) > 0 || x.DonguDurum === 'regl').sort((a, b) => String(b.Tarih).localeCompare(String(a.Tarih)));
+    if (!rows.length) {
+      el.innerHTML = `<button class="daily-prompt" style="border-color:#8B5CF6;background:linear-gradient(135deg,#8B5CF622,var(--bg2))" onclick="switchPanel('water')"><span style="font-size:1.5rem">🌸</span><span><b style="font-size:.88rem">Döngü bilgin eksik</b><br><span style="font-size:.75rem;color:var(--txt2)">Günlük sekmesinden döngü gününü gir; KH hedefin faza göre ayarlansın.</span></span></button>`;
+      renderTodayMeals(); return;
+    }
+    const last = rows[0];
+    const base = n(last.DonguGunu) || 1;
+    const passed = Math.round((parseISO(today()) - parseISO(String(last.Tarih).slice(0, 10))) / 86400000);
+    const day = base + Math.max(0, passed);
+    const ph = cyclePhase(day);
+    const kg = athlete.kilo || 0;
+    const baseGkg = kg && athlete.targets.kh ? athlete.targets.kh / kg : null;
+    window._khBonus = ph.bonus && kg ? Math.round(ph.bonus * kg) : 0;
+    el.innerHTML = `
+      <div class="card" style="border-color:#8B5CF6">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <div><div style="font-weight:700;color:#A78BFA">🌸 ${ph.label}</div><div style="font-size:.72rem;color:var(--txt3)">Döngünün ${day}. günü (tahmini)</div></div>
+          ${ph.bonus ? `<span class="badge" style="background:#8B5CF622;color:#A78BFA">+${ph.bonus} g/kg KH</span>` : ''}
+        </div>
+        ${baseGkg ? `<div style="font-size:.85rem;margin-top:8px">KH hedefin bugün: <b>${(baseGkg + ph.bonus).toFixed(1)} g/kg</b>${window._khBonus ? ` <span style="color:var(--txt2)">(≈ ${Math.round(athlete.targets.kh + window._khBonus)} g; +${window._khBonus} g luteal)</span>` : ` <span style="color:var(--txt2)">(≈ ${Math.round(athlete.targets.kh)} g)</span>`}</div>`
+          : ph.bonus && !kg ? '<div style="font-size:.75rem;color:var(--txt3);margin-top:6px">Kilon kayıtlı olmadığı için KH bonusu hesaplanamadı.</div>' : ''}
+        <div style="font-size:.75rem;color:var(--txt2);margin-top:6px">💡 ${ph.tip}</div>
+      </div>`;
+  } catch (e) { el.innerHTML = ''; }
+  renderTodayMeals();
+}
+function parseISO(s) { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, m - 1, d); }
+
+// ===== G5: SİNDİRİM & TAKVİYE (günlük) =====
+const SUPPS = { beta_alanin:'⚡ Beta-alanin', kreatin:'💪 Kreatin', kafein:'☕ Kafein', protein:'🥛 Protein tozu' };
+let supp = { gi:'', list:new Set(), par:'' };
+function buildSuppUI() {
+  document.getElementById('suppChips').innerHTML = Object.entries(SUPPS).map(([k, l]) => `<button type="button" class="chip" aria-pressed="false" data-k="${k}" onclick="toggleSupp('${k}')">${l}</button>`).join('');
+}
+function setGI(v) { supp.gi = supp.gi === v ? '' : v; document.querySelectorAll('#giSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === supp.gi)); }
+function setPar(v) { supp.par = supp.par === v ? '' : v; document.querySelectorAll('#parSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === supp.par)); }
+function toggleSupp(k) {
+  supp.list.has(k) ? supp.list.delete(k) : supp.list.add(k);
+  document.querySelectorAll('#suppChips .chip').forEach(c => c.setAttribute('aria-pressed', supp.list.has(c.dataset.k)));
+  document.getElementById('parBox').style.display = supp.list.has('beta_alanin') ? '' : 'none';
+}
+function fillSupp(row) {
+  supp = { gi:'', list:new Set(), par:'' };
+  document.querySelectorAll('#giSeg button, #parSeg button, #suppChips .chip').forEach(b => b.setAttribute('aria-pressed', 'false'));
+  document.getElementById('parBox').style.display = 'none';
+  if (!row) return;
+  if (row.GI) setGI(row.GI);
+  String(row.Takviye || '').split(',').filter(Boolean).forEach(toggleSupp);
+  if (row.Parestezi) setPar(row.Parestezi);
+  document.getElementById('suppDone').style.display = row.GI || row.Takviye ? 'inline-block' : 'none';
+}
+async function saveSupp() {
+  if (!athlete) return;
+  if (!supp.gi) { showToast('⚠️ Mide/sindirim durumunu seç', true); return; }
+  if (supp.list.has('beta_alanin') && !supp.par) { showToast('⚠️ Beta-alanin sonrası karıncalanmayı seç', true); return; }
+  try { await postDaily({ gi: supp.gi, takviyeler: [...supp.list], parestezi: supp.list.has('beta_alanin') ? supp.par : '' }, '💊 Kaydedildi'); }
+  catch (e) { showToast('❌ ' + e.message, true); }
+}
+
 // ===== RAPOR =====
 async function loadReport() {
   if (!athlete) return;
@@ -1167,6 +1340,7 @@ async function loadReport() {
   const noteCard = document.getElementById('dietNoteCard');
   noteCard.style.display = athlete.note ? 'block' : 'none';
   document.getElementById('dietNoteText').textContent = athlete.note;
+  renderProtocolCard();
   const rows = [
     { lbl:'⚡ Kalori', val:t.kcal, unit:'kcal', color:'var(--yel)' }, { lbl:'💪 Protein', val:t.protein, unit:'g', color:'var(--blu)' },
     { lbl:'🍞 Karbonhidrat', val:t.kh, unit:'g', color:'var(--grn)' }, { lbl:'🫒 Yağ', val:t.yag, unit:'g', color:'var(--pur)' },
